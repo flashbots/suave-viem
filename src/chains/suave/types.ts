@@ -68,8 +68,10 @@ export type SuaveTransactionReceipt = TransactionReceipt &
   SuaveTransactionReceiptOverrides
 
 export type SuaveTransactionRequest = TransactionRequest_ & {
-  ExecutionNode?: Address
-  IsConfidential?: boolean
+  executionNode?: Address
+  isConfidential?: boolean
+  confidentialInputs?: Hex
+  confidentialResult?: Hex
 }
 
 type RpcTransactionSuave<TPending extends boolean = boolean> = TransactionBase<
