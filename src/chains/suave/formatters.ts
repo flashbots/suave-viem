@@ -8,24 +8,11 @@ import {
 } from '../../utils/formatters/transaction.js'
 import { defineTransactionReceipt } from '../../utils/formatters/transactionReceipt.js'
 import { defineTransactionRequest } from '../../utils/formatters/transactionRequest.js'
-
-// Introduce the new types
-export type ConfidentialComputeRequest = {
-  ExecutionNode: string // Assuming address is a string type
-  Wrapped: RpcTransaction // This might need to be adjusted to the actual Ethereum Transaction type
-}
-
-export type SuaveTransaction = {
-  ExecutionNode: string
-  ConfidentialComputeRequest: ConfidentialComputeRequest
-  ConfidentialComputeResult: string // Assuming bytes are represented as hexadecimal strings
-  // TODO: signature fields
-}
-
 import type {
   SuaveBlockOverrides,
   SuaveRpcTransaction,
   SuaveRpcTransactionRequest,
+  SuaveTransaction,
   SuaveTransactionReceipt,
   SuaveTransactionReceiptOverrides,
   SuaveTransactionRequest,
@@ -45,12 +32,12 @@ export const formattersSuave = {
         if (typeof transaction === 'string') return transaction
         return {
           ...formatTransaction(transaction as RpcTransaction),
-          ExecutionNode: transaction.ExecutionNode,
-          ConfidentialComputeRequest: {
-            ExecutionNode: transaction.ExecutionNode,
-            Wrapped: transaction as RpcTransaction,
+          executionNode: transaction.executionNode,
+          confidentialComputeRequest: {
+            executionNode: transaction.executionNode,
+            wrapped: transaction as RpcTransaction,
           },
-          ConfidentialComputeResult: transaction.ConfidentialComputeResult,
+          ConfidentialComputeResult: transaction.confidentialComputeResult,
           // TODO : Signature fields
         }
       }) as Hash[] | SuaveTransaction[]
@@ -61,14 +48,14 @@ export const formattersSuave = {
   }),
   transaction: /*#__PURE__*/ defineTransaction({
     format(args: SuaveRpcTransaction): SuaveTransaction {
-      if (args.IsConfidential) {
+      if (args.isConfidential) {
         return {
-          ExecutionNode: args.ExecutionNode,
-          ConfidentialComputeRequest: {
-            ExecutionNode: args.ExecutionNode,
-            Wrapped: args.ConfidentialComputeRequest, // This assumes that args.ConfidentialComputeRequest is of type Transaction
+          executionNode: args.executionNode,
+          confidentialComputeRequest: {
+            confidentialInputsHash: args.confidentialComputeRequest.hash, // TODO: is this right?
+            executionNode: args.executionNode,
           },
-          ConfidentialComputeResult: args.ConfidentialComputeResult,
+          confidentialComputeResult: args.confidentialComputeResult,
           // TODO : Signature fields
         } as SuaveTransaction
       } else {
@@ -79,32 +66,31 @@ export const formattersSuave = {
   transactionReceipt: /*#__PURE__*/ defineTransactionReceipt({
     format(args: SuaveTransactionReceiptOverrides): SuaveTransactionReceipt {
       const {
-        ExecutionNode,
-        ConfidentialComputeRequest,
-        ConfidentialComputeResult,
+        executionNode,
+        confidentialComputeRequest,
+        confidentialComputeResult,
         ...baseProps
       } = args
 
       return {
         ...baseProps,
-        ExecutionNode,
-        ConfidentialComputeRequest: {
-          ...ConfidentialComputeRequest,
+        executionNode,
+        confidentialComputeRequest: {
+          ...confidentialComputeRequest,
         },
-        ConfidentialComputeResult,
+        confidentialComputeResult,
         // signature fields
       } as SuaveTransactionReceipt
     },
   }),
-
   transactionRequest: /*#__PURE__*/ defineTransactionRequest({
     format(args: SuaveTransactionRequest): SuaveRpcTransactionRequest {
-      if (args.IsConfidential) {
-        const { ExecutionNode, IsConfidential } = args
+      if (args.isConfidential) {
+        const { executionNode, isConfidential } = args
         return {
           ...args, // Include other properties from args
-          ExecutionNode: ExecutionNode,
-          IsConfidential: IsConfidential,
+          executionNode: executionNode,
+          isConfidential: isConfidential,
           // We omit the ConfidentialComputeRequest here
         } as SuaveRpcTransactionRequest
       } else {
