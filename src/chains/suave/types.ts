@@ -73,11 +73,13 @@ export type SuaveTransactionRequest<
 export type SuaveRpcTransactionRequest<
   TQuantity = Hex,
   TIndex = Hex,
+  TTransactionType = Hex,
 > = TransactionRequestBase<TQuantity, TIndex> &
   Partial<FeeValuesLegacy<TQuantity>> & {
     executionNode?: Address
     isConfidential?: boolean
-    confidentialComputeRequest: ConfidentialComputeRecord
+    confidentialInputs: Hex
+    type?: TTransactionType
   }
 
 export type SuaveTransactionReceiptOverrides = {

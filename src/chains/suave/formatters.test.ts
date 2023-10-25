@@ -157,7 +157,6 @@ describe('transactionRequest', () => {
       // Data  *hexutil.Bytes `json:"data"`
       data: '0x0',
       // input: '0x0',
-      type: 'suave',
     }
     const formattedRequest = transactionRequest.format(inputRequest)
 
