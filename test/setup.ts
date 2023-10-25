@@ -2,13 +2,13 @@ import { fetchLogs } from '@viem/anvil'
 
 import { afterAll, afterEach, beforeAll, beforeEach, vi } from 'vitest'
 
-import { setIntervalMining } from '~viem/test/index.js'
+// import { setIntervalMining } from '~viem/test/index.js'
 import { cleanupCache, listenersCache } from '~viem/utils/observe.js'
 import { promiseCache, responseCache } from '~viem/utils/promise/withCache.js'
 import { socketsCache } from '~viem/utils/rpc.js'
 
-import { forkBlockNumber, poolId } from './src/constants.js'
-import { setBlockNumber, testClient } from './src/utils.js'
+import { /*forkBlockNumber,*/ poolId } from './src/constants.js'
+// import { setBlockNumber, testClient } from './src/utils.js'
 
 beforeAll(() => {
   vi.mock('../src/errors/utils.ts', () => ({
@@ -27,14 +27,14 @@ beforeEach(async () => {
   cleanupCache.clear()
   socketsCache.clear()
 
-  await setIntervalMining(testClient, { interval: 0 })
+  // await setIntervalMining(testClient, { interval: 0 })
 })
 
 afterAll(async () => {
   vi.restoreAllMocks()
 
   // Reset the anvil instance to the same state it was in before the tests started.
-  await setBlockNumber(forkBlockNumber)
+  // await setBlockNumber(forkBlockNumber)
 })
 
 afterEach((context) => {
