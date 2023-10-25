@@ -67,7 +67,6 @@ export type SuaveTransactionRequest<
     accessList?: never
     type?: TTransactionType
     executionNode?: Address
-    isConfidential?: boolean
     confidentialInputs?: Hex
   }
 

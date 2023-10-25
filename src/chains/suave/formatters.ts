@@ -90,12 +90,12 @@ export const formattersSuave = {
   }),
   transactionRequest: /*#__PURE__*/ defineTransactionRequest({
     format(args: SuaveTransactionRequest): SuaveRpcTransactionRequest {
-      if (args.isConfidential) {
-        const { executionNode, isConfidential } = args
+      if (args.confidentialInputs && !['0x', '0x0'].includes(args.confidentialInputs)) {
+        const { executionNode } = args
         return {
           ...formatTransactionRequest(args as TransactionRequestBase),
           executionNode,
-          isConfidential,
+          isConfidential: true,
           // We omit the ConfidentialComputeRequest here
         } as SuaveRpcTransactionRequest
       } else {

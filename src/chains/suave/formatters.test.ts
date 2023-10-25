@@ -147,7 +147,6 @@ describe('transactionRequest', () => {
       gas: 1n,
       // gasPrice: 0n,
       value: 0n,
-      isConfidential: true,
       executionNode: zeroAddress,
       confidentialInputs: '0x13131313',
       // confidentialResult omitted
@@ -181,7 +180,7 @@ describe('transactionRequest', () => {
     `)
   })
 
-  test('formatter', () => {
+  test('formatter (standard)', () => {
     const { transactionRequest } = suaveRigil.formatters!
     const inputRequest: SuaveTransactionRequest = {
       from: zeroAddress,
@@ -189,7 +188,6 @@ describe('transactionRequest', () => {
       gas: 1n,
       // gasPrice: 0n,
       value: 0n,
-      isConfidential: false,
       executionNode: zeroAddress,
       confidentialInputs: '0x0',
       // confidentialResult omitted
@@ -212,7 +210,6 @@ describe('transactionRequest', () => {
         "from": "0x0000000000000000000000000000000000000000",
         "gas": "0x1",
         "gasPrice": undefined,
-        "isConfidential": false,
         "maxFeePerGas": undefined,
         "maxPriorityFeePerGas": undefined,
         "nonce": "0xd",

@@ -55,7 +55,6 @@ export const publicClients = {
 
 const suaveTxReq: SuaveTransactionRequest = {
   executionNode: zeroAddress,
-  isConfidential: true,
   confidentialInputs: '0x13',
   from: zeroAddress,
   to: zeroAddress,
