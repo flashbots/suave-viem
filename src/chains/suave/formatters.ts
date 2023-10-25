@@ -1,13 +1,17 @@
 import { type ChainFormatters } from '../../types/chain.js'
 import type { Hash } from '../../types/misc.js'
 import type { RpcTransaction } from '../../types/rpc.js'
+import type { TransactionRequestBase } from '../../types/transaction.js'
 import { defineBlock } from '../../utils/formatters/block.js'
 import {
   defineTransaction,
   formatTransaction,
 } from '../../utils/formatters/transaction.js'
 import { defineTransactionReceipt } from '../../utils/formatters/transactionReceipt.js'
-import { defineTransactionRequest } from '../../utils/formatters/transactionRequest.js'
+import {
+  defineTransactionRequest,
+  formatTransactionRequest,
+} from '../../utils/formatters/transactionRequest.js'
 import type {
   SuaveBlockOverrides,
   SuaveRpcTransaction,
@@ -50,6 +54,7 @@ export const formattersSuave = {
     format(args: SuaveRpcTransaction): SuaveTransaction {
       if (args.isConfidential) {
         return {
+          ...formatTransaction(args),
           executionNode: args.executionNode,
           confidentialComputeRequest: {
             confidentialInputsHash: args.confidentialComputeRequest.hash, // TODO: is this right?
@@ -88,13 +93,13 @@ export const formattersSuave = {
       if (args.isConfidential) {
         const { executionNode, isConfidential } = args
         return {
-          ...args, // Include other properties from args
-          executionNode: executionNode,
-          isConfidential: isConfidential,
+          ...formatTransactionRequest(args as TransactionRequestBase),
+          executionNode,
+          isConfidential,
           // We omit the ConfidentialComputeRequest here
         } as SuaveRpcTransactionRequest
       } else {
-        return args as any // TODO : Handle as regular Ethereum transaction
+        return formatTransactionRequest(args as any) as any // TODO : Handle as regular Ethereum transaction
       }
     },
   }),

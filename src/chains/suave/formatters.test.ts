@@ -59,7 +59,6 @@ describe('transaction', () => {
       r: '0x0' as `0x${string}`,
       s: '0x0' as `0x${string}`,
       v: '0x0' as `0x${string}`,
-      accessList: undefined,
       from: zeroAddress,
       gas: '0x1000' as `0x${string}`,
       input: '0x0' as `0x${string}`,
@@ -71,7 +70,6 @@ describe('transaction', () => {
     const formattedTransaction = transaction.format(inputTransaction)
     expect(formattedTransaction).toMatchInlineSnapshot(`
     {
-      "accessList": undefined,
       "blockHash": "0x0000000000000000000000000000000000000000",
       "blockNumber": "0x1000000",
       "chainId": undefined,
@@ -141,65 +139,86 @@ describe('transaction', () => {
 // })
 
 describe('transactionRequest', () => {
+  test('formatter (confidential)', () => {
+    const { transactionRequest } = suaveRigil.formatters!
+    const inputRequest: SuaveTransactionRequest = {
+      from: zeroAddress,
+      to: zeroAddress,
+      gas: 1n,
+      // gasPrice: 0n,
+      value: 0n,
+      isConfidential: true,
+      executionNode: zeroAddress,
+      confidentialInputs: '0x13131313',
+      // confidentialResult omitted
+      nonce: 13,
+      // We accept "data" and "input" for backwards-compatibility reasons.
+      // "input" is the newer name and should be preferred by clients.
+      // Issue detail: https://github.com/ethereum/go-ethereum/issues/15628
+      // Data  *hexutil.Bytes `json:"data"`
+      data: '0x0',
+      // input: '0x0',
+      type: 'suave',
+    }
+    const formattedRequest = transactionRequest.format(inputRequest)
+
+    expect(formattedRequest).toMatchInlineSnapshot(`
+      {
+        "confidentialInputs": "0x13131313",
+        "data": "0x0",
+        "executionNode": "0x0000000000000000000000000000000000000000",
+        "from": "0x0000000000000000000000000000000000000000",
+        "gas": "0x1",
+        "gasPrice": undefined,
+        "isConfidential": true,
+        "maxFeePerGas": undefined,
+        "maxPriorityFeePerGas": undefined,
+        "nonce": "0xd",
+        "to": "0x0000000000000000000000000000000000000000",
+        "type": "0x43",
+        "value": "0x0",
+      }
+    `)
+  })
+
   test('formatter', () => {
     const { transactionRequest } = suaveRigil.formatters!
     const inputRequest: SuaveTransactionRequest = {
-      // From                 *common.Address `json:"from"`
       from: zeroAddress,
-      // To                   *common.Address `json:"to"`
       to: zeroAddress,
-      // Gas                  *hexutil.Uint64 `json:"gas"`
-      gas: 0n,
-      // GasPrice             *hexutil.Big    `json:"gasPrice"`
-      gasPrice: 0n,
-      // MaxFeePerGas         *hexutil.Big    `json:"maxFeePerGas"`
-      // maxFeePerGas: 0n,
-      // MaxPriorityFeePerGas *hexutil.Big    `json:"maxPriorityFeePerGas"`
-      // maxPriorityFeePerGas: 0n,
-      // Value                *hexutil.Big    `json:"value"`
+      gas: 1n,
+      // gasPrice: 0n,
       value: 0n,
-      // IsConfidential       bool            `json:"IsConfidential"`
       isConfidential: false,
-      // ExecutionNode        *common.Address `json:"executionNode"`
       executionNode: zeroAddress,
-      // ConfidentialInputs   *hexutil.Bytes  `json:"confidentialInputs"`
       confidentialInputs: '0x0',
-      // ConfidentialResult   *hexutil.Bytes  `json:"ConfidentialResult"`
-      confidentialResult: '0x0',
-      // Nonce                *hexutil.Uint64 `json:"nonce"`
+      // confidentialResult omitted
       nonce: 13,
-      //
-
-      // // We accept "data" and "input" for backwards-compatibility reasons.
-      // // "input" is the newer name and should be preferred by clients.
-      // // Issue detail: https://github.com/ethereum/go-ethereum/issues/15628
+      // We accept "data" and "input" for backwards-compatibility reasons.
+      // "input" is the newer name and should be preferred by clients.
+      // Issue detail: https://github.com/ethereum/go-ethereum/issues/15628
       // Data  *hexutil.Bytes `json:"data"`
       data: '0x0',
-      // Input *hexutil.Bytes `json:"input"`
       // input: '0x0',
-
-      // // Introduced by AccessListTxType transaction.
-      // AccessList *types.AccessList `json:"accessList,omitempty"`
-      // ChainID    *hexutil.Big      `json:"chainId,omitempty"`
+      type: 'suave',
     }
     const formattedRequest = transactionRequest.format(inputRequest)
 
     expect(formattedRequest).toMatchInlineSnapshot(`
       {
         "confidentialInputs": "0x0",
-        "confidentialResult": "0x0",
         "data": "0x0",
         "executionNode": "0x0000000000000000000000000000000000000000",
         "from": "0x0000000000000000000000000000000000000000",
-        "gas": 0n,
-        "gasPrice": 0n,
+        "gas": "0x1",
+        "gasPrice": undefined,
         "isConfidential": false,
         "maxFeePerGas": undefined,
         "maxPriorityFeePerGas": undefined,
-        "nonce": 13,
+        "nonce": "0xd",
         "to": "0x0000000000000000000000000000000000000000",
-        "type": undefined,
-        "value": 0n,
+        "type": "0x43",
+        "value": "0x0",
       }
     `)
   })

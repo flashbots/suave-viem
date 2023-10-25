@@ -1,5 +1,6 @@
 import type { Address } from 'abitype'
 import type { Block, BlockTag } from '../../types/block.js'
+import type { FeeValuesLegacy } from '../../types/fee.js'
 import type { Hash, Hex } from '../../types/misc.js'
 import type {
   Index,
@@ -7,13 +8,12 @@ import type {
   RpcBlock,
   RpcTransaction as RpcTransaction_,
   RpcTransactionReceipt,
-  RpcTransactionRequest as RpcTransactionRequest_,
 } from '../../types/rpc.js'
 import type {
   Transaction as Transaction_,
   TransactionBase,
   TransactionReceipt,
-  TransactionRequest as TransactionRequest_,
+  TransactionRequestBase,
 } from '../../types/transaction.js'
 
 export type SuaveBlockOverrides = {} // Add any specific block overrides if necessary for Suave
@@ -34,31 +34,6 @@ export type SuaveRpcBlock<
   TIncludeTransactions extends boolean = boolean,
 > = RpcBlock<TBlockTag, TIncludeTransactions> & SuaveBlockOverrides
 
-export type SuaveRpcTransaction<TPending extends boolean = boolean> =
-  | (RpcTransaction_<TPending> & {
-      executionNode: Address
-      isConfidential?: boolean
-      confidentialComputeRequest: RpcTransaction_<TPending>
-      confidentialComputeResult: Hex
-    })
-  | RpcTransactionSuave<TPending>
-
-export type SuaveRpcTransactionRequest = RpcTransactionRequest_ & {
-  executionNode?: Address
-  isConfidential?: boolean
-  confidentialComputeRequest: ConfidentialComputeRecord
-}
-
-export type ConfidentialComputeRecord = Transaction_<bigint, number> & {
-  executionNode: Address // Assuming address is a string type
-  confidentialInputsHash: Hash // This might need to be adjusted to the actual Ethereum Transaction type
-}
-
-// export type ConfidentialComputeRequest = Transaction_ & {
-//   confidentialComputeRecord: ConfidentialComputeRecord
-//   confidentialInputs: Hex
-// }
-
 export type SuaveTransaction<TPending extends boolean = boolean> = Transaction_<
   bigint,
   number,
@@ -69,21 +44,51 @@ export type SuaveTransaction<TPending extends boolean = boolean> = Transaction_<
   confidentialComputeResult: Hex
 }
 
+export type SuaveRpcTransaction<TPending extends boolean = boolean> =
+  | (RpcTransaction_<TPending> & {
+      executionNode: Address
+      isConfidential?: boolean
+      confidentialComputeRequest: RpcTransaction_<TPending>
+      confidentialComputeResult: Hex
+    })
+  | RpcTransactionSuave<TPending>
+
+export type ConfidentialComputeRecord = Transaction_<bigint, number> & {
+  executionNode: Address // Assuming address is a string type
+  confidentialInputsHash: Hash // This might need to be adjusted to the actual Ethereum Transaction type
+}
+
+export type SuaveTransactionRequest<
+  TQuantity = bigint,
+  TIndex = number,
+  TTransactionType = 'suave',
+> = TransactionRequestBase<TQuantity, TIndex> &
+  Partial<FeeValuesLegacy<TQuantity>> & {
+    accessList?: never
+    type?: TTransactionType
+    executionNode?: Address
+    isConfidential?: boolean
+    confidentialInputs?: Hex
+  }
+
+export type SuaveRpcTransactionRequest<
+  TQuantity = Hex,
+  TIndex = Hex,
+> = TransactionRequestBase<TQuantity, TIndex> &
+  Partial<FeeValuesLegacy<TQuantity>> & {
+    executionNode?: Address
+    isConfidential?: boolean
+    confidentialComputeRequest: ConfidentialComputeRecord
+  }
+
 export type SuaveTransactionReceiptOverrides = {
   executionNode: Address | null
-  confidentialComputeRequest: ConfidentialComputeRecord | null // TODO : modify to regular transaction
+  confidentialComputeRequest: ConfidentialComputeRecord | null
   confidentialComputeResult: Hex | null
 }
 
 export type SuaveTransactionReceipt = TransactionReceipt &
   SuaveTransactionReceiptOverrides
-
-export type SuaveTransactionRequest = TransactionRequest_ & {
-  executionNode?: Address
-  isConfidential?: boolean
-  confidentialInputs?: Hex
-  confidentialResult?: Hex
-}
 
 type RpcTransactionSuave<TPending extends boolean = boolean> = TransactionBase<
   Quantity,
@@ -102,7 +107,8 @@ export type SuaveRpcTransactionReceipt = RpcTransactionReceipt & {
   confidentialComputeResult: Hex
 }
 
-// Define a type for serializable Suave transactions
+// Serializable Suave transactions.
+// Returned from RPC calls.
 export type SuaveTransactionSerializable = {
   chainId: bigint
   nonce: bigint
@@ -120,4 +126,4 @@ export type SuaveTransactionSerializable = {
 }
 
 // Define a type for serialized Suave transactions
-export type TransactionSerializedSuave = string
+export type TransactionSerializedSuave = Hex
