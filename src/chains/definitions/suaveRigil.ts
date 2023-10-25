@@ -3,7 +3,7 @@ import { formattersSuave } from '../suave/formatters.js'
 
 export const suaveRigil = /*#__PURE__*/ defineChain(
   {
-    id: 424242,
+    id: 16813125,
     name: 'Suave Rigil Testnet',
     network: 'rigil-testnet',
     nativeCurrency: {
@@ -19,6 +19,10 @@ export const suaveRigil = /*#__PURE__*/ defineChain(
       public: {
         http: ['https://testnet.rpc.flashbots.net'],
         webSocket: ['wss://testnet.rpc.flashbots.net'],
+      },
+      local: {
+        http: ['http://localhost:8545'],
+        webSocket: ['ws://localhost:8545'],
       },
     },
     blockExplorers: {
