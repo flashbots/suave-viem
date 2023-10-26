@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest'
 
-import { zeroAddress } from '~viem/index.js'
+import { type Hex, zeroAddress } from '~viem/index.js'
 import { suaveRigil } from '../index.js'
 import type { SuaveTransactionRequest } from './types.js'
 
@@ -23,48 +23,50 @@ describe('transaction', () => {
     const confidentialTx = {
       from: zeroAddress,
       to: zeroAddress,
-      gas: '0x13000' as `0x${string}`,
+      gas: '0x13000' as Hex,
       gasPrice: undefined,
       blockHash: zeroAddress,
-      blockNumber: '0x55' as `0x${string}`,
+      blockNumber: '0x55' as Hex,
       hash: zeroAddress,
-      nonce: '0x0' as `0x${string}`,
-      transactionIndex: '0x0' as `0x${string}`,
-      input: '0x0' as `0x${string}`,
-      value: '0x0' as `0x${string}`,
-      typeHex: '0x0' as `0x${string}`,
-      r: '0x0' as `0x${string}`,
-      s: '0x0' as `0x${string}`,
-      v: '0x0' as `0x${string}`,
-      maxFeePerGas: '0x0' as `0x${string}`,
-      maxPriorityFeePerGas: '0x0' as `0x${string}`,
+      nonce: '0x0' as Hex,
+      transactionIndex: '0x0' as Hex,
+      input: '0x0' as Hex,
+      value: '0x0' as Hex,
+      typeHex: '0x0' as Hex,
+      r: '0x0' as Hex,
+      s: '0x0' as Hex,
+      v: '0x0' as Hex,
+      maxFeePerGas: '0x1' as Hex,
+      maxPriorityFeePerGas: '0x1' as Hex,
       accessList: [],
-      chainId: '0x1' as `0x${string}`,
+      chainId: '0x1' as Hex,
       type: '0x2' as `0x2`,
     }
 
     const inputTransaction = {
-      executionNode: '0x0' as `0x${string}`,
+      executionNode: '0x0' as Hex,
       confidentialComputeRequest: {
         ...confidentialTx,
-        executionNode: '0x0' as `0x${string}`,
-        confidentialInputsHash: '0x0' as `0x${string}`,
+        executionNode: '0x0' as Hex,
+        confidentialInputsHash: '0x0' as Hex,
       },
-      confidentialComputeResult: '0x0' as `0x${string}`,
+      confidentialComputeResult: '0x0' as Hex,
+      isConfidential: true,
       blockHash: zeroAddress,
-      blockNumber: '0x1000000' as `0x${string}`,
+      blockNumber: '0x1000000' as Hex,
+      gasPrice: '0x424242' as Hex,
       hash: zeroAddress,
-      nonce: '0x0' as `0x${string}`,
-      transactionIndex: '0x0' as `0x${string}`,
-      r: '0x0' as `0x${string}`,
-      s: '0x0' as `0x${string}`,
-      v: '0x0' as `0x${string}`,
+      nonce: '0x0' as Hex,
+      transactionIndex: '0x0' as Hex,
+      r: '0x0' as Hex,
+      s: '0x0' as Hex,
+      v: '0x0' as Hex,
       from: zeroAddress,
-      gas: '0x1000' as `0x${string}`,
-      input: '0x0' as `0x${string}`,
+      gas: '0x1000' as Hex,
+      input: '0x0' as Hex,
       to: zeroAddress,
-      value: '0x0' as `0x${string}`,
-      typeHex: '0x0' as `0x${string}`,
+      value: '0x0' as Hex,
+      typeHex: '0x0' as Hex,
     }
 
     const formattedTransaction = transaction.format(inputTransaction)

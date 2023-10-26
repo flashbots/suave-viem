@@ -1,8 +1,11 @@
+import { parseUnits } from '~viem/index.js'
 import { type ChainFormatters } from '../../types/chain.js'
-import type { Hash } from '../../types/misc.js'
 import type { RpcTransaction } from '../../types/rpc.js'
-import type { TransactionRequestBase } from '../../types/transaction.js'
-import { defineBlock } from '../../utils/formatters/block.js'
+import type {
+  Transaction,
+  TransactionRequestBase,
+} from '../../types/transaction.js'
+// import { defineBlock } from '../../utils/formatters/block.js'
 import {
   defineTransaction,
   formatTransaction,
@@ -13,7 +16,8 @@ import {
   formatTransactionRequest,
 } from '../../utils/formatters/transactionRequest.js'
 import type {
-  SuaveBlockOverrides,
+  RpcTransactionSuave,
+  // SuaveBlockOverrides,
   SuaveRpcTransaction,
   SuaveRpcTransactionRequest,
   SuaveTransaction,
@@ -23,48 +27,57 @@ import type {
 } from './types.js'
 
 export const formattersSuave = {
-  block: /*#__PURE__*/ defineBlock({
-    exclude: ['difficulty', 'gasLimit', 'mixHash', 'nonce', 'uncles'],
-    format(
-      args: SuaveBlockOverrides & {
-        transactions: Hash[] | SuaveRpcTransaction[]
-      },
-    ): SuaveBlockOverrides & {
-      transactions: Hash[] | SuaveTransaction[]
-    } {
-      const transactions = args.transactions?.map((transaction) => {
-        if (typeof transaction === 'string') return transaction
-        return {
-          ...formatTransaction(transaction as RpcTransaction),
-          executionNode: transaction.executionNode,
-          confidentialComputeRequest: {
-            executionNode: transaction.executionNode,
-            wrapped: transaction as RpcTransaction,
-          },
-          ConfidentialComputeResult: transaction.confidentialComputeResult,
-          // TODO : Signature fields
-        }
-      }) as Hash[] | SuaveTransaction[]
-      return {
-        transactions,
-      }
-    },
-  }),
+  // block: /*#__PURE__*/ defineBlock({
+  //   exclude: ['difficulty', 'gasLimit', 'mixHash', 'nonce', 'uncles'],
+  //   format(
+  //     args: SuaveBlockOverrides & {
+  //       transactions: Hash[] | SuaveRpcTransaction[]
+  //     },
+  //   ): SuaveBlockOverrides & {
+  //     transactions: Hash[] | SuaveTransaction[]
+  //   } {
+  //     const transactions = args.transactions?.map((transaction) => {
+  //       if (typeof transaction === 'string') return transaction
+  //       return {
+  //         ...formatTransaction(transaction as SuaveRpcTransaction),
+  //         executionNode: transaction.executionNode,
+  //         confidentialComputeRequest: {
+  //           executionNode: transaction.executionNode,
+  //           wrapped: transaction as RpcTransaction,
+  //         },
+  //         ConfidentialComputeResult: transaction.confidentialComputeResult,
+  //         // TODO : Signature fields
+  //       }
+  //     }) as Hash[] | SuaveTransaction[]
+  //     return {
+  //       transactions,
+  //     }
+  //   },
+  // }),
   transaction: /*#__PURE__*/ defineTransaction({
-    format(args: SuaveRpcTransaction): SuaveTransaction {
-      if (args.isConfidential) {
+    format(args: SuaveRpcTransaction): SuaveTransaction | Transaction {
+      if ((args as RpcTransactionSuave).isConfidential) {
+        const args_ = args as RpcTransactionSuave
         return {
           ...formatTransaction(args),
-          executionNode: args.executionNode,
+          gasPrice: parseUnits(args.gasPrice, 0),
+          maxFeePerGas: undefined,
+          maxPriorityFeePerGas: undefined,
+          executionNode: args_.executionNode,
           confidentialComputeRequest: {
-            confidentialInputsHash: args.confidentialComputeRequest.hash, // TODO: is this right?
-            executionNode: args.executionNode,
+            ...formatTransaction(args_.confidentialComputeRequest),
+            confidentialInputsHash: args_.confidentialComputeRequest.hash, // TODO: is this right?
+            executionNode: args_.executionNode,
           },
-          confidentialComputeResult: args.confidentialComputeResult,
+          confidentialComputeResult: args_.confidentialComputeResult,
+          type: 'suave',
           // TODO : Signature fields
         } as SuaveTransaction
       } else {
-        return args as any // TODO : Handle as regular Ethereum transaction
+        return formatTransaction({
+          ...args,
+          type: '0x0',
+        } as RpcTransaction) as Transaction // TODO : Handle as regular Ethereum transaction
       }
     },
   }),
