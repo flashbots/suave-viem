@@ -53,24 +53,38 @@ export const publicClients = {
 //   },
 // })
 
+publicClients.suaveLocal.watchPendingTransactions({
+  async onTransactions(transactions) {
+    console.log('pending', transactions)
+    for (const hash of transactions) {
+      const fullTx = await publicClients.suaveLocal.getTransaction({ hash })
+      console.log('fullTx', fullTx)
+      const receipt = await publicClients.suaveLocal.getTransactionReceipt({
+        hash,
+      })
+      console.log('receipt', receipt)
+    }
+  },
+})
+
 const suaveTxReq: SuaveTransactionRequest = {
   executionNode: zeroAddress,
   confidentialInputs: '0x13',
   from: zeroAddress,
   to: zeroAddress,
-  type: 'suave',
   gasPrice: 10000000000n,
   gas: 21000n,
   /* TODO: modify default gasPrice and gas
   - not defining them makes eth_estimateGas try & fail
   - it stringifies integer values without hexifying them */
 }
+
 const wallet = createWalletClient({
   account: privateKeyToAccount(process.env.PRIVATE_KEY! as Hex),
   transport: http(suaveRigil.rpcUrls.local.http[0]),
-  chain: suaveRigil,
+  chain: publicClients.suaveLocal.chain,
 })
-// publicClients.suaveRigil.sendRawTransaction(suaveTxReq)
+
 const res = await wallet.sendTransaction(suaveTxReq)
 console.log(`sent tx: ${res}`)
 
