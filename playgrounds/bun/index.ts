@@ -74,6 +74,7 @@ const suaveTxReq: SuaveTransactionRequest = {
   to: zeroAddress,
   gasPrice: 10000000000n,
   gas: 21000n,
+  type: 'suave',
   /* TODO: modify default gasPrice and gas
   - not defining them makes eth_estimateGas try & fail
   - it stringifies integer values without hexifying them */

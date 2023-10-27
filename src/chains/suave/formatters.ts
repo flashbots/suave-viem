@@ -1,4 +1,4 @@
-import { parseUnits } from '~viem/index.js'
+import { type Hex, hexToBigInt } from '~viem/index.js'
 import { type ChainFormatters } from '../../types/chain.js'
 import type { RpcTransaction } from '../../types/rpc.js'
 import type {
@@ -16,6 +16,7 @@ import {
   formatTransactionRequest,
 } from '../../utils/formatters/transactionRequest.js'
 import type {
+  ConfidentialComputeRecord,
   RpcTransactionSuave,
   // SuaveBlockOverrides,
   SuaveRpcTransaction,
@@ -25,6 +26,8 @@ import type {
   SuaveTransactionReceiptOverrides,
   SuaveTransactionRequest,
 } from './types.js'
+import { TX_TYPE } from './types.js'
+
 
 export const formattersSuave = {
   // block: /*#__PURE__*/ defineBlock({
@@ -56,28 +59,42 @@ export const formattersSuave = {
   // }),
   transaction: /*#__PURE__*/ defineTransaction({
     format(args: SuaveRpcTransaction): SuaveTransaction | Transaction {
-      if ((args as RpcTransactionSuave).isConfidential) {
-        const args_ = args as RpcTransactionSuave
+      const args_ = args as RpcTransactionSuave
+      if (args_.typeHex === TX_TYPE.suave || args_.requestRecord) {
         return {
-          ...formatTransaction(args),
-          gasPrice: parseUnits(args.gasPrice, 0),
+          // format original eth params as legacy tx
+          ...formatTransaction({ ...args_, type: '0x0' }),
+          // ... then replace and add fields as needed
+          gasPrice: hexToBigInt(args.gasPrice as Hex),
           maxFeePerGas: undefined,
           maxPriorityFeePerGas: undefined,
           executionNode: args_.executionNode,
-          confidentialComputeRequest: {
-            ...formatTransaction(args_.confidentialComputeRequest),
-            confidentialInputsHash: args_.confidentialComputeRequest.hash, // TODO: is this right?
-            executionNode: args_.executionNode,
-          },
+          requestRecord: {
+            // format confidential compute request as legacy tx
+            ...formatTransaction({ ...args_.requestRecord, type: '0x0' }),
+            // ... then replace and add fields as needed
+            chainId:
+              args_.requestRecord.chainId &&
+              parseInt(args_.requestRecord.chainId, 16),
+            type:
+              args_.requestRecord.type === TX_TYPE.confidentialRecord
+                ? 'confidentialRecord'
+                : args_.requestRecord.type,
+            gasPrice: hexToBigInt(args_.requestRecord.gasPrice),
+            maxFeePerGas: undefined,
+            maxPriorityFeePerGas: undefined,
+            executionNode: args_.requestRecord.executionNode,
+            confidentialInputsHash: args_.requestRecord.confidentialInputsHash,
+            typeHex: args_.requestRecord.type,
+          } as ConfidentialComputeRecord,
           confidentialComputeResult: args_.confidentialComputeResult,
           type: 'suave',
-          // TODO : Signature fields
         } as SuaveTransaction
       } else {
         return formatTransaction({
           ...args,
           type: '0x0',
-        } as RpcTransaction) as Transaction // TODO : Handle as regular Ethereum transaction
+        } as RpcTransaction) as Transaction
       }
     },
   }),
@@ -113,7 +130,7 @@ export const formattersSuave = {
           executionNode,
           isConfidential: true,
           confidentialInputs: args.confidentialInputs,
-          type: args.type || '0x43',
+          type: args.type && args.type === 'suave' ? TX_TYPE.suave : args.type,
           // We omit the ConfidentialComputeRequest here
         } as SuaveRpcTransactionRequest
       } else {

@@ -2,7 +2,11 @@ import { describe, expect, test } from 'vitest'
 
 import { type Hex, zeroAddress } from '~viem/index.js'
 import { suaveRigil } from '../index.js'
-import type { SuaveTransactionRequest } from './types.js'
+import type {
+  ConfidentialComputeRecordRpc,
+  SuaveRpcTransaction,
+  SuaveTransactionRequest,
+} from './types.js'
 
 // Assuming you have similar actions for the Suave chain like the Celo ones provided.
 // import { hexToBigInt } from '~viem/index.js'
@@ -18,105 +22,99 @@ import type { SuaveTransactionRequest } from './types.js'
 // })
 
 describe('transaction', () => {
-  test('formatter', () => {
+  test('formatter (RPC -> Transaction)', () => {
     const { transaction } = suaveRigil.formatters!
-    const confidentialTx = {
+
+    const requestRecord = {
       from: zeroAddress,
-      to: zeroAddress,
-      gas: '0x13000' as Hex,
-      gasPrice: undefined,
-      blockHash: zeroAddress,
-      blockNumber: '0x55' as Hex,
-      hash: zeroAddress,
-      nonce: '0x0' as Hex,
-      transactionIndex: '0x0' as Hex,
-      input: '0x0' as Hex,
-      value: '0x0' as Hex,
-      typeHex: '0x0' as Hex,
-      r: '0x0' as Hex,
-      s: '0x0' as Hex,
-      v: '0x0' as Hex,
-      maxFeePerGas: '0x1' as Hex,
-      maxPriorityFeePerGas: '0x1' as Hex,
-      accessList: [],
+      to: '0x1300000000130000000013000000001300000000',
       chainId: '0x1' as Hex,
-      type: '0x2' as `0x2`,
-    }
+      gas: '0x13' as Hex,
+      gasPrice: '0x1000' as Hex,
+      executionNode: zeroAddress,
+      confidentialInputsHash: '0x0' as Hex,
+      hash: '0x3303d96ec5d3387da51f2fc815ea3e88c5b534383f86eef02a9200f0c6fd5713',
+      nonce: '0x0' as Hex,
+      input: '0x0' as Hex,
+      value: '0x0' as Hex,
+      r: '0x0' as Hex,
+      s: '0x0' as Hex,
+      v: '0x0' as Hex,
+      // maxFeePerGas: '0x1' as Hex,
+      // maxPriorityFeePerGas: '0x1' as Hex,
+      type: '0x42' as `0x42`,
+    } as ConfidentialComputeRecordRpc
 
-    const inputTransaction = {
+    const inputTransactionRpc = {
+      blockHash:
+        '0x8756d7614991fafffd2c788d7213122a2145629860575fb52be80cbef128fbb6',
       executionNode: '0x0' as Hex,
-      confidentialComputeRequest: {
-        ...confidentialTx,
-        executionNode: '0x0' as Hex,
-        confidentialInputsHash: '0x0' as Hex,
-      },
+      requestRecord,
       confidentialComputeResult: '0x0' as Hex,
-      isConfidential: true,
-      blockHash: zeroAddress,
-      blockNumber: '0x1000000' as Hex,
-      gasPrice: '0x424242' as Hex,
-      hash: zeroAddress,
+      blockNumber: '0x10' as Hex,
+      gasPrice: '0x100' as Hex,
+      hash: '0xcd6a47804736bf27ec2a5845c560adcdfab305b4e80452354bcf96fb472fd364',
       nonce: '0x0' as Hex,
       transactionIndex: '0x0' as Hex,
       r: '0x0' as Hex,
       s: '0x0' as Hex,
       v: '0x0' as Hex,
       from: zeroAddress,
-      gas: '0x1000' as Hex,
+      gas: '0x13' as Hex,
       input: '0x0' as Hex,
-      to: zeroAddress,
+      to: '0x1300000000130000000013000000001300000000' as Hex,
       value: '0x0' as Hex,
-      typeHex: '0x0' as Hex,
-    }
+      type: '0x50',
+      typeHex: '0x50',
+    } as SuaveRpcTransaction
 
-    const formattedTransaction = transaction.format(inputTransaction)
+    const formattedTransaction = transaction.format(inputTransactionRpc)
     expect(formattedTransaction).toMatchInlineSnapshot(`
     {
-      "blockHash": "0x0000000000000000000000000000000000000000",
-      "blockNumber": "0x1000000",
+      "blockHash": "0x8756d7614991fafffd2c788d7213122a2145629860575fb52be80cbef128fbb6",
+      "blockNumber": 16n,
       "chainId": undefined,
-      "confidentialComputeRequest": {
-        "accessList": [],
-        "blockHash": "0x0000000000000000000000000000000000000000",
-        "blockNumber": "0x55",
-        "chainId": "0x1",
-        "confidentialInputsHash": "0x0",
-        "executionNode": "0x0",
-        "from": "0x0000000000000000000000000000000000000000",
-        "gas": "0x13000",
-        "gasPrice": undefined,
-        "hash": "0x0000000000000000000000000000000000000000",
-        "input": "0x0",
-        "maxFeePerGas": "0x0",
-        "maxPriorityFeePerGas": "0x0",
-        "nonce": "0x0",
-        "r": "0x0",
-        "s": "0x0",
-        "to": "0x0000000000000000000000000000000000000000",
-        "transactionIndex": "0x0",
-        "type": "0x2",
-        "typeHex": "0x0",
-        "v": "0x0",
-        "value": "0x0",
-      },
       "confidentialComputeResult": "0x0",
       "executionNode": "0x0",
       "from": "0x0000000000000000000000000000000000000000",
-      "gas": "0x1000",
-      "gasPrice": undefined,
-      "hash": "0x0000000000000000000000000000000000000000",
+      "gas": 19n,
+      "gasPrice": 256n,
+      "hash": "0xcd6a47804736bf27ec2a5845c560adcdfab305b4e80452354bcf96fb472fd364",
       "input": "0x0",
       "maxFeePerGas": undefined,
       "maxPriorityFeePerGas": undefined,
-      "nonce": "0x0",
+      "nonce": 0,
       "r": "0x0",
+      "requestRecord": {
+        "blockHash": null,
+        "blockNumber": null,
+        "chainId": 1,
+        "confidentialInputsHash": "0x0",
+        "executionNode": "0x0000000000000000000000000000000000000000",
+        "from": "0x0000000000000000000000000000000000000000",
+        "gas": 19n,
+        "gasPrice": 4096n,
+        "hash": "0x3303d96ec5d3387da51f2fc815ea3e88c5b534383f86eef02a9200f0c6fd5713",
+        "input": "0x0",
+        "maxFeePerGas": undefined,
+        "maxPriorityFeePerGas": undefined,
+        "nonce": 0,
+        "r": "0x0",
+        "s": "0x0",
+        "to": "0x1300000000130000000013000000001300000000",
+        "transactionIndex": null,
+        "type": "confidentialRecord",
+        "typeHex": "0x42",
+        "v": 0n,
+        "value": 0n,
+      },
       "s": "0x0",
-      "to": "0x0000000000000000000000000000000000000000",
-      "transactionIndex": "0x0",
-      "type": undefined,
+      "to": "0x1300000000130000000013000000001300000000",
+      "transactionIndex": 0,
+      "type": "suave",
       "typeHex": "0x0",
-      "v": "0x0",
-      "value": "0x0",
+      "v": 0n,
+      "value": 0n,
     }
   `)
   })
@@ -147,7 +145,7 @@ describe('transactionRequest', () => {
       from: zeroAddress,
       to: zeroAddress,
       gas: 1n,
-      // gasPrice: 0n,
+      gasPrice: 0x10000000n,
       value: 0n,
       executionNode: zeroAddress,
       confidentialInputs: '0x13131313',
@@ -159,6 +157,7 @@ describe('transactionRequest', () => {
       // Data  *hexutil.Bytes `json:"data"`
       data: '0x0',
       // input: '0x0',
+      type: 'suave',
     }
     const formattedRequest = transactionRequest.format(inputRequest)
 
@@ -169,13 +168,13 @@ describe('transactionRequest', () => {
         "executionNode": "0x0000000000000000000000000000000000000000",
         "from": "0x0000000000000000000000000000000000000000",
         "gas": "0x1",
-        "gasPrice": undefined,
+        "gasPrice": "0x10000000",
         "isConfidential": true,
         "maxFeePerGas": undefined,
         "maxPriorityFeePerGas": undefined,
         "nonce": "0xd",
         "to": "0x0000000000000000000000000000000000000000",
-        "type": "0x43",
+        "type": "0x50",
         "value": "0x0",
       }
     `)
@@ -187,7 +186,7 @@ describe('transactionRequest', () => {
       from: zeroAddress,
       to: zeroAddress,
       gas: 1n,
-      // gasPrice: 0n,
+      gasPrice: 0n,
       value: 0n,
       executionNode: zeroAddress,
       confidentialInputs: '0x0',
@@ -210,12 +209,12 @@ describe('transactionRequest', () => {
         "executionNode": "0x0000000000000000000000000000000000000000",
         "from": "0x0000000000000000000000000000000000000000",
         "gas": "0x1",
-        "gasPrice": undefined,
+        "gasPrice": "0x0",
         "maxFeePerGas": undefined,
         "maxPriorityFeePerGas": undefined,
         "nonce": "0xd",
         "to": "0x0000000000000000000000000000000000000000",
-        "type": "0x43",
+        "type": "0x50",
         "value": "0x0",
       }
     `)

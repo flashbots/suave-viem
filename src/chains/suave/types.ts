@@ -5,17 +5,46 @@ import type { Hash, Hex } from '../../types/misc.js'
 import type { RpcBlock, RpcTransactionReceipt } from '../../types/rpc.js'
 import type {
   TransactionBase,
-  TransactionLegacy,
   TransactionReceipt,
   TransactionRequestBase,
 } from '../../types/transaction.js'
 
-type RpcTransaction<TPending extends boolean = boolean> = TransactionBase<
+export const TX_TYPE = {
+  suave: '0x50',
+  confidentialRecord: '0x42',
+}
+
+type SuaveTxType = '0x50'
+type ConfidentialRecordTxType = '0x42'
+
+type TransactionCore<
+  TQuantity,
+  TIndex,
+  TType,
+  TPending extends boolean,
+> = TransactionBase<TQuantity, TIndex, TPending> &
+  FeeValuesLegacy<TQuantity> & {
+    accessList?: never
+    chainId?: TIndex
+    type: TType
+  }
+
+type RpcTransaction<TPending extends boolean = boolean> = TransactionCore<
+  Hex,
   Hex,
   Hex,
   TPending
+>
+
+type TransactionRequestCore<TQuantity, TIndex, TType> = TransactionRequestBase<
+  TQuantity,
+  TIndex
 > &
-  FeeValuesLegacy<Hex>
+  FeeValuesLegacy<TQuantity> & {
+    accessList?: never
+    chainId?: TIndex
+    type: TType
+  }
 
 export type SuaveBlockOverrides = {} // Add any specific block overrides if necessary for Suave
 
@@ -38,49 +67,75 @@ export type SuaveRpcBlock<
 export type SuaveTransaction<
   TPending extends boolean = boolean,
   TType = 'suave',
-> = TransactionBase<bigint, number, TPending> &
-  FeeValuesLegacy<bigint> & {
-    executionNode: Address
-    confidentialComputeRequest: ConfidentialComputeRecord
-    confidentialComputeResult: Hex
-    type: TType
-  }
+> = TransactionCore<bigint, number, TType, TPending> & {
+  executionNode: Address
+  requestRecord: ConfidentialComputeRecord
+  confidentialComputeResult: Hex
+  type: TType
+}
 
 export type SuaveRpcTransaction<TPending extends boolean = boolean> =
   | RpcTransactionSuave<TPending>
   | RpcTransaction<TPending>
 
-export type RpcTransactionSuave<TPending extends boolean = boolean> =
-  TransactionBase<Hex, Hex, TPending> &
-    FeeValuesLegacy<Hex> & {
-      executionNode: Address
-      confidentialComputeRequest: RpcTransaction<TPending>
-      confidentialComputeResult: Hex
-      isConfidential: boolean
-    }
+export type RpcTransactionSuave<
+  TPending extends boolean = boolean,
+  TType = SuaveTxType,
+> = RpcTransaction<TPending> & {
+  executionNode: Address
+  requestRecord: ConfidentialComputeRecordRpc
+  confidentialComputeResult: Hex
+  type: TType
+}
 
-export type ConfidentialComputeRecord = TransactionBase<bigint, number> &
-  FeeValuesLegacy<bigint> & {
-    executionNode: Address // Assuming address is a string type
-    confidentialInputsHash: Hash // This might need to be adjusted to the actual Ethereum Transaction type
-  }
+export type ConfidentialComputeRecord<
+  TType = 'confidentialRecord',
+  TPending extends boolean = true,
+> = Omit<
+  Omit<
+    Omit<TransactionCore<bigint, number, TType, TPending>, 'blockHash'>,
+    'transactionIndex'
+  >,
+  'blockNumber'
+> & {
+  executionNode: Address // Assuming address is a string type
+  confidentialInputsHash: Hash // This might need to be adjusted to the actual Ethereum Transaction type
+  type: TType
+}
+
+export type ConfidentialComputeRecordRpc<
+  TType = ConfidentialRecordTxType,
+  TPending extends boolean = true,
+> = Omit<
+  Omit<
+    Omit<
+      Omit<TransactionCore<Hex, Hex, TType, TPending>, 'blockHash'>,
+      'typeHex'
+    >,
+    'transactionIndex'
+  >,
+  'blockNumber'
+> & {
+  executionNode: Address // Assuming address is a string type
+  confidentialInputsHash: Hash // This might need to be adjusted to the actual Ethereum Transaction type
+  type: TType
+}
 
 export type SuaveTransactionRequest<
   TQuantity = bigint,
   TIndex = number,
   TTransactionType = 'suave',
-> = TransactionRequestBase<TQuantity, TIndex> &
-  Partial<FeeValuesLegacy<TQuantity>> & {
-    accessList?: never
-    type?: TTransactionType
-    executionNode?: Address
-    confidentialInputs?: Hex
-  }
+> = TransactionRequestCore<TQuantity, TIndex, TTransactionType> & {
+  accessList?: never
+  type?: TTransactionType
+  executionNode?: Address
+  confidentialInputs?: Hex
+}
 
 export type SuaveRpcTransactionRequest<
   TQuantity = Hex,
   TIndex = Hex,
-  TTransactionType = Hex,
+  TTransactionType = SuaveTxType,
 > = TransactionRequestBase<TQuantity, TIndex> &
   Partial<FeeValuesLegacy<TQuantity>> & {
     executionNode?: Address
@@ -104,7 +159,7 @@ export type SuaveRpcTransactionReceipt = RpcTransactionReceipt & {
   confidentialComputeResult: Hex
 }
 
-export type SuaveTransactionSerializable = TransactionLegacy & {
+export type SuaveTransactionSerializable = RpcTransaction & {
   /// data is an alias for input
   data: Hex
   executionNode: Address
