@@ -4,14 +4,16 @@ import type { FeeValuesLegacy } from '../../types/fee.js'
 import type { Hash, Hex } from '../../types/misc.js'
 import type { RpcBlock, RpcTransactionReceipt } from '../../types/rpc.js'
 import type {
+  AccessList,
   TransactionBase,
   TransactionReceipt,
   TransactionRequestBase,
+  TransactionSerializableBase,
 } from '../../types/transaction.js'
 
 export const TX_TYPE = {
-  suave: '0x50',
-  confidentialRecord: '0x42',
+  suave: '0x50' as Hex,
+  confidentialRecord: '0x42' as Hex,
 }
 
 type SuaveTxType = '0x50'
@@ -25,7 +27,7 @@ type TransactionCore<
 > = TransactionBase<TQuantity, TIndex, TPending> &
   FeeValuesLegacy<TQuantity> & {
     accessList?: never
-    chainId?: TIndex
+    chainId: TIndex
     type: TType
   }
 
@@ -42,7 +44,7 @@ type TransactionRequestCore<TQuantity, TIndex, TType> = TransactionRequestBase<
 > &
   FeeValuesLegacy<TQuantity> & {
     accessList?: never
-    chainId?: TIndex
+    chainId: TIndex
     type: TType
   }
 
@@ -159,15 +161,33 @@ export type SuaveRpcTransactionReceipt = RpcTransactionReceipt & {
   confidentialComputeResult: Hex
 }
 
-export type SuaveTransactionSerializable = RpcTransaction & {
-  /// data is an alias for input
-  data: Hex
-  executionNode: Address
-  confidentialInputsHash: Hash
-  confidentialInputs: Hex
-  requestRecord: ConfidentialComputeRecord
-  confidentialComputeResult: Hex
-}
+/// Original sans `type: 'eip2930'`
+export type TransactionSerializableEIP2930<
+  TQuantity = bigint,
+  TIndex = number,
+> = TransactionSerializableBase<TQuantity, TIndex> &
+  Partial<FeeValuesLegacy<TQuantity>> & {
+    accessList?: AccessList
+    chainId?: TIndex
+    yParity?: TIndex
+    gasPrice?: TQuantity
+  }
+
+export type TransactionSerializableSuave<
+  TQuantity = bigint,
+  TIndex = number,
+> = TransactionSerializableEIP2930<TQuantity, TIndex> &
+  Omit<SuaveTransactionRequest<TQuantity, TIndex>, 'from'> & {
+    // chainId: TIndex
+    /// data is an alias for input
+    data: Hex
+    executionNode: Address
+    confidentialInputs: Hex
+    confidentialComputeResult?: Hex
+    type: 'suave'
+  }
+// | TransactionSerializableEIP2930<TQuantity, TIndex>
 
 // Define a type for serialized Suave transactions
-export type TransactionSerializedSuave = Hex
+export type TransactionSerializedSuave = `0x50${string}`
+export type TransactionSerializedConfidentialRequest = `0x42${string}`

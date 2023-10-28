@@ -7,7 +7,11 @@ import {
 } from 'viem'
 import { privateKeyToAccount } from 'viem/accounts'
 import { mainnet, polygon, suaveRigil } from 'viem/chains'
-import { SuaveTransactionRequest } from 'viem/chains/suave/types'
+import { serializeTransactionSuave } from 'viem/chains/suave/serializers'
+import {
+  SuaveTransactionRequest,
+  TransactionSerializableSuave,
+} from 'viem/chains/suave/types'
 
 ////////////////////////////////////////////////////////////////////
 // Clients
@@ -67,25 +71,32 @@ publicClients.suaveLocal.watchPendingTransactions({
   },
 })
 
-const suaveTxReq: SuaveTransactionRequest = {
-  executionNode: zeroAddress,
-  confidentialInputs: '0x13',
-  from: zeroAddress,
-  to: zeroAddress,
-  gasPrice: 10000000000n,
-  gas: 21000n,
-  type: 'suave',
-  /* TODO: modify default gasPrice and gas
-  - not defining them makes eth_estimateGas try & fail
-  - it stringifies integer values without hexifying them */
-}
-
 const wallet = createWalletClient({
   account: privateKeyToAccount(process.env.PRIVATE_KEY! as Hex),
   transport: http(suaveRigil.rpcUrls.local.http[0]),
   chain: publicClients.suaveLocal.chain,
 })
 
+const suaveTxReq: SuaveTransactionRequest = {
+  executionNode: zeroAddress,
+  confidentialInputs: '0x13',
+  from: wallet.account.address,
+  to: zeroAddress,
+  gasPrice: 10000000000n,
+  gas: 42000n,
+  type: 'suave',
+  chainId: suaveRigil.id,
+  data: '0x',
+  /* TODO: modify default gasPrice and gas
+  - not defining them makes eth_estimateGas try & fail
+  - it stringifies integer values without hexifying them */
+}
+
+const serializedTx = serializeTransactionSuave(
+  suaveTxReq as TransactionSerializableSuave,
+)
+
+console.log('serialized tx', serializedTx)
 const res = await wallet.sendTransaction(suaveTxReq)
 console.log(`sent tx: ${res}`)
 

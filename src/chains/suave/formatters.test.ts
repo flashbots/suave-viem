@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest'
 
-import { type Hex, zeroAddress } from '~viem/index.js'
+import { type Hex, numberToHex, zeroAddress } from '~viem/index.js'
 import { suaveRigil } from '../index.js'
 import type {
   ConfidentialComputeRecordRpc,
@@ -48,6 +48,7 @@ describe('transaction', () => {
     const inputTransactionRpc = {
       blockHash:
         '0x8756d7614991fafffd2c788d7213122a2145629860575fb52be80cbef128fbb6',
+      chainId: numberToHex(suaveRigil.id),
       executionNode: '0x0' as Hex,
       requestRecord,
       confidentialComputeResult: '0x0' as Hex,
@@ -71,9 +72,10 @@ describe('transaction', () => {
     const formattedTransaction = transaction.format(inputTransactionRpc)
     expect(formattedTransaction).toMatchInlineSnapshot(`
     {
+      "accessList": undefined,
       "blockHash": "0x8756d7614991fafffd2c788d7213122a2145629860575fb52be80cbef128fbb6",
       "blockNumber": 16n,
-      "chainId": undefined,
+      "chainId": 16813125,
       "confidentialComputeResult": "0x0",
       "executionNode": "0x0",
       "from": "0x0000000000000000000000000000000000000000",
@@ -149,6 +151,7 @@ describe('transactionRequest', () => {
       value: 0n,
       executionNode: zeroAddress,
       confidentialInputs: '0x13131313',
+      chainId: suaveRigil.id,
       // confidentialResult omitted
       nonce: 13,
       // We accept "data" and "input" for backwards-compatibility reasons.
@@ -163,6 +166,7 @@ describe('transactionRequest', () => {
 
     expect(formattedRequest).toMatchInlineSnapshot(`
       {
+        "chainId": 16813125,
         "confidentialInputs": "0x13131313",
         "data": "0x0",
         "executionNode": "0x0000000000000000000000000000000000000000",
@@ -183,6 +187,7 @@ describe('transactionRequest', () => {
   test('formatter (standard)', () => {
     const { transactionRequest } = suaveRigil.formatters!
     const inputRequest: SuaveTransactionRequest = {
+      chainId: suaveRigil.id,
       from: zeroAddress,
       to: zeroAddress,
       gas: 1n,
@@ -204,6 +209,7 @@ describe('transactionRequest', () => {
 
     expect(formattedRequest).toMatchInlineSnapshot(`
       {
+        "chainId": 16813125,
         "confidentialInputs": "0x0",
         "data": "0x0",
         "executionNode": "0x0000000000000000000000000000000000000000",

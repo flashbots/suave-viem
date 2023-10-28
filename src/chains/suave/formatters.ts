@@ -28,7 +28,6 @@ import type {
 } from './types.js'
 import { TX_TYPE } from './types.js'
 
-
 export const formattersSuave = {
   // block: /*#__PURE__*/ defineBlock({
   //   exclude: ['difficulty', 'gasLimit', 'mixHash', 'nonce', 'uncles'],
@@ -64,6 +63,8 @@ export const formattersSuave = {
         return {
           // format original eth params as legacy tx
           ...formatTransaction({ ...args_, type: '0x0' }),
+          chainId: parseInt(args_.chainId, 16),
+          accessList: args.accessList,
           // ... then replace and add fields as needed
           gasPrice: hexToBigInt(args.gasPrice as Hex),
           maxFeePerGas: undefined,
