@@ -1,15 +1,10 @@
-import {
-  http,
-  Hex,
-  createPublicClient,
-  createWalletClient,
-  zeroAddress,
-} from 'viem'
+import { http, Hex, createPublicClient, createWalletClient } from 'viem'
 import { privateKeyToAccount } from 'viem/accounts'
 import { mainnet, polygon, suaveRigil } from 'viem/chains'
 import { serializeTransactionSuave } from 'viem/chains/suave/serializers'
 import {
-  SuaveTransactionRequest,
+  SuaveTxTypes,
+  TransactionRequestSuave,
   TransactionSerializableSuave,
 } from 'viem/chains/suave/types'
 
@@ -77,14 +72,13 @@ const wallet = createWalletClient({
   chain: publicClients.suaveLocal.chain,
 })
 
-const suaveTxReq: SuaveTransactionRequest = {
-  executionNode: zeroAddress,
-  confidentialInputs: '0x13',
-  from: wallet.account.address,
-  to: zeroAddress,
+const suaveTxReq: TransactionRequestSuave = {
+  executionNode: '0xb5feafbdd752ad52afb7e1bd2e40432a485bbb7f',
+  confidentialInputs: '0x13131313',
+  to: '0x2d09719d6f4fa3aae6b43328eb150a6902491713',
   gasPrice: 10000000000n,
-  gas: 42000n,
-  type: 'suave',
+  gas: 420000n,
+  type: SuaveTxTypes.ConfidentialRequest,
   chainId: suaveRigil.id,
   data: '0x',
   /* TODO: modify default gasPrice and gas

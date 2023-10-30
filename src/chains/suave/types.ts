@@ -5,42 +5,42 @@ import type { Hash, Hex } from '../../types/misc.js'
 import type { RpcBlock, RpcTransactionReceipt } from '../../types/rpc.js'
 import type {
   AccessList,
-  TransactionBase,
+  TransactionBase as TransactionBase_,
   TransactionReceipt,
-  TransactionRequestBase,
+  TransactionRequestBase as TransactionRequestBase_,
   TransactionSerializableBase,
 } from '../../types/transaction.js'
 
-export const TX_TYPE = {
-  suave: '0x50' as Hex,
-  confidentialRecord: '0x42' as Hex,
+export enum SuaveTxTypes {
+  ConfidentialRecord = '0x42',
+  ConfidentialRequest = '0x43',
+  Suave = '0x50',
 }
 
-type SuaveTxType = '0x50'
-type ConfidentialRecordTxType = '0x42'
+export type SuaveTxType = '0x0' | `${SuaveTxTypes}`
 
-type TransactionCore<
+type TransactionBase<
   TQuantity,
   TIndex,
   TType,
   TPending extends boolean,
-> = TransactionBase<TQuantity, TIndex, TPending> &
+> = TransactionBase_<TQuantity, TIndex, TPending> &
   FeeValuesLegacy<TQuantity> & {
     accessList?: never
     chainId: TIndex
     type: TType
   }
 
-type RpcTransaction<TPending extends boolean = boolean> = TransactionCore<
+type RpcTransaction<TPending extends boolean = boolean> = TransactionBase<
   Hex,
   Hex,
   Hex,
   TPending
 >
 
-type TransactionRequestCore<TQuantity, TIndex, TType> = TransactionRequestBase<
-  TQuantity,
-  TIndex
+type TransactionRequestBase<TQuantity, TIndex, TType> = Omit<
+  TransactionRequestBase_<TQuantity, TIndex>,
+  'from'
 > &
   FeeValuesLegacy<TQuantity> & {
     accessList?: never
@@ -57,7 +57,7 @@ export type SuaveBlock<
   bigint,
   TIncludeTransactions,
   TBlockTag,
-  SuaveTransaction<TBlockTag extends 'pending' ? true : false>
+  TransactionSuave<TBlockTag extends 'pending' ? true : false>
 > &
   SuaveBlockOverrides
 
@@ -66,84 +66,74 @@ export type SuaveRpcBlock<
   TIncludeTransactions extends boolean = boolean,
 > = RpcBlock<TBlockTag, TIncludeTransactions> & SuaveBlockOverrides
 
-export type SuaveTransaction<
-  TPending extends boolean = boolean,
-  TType = 'suave',
-> = TransactionCore<bigint, number, TType, TPending> & {
-  executionNode: Address
-  requestRecord: ConfidentialComputeRecord
-  confidentialComputeResult: Hex
-  type: TType
-}
-
-export type SuaveRpcTransaction<TPending extends boolean = boolean> =
-  | RpcTransactionSuave<TPending>
-  | RpcTransaction<TPending>
-
-export type RpcTransactionSuave<
+export type TransactionSuave<
   TPending extends boolean = boolean,
   TType = SuaveTxType,
-> = RpcTransaction<TPending> & {
+  TQuantity = bigint,
+  TIndex = number,
+> = TransactionBase<TQuantity, TIndex, TType, TPending> & {
   executionNode: Address
-  requestRecord: ConfidentialComputeRecordRpc
+  requestRecord: ConfidentialComputeRecord<
+    TPending,
+    TQuantity,
+    TIndex,
+    SuaveTxTypes.ConfidentialRecord
+  >
   confidentialComputeResult: Hex
   type: TType
 }
 
+/** The type that interfaces with RPC endpoints.
+ * Used for endpoints that returns transactions, such as `eth_getTransactionByHash`.
+ * Also used when parsing transactions from this client before sending to RPC endpoints
+ * and/or signing transactions.
+ */
+export type RpcTransactionSuave<
+  TType extends SuaveTxType = SuaveTxType,
+  TPending extends boolean = boolean,
+> = TransactionSuave<TPending, TType, Hex, Hex>
+
 export type ConfidentialComputeRecord<
-  TType = 'confidentialRecord',
   TPending extends boolean = true,
-> = Omit<
-  Omit<
-    Omit<TransactionCore<bigint, number, TType, TPending>, 'blockHash'>,
-    'transactionIndex'
-  >,
-  'blockNumber'
-> & {
-  executionNode: Address // Assuming address is a string type
-  confidentialInputsHash: Hash // This might need to be adjusted to the actual Ethereum Transaction type
-  type: TType
-}
-
-export type ConfidentialComputeRecordRpc<
-  TType = ConfidentialRecordTxType,
-  TPending extends boolean = true,
-> = Omit<
-  Omit<
-    Omit<
-      Omit<TransactionCore<Hex, Hex, TType, TPending>, 'blockHash'>,
-      'typeHex'
-    >,
-    'transactionIndex'
-  >,
-  'blockNumber'
-> & {
-  executionNode: Address // Assuming address is a string type
-  confidentialInputsHash: Hash // This might need to be adjusted to the actual Ethereum Transaction type
-  type: TType
-}
-
-export type SuaveTransactionRequest<
   TQuantity = bigint,
   TIndex = number,
-  TTransactionType = 'suave',
-> = TransactionRequestCore<TQuantity, TIndex, TTransactionType> & {
-  accessList?: never
-  type?: TTransactionType
+  TType extends SuaveTxType = SuaveTxTypes.ConfidentialRecord,
+> = Omit<
+  Omit<
+    Omit<TransactionBase<TQuantity, TIndex, TType, TPending>, 'blockHash'>,
+    'transactionIndex'
+  >,
+  'blockNumber'
+> & {
+  executionNode: Address // Assuming address is a string type
+  confidentialInputsHash: Hash // This might need to be adjusted to the actual Ethereum Transaction type
+  type: TType
+}
+
+export type ConfidentialComputeRecordRpc<TPending extends boolean = true,> =
+  ConfidentialComputeRecord<TPending, Hex, Hex>
+
+export type TransactionRequestSuave<
+  TQuantity = bigint,
+  TIndex = number,
+  TType = SuaveTxTypes.ConfidentialRequest,
+> = TransactionRequestBase<TQuantity, TIndex, TType> & {
+  accessList?: AccessList
+  type: TType
   executionNode?: Address
   confidentialInputs?: Hex
 }
 
-export type SuaveRpcTransactionRequest<
+export type RpcTransactionRequestSuave<
   TQuantity = Hex,
   TIndex = Hex,
-  TTransactionType = SuaveTxType,
-> = TransactionRequestBase<TQuantity, TIndex> &
-  Partial<FeeValuesLegacy<TQuantity>> & {
+  TType extends SuaveTxType = SuaveTxTypes.ConfidentialRequest,
+> = TransactionRequestBase<TQuantity, TIndex, TType> &
+  FeeValuesLegacy<TQuantity> & {
     executionNode?: Address
     isConfidential?: boolean
     confidentialInputs: Hex
-    type?: TTransactionType
+    type?: TType
   }
 
 export type SuaveTransactionReceiptOverrides = {
@@ -176,18 +166,15 @@ export type TransactionSerializableEIP2930<
 export type TransactionSerializableSuave<
   TQuantity = bigint,
   TIndex = number,
-> = TransactionSerializableEIP2930<TQuantity, TIndex> &
-  Omit<SuaveTransactionRequest<TQuantity, TIndex>, 'from'> & {
-    // chainId: TIndex
-    /// data is an alias for input
-    data: Hex
-    executionNode: Address
-    confidentialInputs: Hex
-    confidentialComputeResult?: Hex
-    type: 'suave'
-  }
-// | TransactionSerializableEIP2930<TQuantity, TIndex>
+  TType = SuaveTxType,
+> = TransactionSerializableEIP2930<TQuantity, TIndex> & {
+  // chainId: TIndex
+  /// data is an alias for input
+  data: Hex
+  executionNode: Address
+  confidentialInputs?: Hex
+  type: TType
+}
 
 // Define a type for serialized Suave transactions
-export type TransactionSerializedSuave = `0x50${string}`
-export type TransactionSerializedConfidentialRequest = `0x42${string}`
+export type TransactionSerializedSuave = `${SuaveTxType}${string}`
