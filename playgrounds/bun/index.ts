@@ -39,6 +39,21 @@ publicClients.suaveLocal.watchPendingTransactions({
   },
 })
 
+const wallet = getSuaveWallet(process.env.PRIVATE_KEY! as Hex, {
+  chain: suaveRigil,
+  transport: http(suaveRigil.rpcUrls.local.http[0]),
+})
+
+const fundTx: TransactionRequestSuave = {
+  type: '0x0',
+  value: 5000000000000000000n, // 5 ETH
+  // from: '0xb5feafbdd752ad52afb7e1bd2e40432a485bbb7f',
+  gasPrice: 10000000000n,
+  chainId: suaveRigil.id,
+  to: wallet.account.address,
+  gas: 21000n,
+}
+
 const suaveTxReq: TransactionRequestSuave = {
   executionNode: '0xb5feafbdd752ad52afb7e1bd2e40432a485bbb7f',
   confidentialInputs:
@@ -54,12 +69,11 @@ const suaveTxReq: TransactionRequestSuave = {
   - it stringifies integer values without hexifying them */
 }
 
-const wallet = getSuaveWallet(process.env.PRIVATE_KEY! as Hex, {
-  chain: suaveRigil,
-  transport: http(suaveRigil.rpcUrls.local.http[0]),
-})
+const fund = await wallet.sendTransaction(fundTx)
+console.log('sent fund tx', fund)
 
-const test = await wallet.signTransaction(suaveTxReq)
-console.log('signed tx', test)
+// const test = await wallet.signTransaction(suaveTxReq)
+// console.log('signed tx', test)
+
 const res = await wallet.sendTransaction(suaveTxReq)
 console.log(`sent tx: ${res}`)

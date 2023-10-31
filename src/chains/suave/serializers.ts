@@ -178,7 +178,7 @@ export const serializeConfidentialComputeRequest = (
   transaction: TransactionSerializableSuave,
   signedComputeRecord: Hex,
   _signature?: Signature,
-) => {
+): SuaveTxTypes.ConfidentialRequest => {
   if (transaction.type !== SuaveTxTypes.ConfidentialRequest) {
     throw new Error('Invalid transaction type') // TODO: make this a custom error
   }
@@ -216,7 +216,7 @@ export const serializeConfidentialComputeRequest = (
   return concatHex([
     SuaveTxTypes.ConfidentialRequest,
     toRlp(serializedTransaction),
-  ]) as TransactionSerializedSuave
+  ]) as SuaveTxTypes.ConfidentialRequest
 }
 
 // Define the Suave serializers object

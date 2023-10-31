@@ -13,7 +13,6 @@ import {
   serializeConfidentialComputeRequest,
 } from './serializers.js'
 import {
-  type SuaveTxType,
   SuaveTxTypes,
   type TransactionRequestSuave,
   type TransactionSerializableSuave,
@@ -35,34 +34,45 @@ export function getSuaveWallet<
       const preparedTx = await client.prepareTransactionRequest<TChain>(
         txRequest as any,
       )
+      console.log('prepared request', preparedTx)
+      // if (txRequest.chainId)
 
-      const recordPayload = {
+      const payload = {
         ...txRequest,
         confidentialInputsHash: txRequest.confidentialInputs
           ? keccak256(txRequest.confidentialInputs)
           : '0x',
-        type: SuaveTxTypes.ConfidentialRecord,
+        executionNode: txRequest.executionNode,
         chainId: txRequest.chainId,
         gas: txRequest.gas,
         gasPrice: txRequest.gasPrice,
         nonce: preparedTx.nonce,
         to: txRequest.to,
-        value: 0x69000n,
+        value: txRequest.value,
         data: txRequest.data,
         confidentialInputs: txRequest.confidentialInputs,
       } as TransactionSerializableSuave
-      console.log('recordPayload', recordPayload)
-      const signedComputeRecord = (await this.signTransaction(
-        recordPayload,
-      )) as SuaveTxType
 
-      const fullTx = serializeConfidentialComputeRequest(
-        {
-          ...txRequest,
-          nonce: preparedTx.nonce,
-        } as TransactionSerializableSuave,
-        signedComputeRecord,
-      )
+      let fullTx: Hex
+      if (txRequest.type === SuaveTxTypes.ConfidentialRequest) {
+        const signedComputeRecord = (await this.signTransaction({
+          ...payload,
+          type: SuaveTxTypes.ConfidentialRecord,
+        })) as SuaveTxTypes.ConfidentialRecord
+
+        fullTx = serializeConfidentialComputeRequest(
+          {
+            ...payload,
+            nonce: preparedTx.nonce,
+            type: SuaveTxTypes.ConfidentialRequest,
+            from: client.account.address,
+          } as TransactionSerializableSuave,
+          signedComputeRecord,
+        )
+      } else {
+        fullTx = await this.signTransaction(payload)
+        console.log('fullTx', fullTx)
+      }
       return client.request({
         method: 'eth_sendRawTransaction',
         params: [fullTx],

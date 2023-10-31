@@ -116,12 +116,15 @@ export type ConfidentialComputeRecordRpc<TPending extends boolean = true,> =
 export type TransactionRequestSuave<
   TQuantity = bigint,
   TIndex = number,
-  TType = SuaveTxTypes.ConfidentialRequest | SuaveTxTypes.ConfidentialRecord,
+  TType =
+    | SuaveTxTypes.ConfidentialRequest
+    | SuaveTxTypes.ConfidentialRecord
+    | '0x0',
 > = TransactionRequestBase<TQuantity, TIndex, TType> & {
   accessList?: AccessList
   type: TType
-  executionNode: Address
-  confidentialInputs: Hex
+  executionNode?: Address
+  confidentialInputs?: Hex
 }
 
 export type RpcTransactionRequestSuave<
@@ -158,7 +161,7 @@ export type TransactionSerializableEIP2930<
 > = TransactionSerializableBase<TQuantity, TIndex> &
   Partial<FeeValuesLegacy<TQuantity>> & {
     accessList?: AccessList
-    chainId?: TIndex
+    chainId: TIndex
     yParity?: TIndex
     gasPrice?: TQuantity
   }
