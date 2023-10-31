@@ -39,17 +39,17 @@ publicClients.suaveLocal.watchPendingTransactions({
   },
 })
 
-const adminWallet = getSuaveWallet(process.env.PRIVATE_KEY! as Hex, {
+const adminWallet = getSuaveWallet({
   chain: suaveRigil,
   transport: http(suaveRigil.rpcUrls.local.http[0]),
-})
+}, process.env.PRIVATE_KEY! as Hex)
 
 const wallet = getSuaveWallet(
-  '0x01000070530220062104600650003002001814120800043ff33603df10300012',
   {
     chain: suaveRigil,
     transport: http(suaveRigil.rpcUrls.local.http[0]),
   },
+  '0x01000070530220062104600650003002001814120800043ff33603df10300012',
 )
 
 const fundTx: TransactionRequestSuave = {

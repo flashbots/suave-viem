@@ -22,11 +22,11 @@ export function getSuaveWallet<
   TTransport extends Transport,
   TChain extends Chain | undefined = undefined,
 >(
-  privateKey: Hex,
   params: { transport: TTransport; chain: TChain },
+  privateKey?: Hex,
 ): WalletClient<TTransport, TChain, PrivateKeyAccount> {
   return createWalletClient({
-    account: privateKeyToAccount(privateKey),
+    account: privateKey ? privateKeyToAccount(privateKey) : undefined,
     transport: params.transport,
     chain: params.chain,
   }).extend((client) => ({

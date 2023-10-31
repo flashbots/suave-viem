@@ -1,5 +1,6 @@
 import { defineChain } from '../../utils/chain.js'
 import { formattersSuave } from '../suave/formatters.js'
+export { getSuaveWallet } from '../suave/wallet.js'
 
 export const suaveRigil = /*#__PURE__*/ defineChain(
   {
