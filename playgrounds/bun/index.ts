@@ -1,22 +1,7 @@
-import {
-  http,
-  Hex,
-  createPublicClient,
-  createWalletClient,
-  keccak256,
-} from 'viem'
-import { privateKeyToAccount } from 'viem/accounts'
+import { http, Hex, createPublicClient } from 'viem'
 import { mainnet, polygon, suaveRigil } from 'viem/chains'
-import {
-  serializeConfidentialComputeRecord,
-  serializeTransactionSuave,
-} from 'viem/chains/suave/serializers'
-import {
-  SuaveTxType,
-  SuaveTxTypes,
-  TransactionRequestSuave,
-  TransactionSerializableSuave,
-} from 'viem/chains/suave/types'
+import { SuaveTxTypes, TransactionRequestSuave } from 'viem/chains/suave/types'
+import { getSuaveWallet } from 'viem/chains/suave/wallet'
 
 ////////////////////////////////////////////////////////////////////
 // Clients
@@ -54,44 +39,6 @@ publicClients.suaveLocal.watchPendingTransactions({
   },
 })
 
-const wallet = createWalletClient({
-  account: privateKeyToAccount(process.env.PRIVATE_KEY! as Hex),
-  transport: http(suaveRigil.rpcUrls.local.http[0]),
-  chain: publicClients.suaveLocal.chain,
-}).extend((client) => ({
-  async sendTransaction(txRequest: TransactionRequestSuave) {
-    const preparedTx = await client.prepareTransactionRequest(txRequest)
-    const signedComputeRecord = (await client.account.signTransaction(
-      {
-        ...txRequest,
-        confidentialInputsHash: txRequest.confidentialInputs
-          ? keccak256(txRequest.confidentialInputs)
-          : '0x',
-        type: SuaveTxTypes.ConfidentialRecord,
-        chainId: txRequest.chainId,
-        gas: txRequest.gas,
-        gasPrice: txRequest.gasPrice,
-        nonce: preparedTx.nonce,
-        to: txRequest.to,
-        value: txRequest.value,
-        data: txRequest.data,
-      } as TransactionSerializableSuave,
-      {
-        serializer: serializeConfidentialComputeRecord,
-      },
-    )) as SuaveTxType
-
-    const fullTx = serializeTransactionSuave(
-      { ...txRequest, nonce: preparedTx.nonce } as TransactionSerializableSuave,
-      signedComputeRecord,
-    )
-    return client.request({
-      method: 'eth_sendRawTransaction',
-      params: [fullTx],
-    })
-  },
-}))
-
 const suaveTxReq: TransactionRequestSuave = {
   executionNode: '0xb5feafbdd752ad52afb7e1bd2e40432a485bbb7f',
   confidentialInputs:
@@ -107,12 +54,12 @@ const suaveTxReq: TransactionRequestSuave = {
   - it stringifies integer values without hexifying them */
 }
 
-// const serializedTx = serializeTransactionSuave(
-//   suaveTxReq as TransactionSerializableSuave,
-// )
+const wallet = getSuaveWallet(process.env.PRIVATE_KEY! as Hex, {
+  chain: suaveRigil,
+  transport: http(suaveRigil.rpcUrls.local.http[0]),
+})
 
-// console.log('serialized tx', serializedTx)
+const test = await wallet.signTransaction(suaveTxReq)
+console.log('signed tx', test)
 const res = await wallet.sendTransaction(suaveTxReq)
 console.log(`sent tx: ${res}`)
-
-////////////////////////////////////////////////////////////////////

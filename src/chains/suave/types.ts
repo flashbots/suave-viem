@@ -170,10 +170,10 @@ export type TransactionSerializableSuave<
 > = TransactionSerializableEIP2930<TQuantity, TIndex> & {
   // chainId: TIndex
   /// data is an alias for input
-  data: Hex
-  executionNode: Address
+  executionNode?: Address
   confidentialInputs?: Hex
   confidentialInputsHash?: Hash
+  signedComputeRecord?: Hex
   type: TType
 }
 

@@ -40,6 +40,9 @@ export const serializeConfidentialComputeRecord = (
   if (transaction.type !== SuaveTxTypes.ConfidentialRecord) {
     throw new Error('Invalid transaction type') // TODO: make this a custom error
   }
+  if (!transaction.executionNode) {
+    throw new Error('execution node is required') // TODO: make this a custom error
+  }
   // Extract fields from the transaction
   const {
     // r,
@@ -171,7 +174,7 @@ const deserializeSignedComputeRecord = (signedComputeRecord: Hex) => {
 /** RLP serialization for ConfidentialComputeRequest. `_signature is ignored`
  * because the signature from ConfidentialComputeRecord is used instead.
  */
-export const serializeTransactionSuave = (
+export const serializeConfidentialComputeRequest = (
   transaction: TransactionSerializableSuave,
   signedComputeRecord: Hex,
   _signature?: Signature,
@@ -216,12 +219,12 @@ export const serializeTransactionSuave = (
   ]) as TransactionSerializedSuave
 }
 
-// // Define the Suave serializers object
+// Define the Suave serializers object
 // export const serializersSuave = {
-//   transaction: (tx, sig) => {
+//   transaction: (tx: TransactionRequestSuave, sig: Signature) => {
 //     console.log(`tx: ${tx}`, `sig: ${sig}`)
 //     if (tx.type === SuaveTxTypes.ConfidentialRequest) {
-//       return serializeTransactionSuave(tx as TransactionSerializableSuave, sig)
+//       return serializeTransactionSuave(tx as TransactionSerializableSuave, , sig)
 //     }
 //     return serializeTransaction(tx, sig)
 //   },
