@@ -8,7 +8,7 @@ import {
 import { privateKeyToAccount } from 'viem/accounts'
 import { mainnet, polygon, suaveRigil } from 'viem/chains'
 import {
-  serializeConfidentialRecord,
+  serializeConfidentialComputeRecord,
   serializeTransactionSuave,
 } from 'viem/chains/suave/serializers'
 import {
@@ -60,10 +60,6 @@ const wallet = createWalletClient({
   chain: publicClients.suaveLocal.chain,
 }).extend((client) => ({
   async sendTransaction(txRequest: TransactionRequestSuave) {
-    // const serializedComputeRecord = serializeConfidentialRecord({
-    //   ...txRequest,
-    //   type: SuaveTxTypes.ConfidentialRecord,
-    // } as TransactionSerializableSuave)
     const preparedTx = await client.prepareTransactionRequest(txRequest)
     const signedComputeRecord = (await client.account.signTransaction(
       {
@@ -81,7 +77,7 @@ const wallet = createWalletClient({
         data: txRequest.data,
       } as TransactionSerializableSuave,
       {
-        serializer: serializeConfidentialRecord,
+        serializer: serializeConfidentialComputeRecord,
       },
     )) as SuaveTxType
 

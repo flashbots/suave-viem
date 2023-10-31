@@ -49,7 +49,7 @@ function parseSuaveTransaction(
     s,
   ] = transactionArray
 
-  if (transactionArray.length !== 13) {
+  if (transactionArray.length !== 12) {
     throw new InvalidSerializedTransactionError({
       attributes: {
         nonce,
