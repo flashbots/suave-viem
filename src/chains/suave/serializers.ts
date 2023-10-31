@@ -149,9 +149,7 @@ const safeHexToNumber = (hex: Hex) => {
   return hexToNumber(hex)
 }
 
-const deserializeSignedComputeRecord = (
-  signedComputeRecord: Hex
-) => {
+const deserializeSignedComputeRecord = (signedComputeRecord: Hex) => {
   console.log('signedComputeRecortd', signedComputeRecord)
   const transactionArray = toTransactionArray(signedComputeRecord)
 
@@ -210,7 +208,6 @@ const deserializeSignedComputeRecord = (
   }
   console.log('mkay', ccRecord)
 
-
   return ccRecord
 }
 
@@ -219,13 +216,15 @@ export const serializeTransactionSuave = (
   signedComputeRecord: Hex,
   _signature?: Signature,
 ) => {
-  console.log("full tx", transaction)
+  console.log('full tx', transaction)
   if (transaction.type !== SuaveTxTypes.ConfidentialRequest) {
     throw new Error('Invalid transaction type') // TODO: make this a custom error
   }
   const ccRecord = deserializeSignedComputeRecord(signedComputeRecord)
   console.log('confidentialInputs', transaction.confidentialInputs)
-  const confidentialInputsHash = keccak256(transaction.confidentialInputs || '0x')
+  const confidentialInputsHash = keccak256(
+    transaction.confidentialInputs || '0x',
+  )
   console.log('confidentialInputsHash (calc)', confidentialInputsHash)
   console.log('confidentialInputsHash (ccr)', ccRecord.confidentialInputsHash)
   console.log('confidentialInputsHash (tx)', transaction.confidentialInputsHash)
