@@ -116,12 +116,12 @@ export type ConfidentialComputeRecordRpc<TPending extends boolean = true,> =
 export type TransactionRequestSuave<
   TQuantity = bigint,
   TIndex = number,
-  TType = SuaveTxTypes.ConfidentialRequest,
+  TType = SuaveTxTypes.ConfidentialRequest | SuaveTxTypes.ConfidentialRecord,
 > = TransactionRequestBase<TQuantity, TIndex, TType> & {
   accessList?: AccessList
   type: TType
-  executionNode?: Address
-  confidentialInputs?: Hex
+  executionNode: Address
+  confidentialInputs: Hex
 }
 
 export type RpcTransactionRequestSuave<
@@ -173,6 +173,7 @@ export type TransactionSerializableSuave<
   data: Hex
   executionNode: Address
   confidentialInputs?: Hex
+  confidentialInputsHash?: Hash
   type: TType
 }
 

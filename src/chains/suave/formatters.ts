@@ -46,7 +46,7 @@ export const formattersSuave = {
             executionNode: transaction.executionNode,
             wrapped: transaction as RpcTransaction,
           },
-          ConfidentialComputeResult: transaction.confidentialComputeResult,
+          confidentialComputeResult: transaction.confidentialComputeResult,
           // TODO : Signature fields
         }
       }) as Hash[] | TransactionSuave[]

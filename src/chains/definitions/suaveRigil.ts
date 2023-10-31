@@ -1,6 +1,5 @@
 import { defineChain } from '../../utils/chain.js'
 import { formattersSuave } from '../suave/formatters.js'
-import { serializersSuave } from '../suave/serializers.js'
 
 export const suaveRigil = /*#__PURE__*/ defineChain(
   {
@@ -37,6 +36,6 @@ export const suaveRigil = /*#__PURE__*/ defineChain(
   },
   {
     formatters: formattersSuave,
-    serializers: serializersSuave,
+    // serializers: serializersSuave,
   },
 )
