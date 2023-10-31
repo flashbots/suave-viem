@@ -39,10 +39,13 @@ publicClients.suaveLocal.watchPendingTransactions({
   },
 })
 
-const adminWallet = getSuaveWallet({
-  chain: suaveRigil,
-  transport: http(suaveRigil.rpcUrls.local.http[0]),
-}, process.env.PRIVATE_KEY! as Hex)
+const adminWallet = getSuaveWallet(
+  {
+    chain: suaveRigil,
+    transport: http(suaveRigil.rpcUrls.local.http[0]),
+  },
+  process.env.PRIVATE_KEY! as Hex,
+)
 
 const wallet = getSuaveWallet(
   {
