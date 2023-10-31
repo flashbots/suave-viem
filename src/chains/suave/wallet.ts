@@ -23,7 +23,7 @@ export function getSuaveWallet<
   TChain extends Chain | undefined = undefined,
 >(
   privateKey: Hex,
-  params: { transport: TTransport; chain: TChain },
+  params: { transport: TTransport, chain: TChain },
 ): WalletClient<TTransport, TChain, PrivateKeyAccount> {
   return createWalletClient({
     account: privateKeyToAccount(privateKey),
@@ -31,6 +31,7 @@ export function getSuaveWallet<
     chain: params.chain,
   }).extend((client) => ({
     async sendTransaction(txRequest: TransactionRequestSuave) {
+      console.log("wallet address", client.account.address)
       const preparedTx = await client.prepareTransactionRequest<TChain>(
         txRequest as any,
       )
@@ -40,13 +41,14 @@ export function getSuaveWallet<
       const payload = {
         ...txRequest,
         confidentialInputsHash: txRequest.confidentialInputs
-          ? keccak256(txRequest.confidentialInputs)
-          : '0x',
+        ? keccak256(txRequest.confidentialInputs)
+        : '0x',
         executionNode: txRequest.executionNode,
         chainId: txRequest.chainId,
         gas: txRequest.gas,
         gasPrice: txRequest.gasPrice,
         nonce: preparedTx.nonce,
+        // from: client.account.address,
         to: txRequest.to,
         value: txRequest.value,
         data: txRequest.data,
@@ -71,7 +73,6 @@ export function getSuaveWallet<
         )
       } else {
         fullTx = await this.signTransaction(payload)
-        console.log('fullTx', fullTx)
       }
       return client.request({
         method: 'eth_sendRawTransaction',
@@ -93,7 +94,10 @@ export function getSuaveWallet<
         )
         // serialize as confidential compute request
         const fullTx = serializeConfidentialComputeRequest(
-          { ...txRequest } as TransactionSerializableSuave,
+          { 
+            ...txRequest,
+            type: SuaveTxTypes.ConfidentialRequest
+          } as TransactionSerializableSuave,
           signedComputeRecord,
         )
         return fullTx

@@ -123,6 +123,7 @@ export type TransactionRequestSuave<
 > = TransactionRequestBase<TQuantity, TIndex, TType> & {
   accessList?: AccessList
   type: TType
+  from?: Address
   executionNode?: Address
   confidentialInputs?: Hex
 }
