@@ -44,10 +44,13 @@ const adminWallet = getSuaveWallet(process.env.PRIVATE_KEY! as Hex, {
   transport: http(suaveRigil.rpcUrls.local.http[0]),
 })
 
-const wallet = getSuaveWallet('0x01000070530220062104600650003002001814120800043ff33603df10300012', {
-  chain: suaveRigil,
-  transport: http(suaveRigil.rpcUrls.local.http[0]),
-})
+const wallet = getSuaveWallet(
+  '0x01000070530220062104600650003002001814120800043ff33603df10300012',
+  {
+    chain: suaveRigil,
+    transport: http(suaveRigil.rpcUrls.local.http[0]),
+  },
+)
 
 const fundTx: TransactionRequestSuave = {
   type: '0x0',
