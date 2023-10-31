@@ -17,13 +17,13 @@ import {
   hexToNumber,
   isAddress,
   isHex,
-} from '~viem/index.js'
-import { toTransactionArray } from '~viem/utils/transaction/parseTransaction.js'
+} from '../../index.js'
 import type { Hex, Signature } from '../../types/misc.js'
 import { concatHex } from '../../utils/data/concat.js'
 import { numberToHex, toHex } from '../../utils/encoding/toHex.js'
 import { toRlp } from '../../utils/encoding/toRlp.js'
 import { keccak256 } from '../../utils/hash/keccak256.js'
+import { toTransactionArray } from '../../utils/transaction/parseTransaction.js'
 import {
   type SuaveTxType,
   SuaveTxTypes,
