@@ -87,7 +87,7 @@ toBytes(
 Encodes a hex value to a byte array.
 
 ```ts
-import { hexToBytes } from 'viem'
+import { numberToHex } from 'viem'
 
 hexToBytes('0x48656c6c6f20576f726c6421') // [!code focus:2]
 // Uint8Array([72, 101, 108, 108, 111, 32, 87, 111, 114, 108, 100, 33])
@@ -103,7 +103,7 @@ hexToBytes('0x48656c6c6f20576f726c6421', { size: 32 }) // [!code focus:2]
 Encodes a string to a byte array.
 
 ```ts
-import { stringToBytes } from 'viem'
+import { numberToHex } from 'viem'
 
 stringToBytes('Hello world') // [!code focus:2]
 // Uint8Array([72, 101, 108, 108, 111, 32, 87, 111, 114, 108, 100, 33])
@@ -119,7 +119,7 @@ stringToBytes('Hello world', { size: 32 }) // [!code focus:2]
 Encodes a number to a byte array.
 
 ```ts
-import { numberToBytes } from 'viem'
+import { numberToHex } from 'viem'
 
 numberToBytes(420) // [!code focus:2]
 // Uint8Array([1, 164])
@@ -135,7 +135,7 @@ numberToBytes(420, { size: 32 }) // [!code focus:2]
 Encodes a boolean to a byte array.
 
 ```ts
-import { boolToBytes } from 'viem'
+import { boolToHex } from 'viem'
 
 boolToBytes(true) // [!code focus:2]
 // Uint8Array([1])

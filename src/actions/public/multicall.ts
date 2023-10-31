@@ -25,14 +25,13 @@ import {
 import {
   type GetChainContractAddressErrorType,
   getChainContractAddress,
-} from '../../utils/chain/getChainContractAddress.js'
+} from '../../utils/chain.js'
 import {
   type GetContractErrorReturnType,
   getContractError,
 } from '../../utils/errors/getContractError.js'
 
 import type { ErrorType } from '../../errors/utils.js'
-import { getAction } from '../../utils/getAction.js'
 import type { CallParameters } from './call.js'
 import { type ReadContractErrorType, readContract } from './readContract.js'
 
@@ -201,10 +200,7 @@ export async function multicall<
 
   const aggregate3Results = await Promise.allSettled(
     chunkedCalls.map((calls) =>
-      getAction(
-        client,
-        readContract,
-      )({
+      readContract(client, {
         abi: multicall3Abi,
         address: multicallAddress!,
         args: [calls],

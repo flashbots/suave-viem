@@ -22,7 +22,6 @@ import {
 } from '../../errors/abi.js'
 import { InvalidInputRpcError } from '../../errors/rpc.js'
 import type { ErrorType } from '../../errors/utils.js'
-import { getAction } from '../../utils/getAction.js'
 import {
   decodeEventLog,
   encodeEventTopics,
@@ -223,10 +222,7 @@ export function watchEvent<
         async () => {
           if (!initialized) {
             try {
-              filter = (await getAction(
-                client,
-                createEventFilter as any,
-              )({
+              filter = (await createEventFilter(client, {
                 address,
                 args,
                 event: event!,
@@ -245,22 +241,19 @@ export function watchEvent<
           try {
             let logs: Log[]
             if (filter) {
-              logs = await getAction(client, getFilterChanges)({ filter })
+              logs = await getFilterChanges(client, { filter })
             } else {
               // If the filter doesn't exist, we will fall back to use `getLogs`.
               // The fall back exists because some RPC Providers do not support filters.
 
               // Fetch the block number to use for `getLogs`.
-              const blockNumber = await getAction(client, getBlockNumber)({})
+              const blockNumber = await getBlockNumber(client)
 
               // If the block number has changed, we will need to fetch the logs.
               // If the block number doesn't exist, we are yet to reach the first poll interval,
               // so do not emit any logs.
               if (previousBlockNumber && previousBlockNumber !== blockNumber) {
-                logs = await getAction(
-                  client,
-                  getLogs,
-                )({
+                logs = await getLogs(client, {
                   address,
                   args,
                   event: event!,
@@ -292,7 +285,7 @@ export function watchEvent<
       )
 
       return async () => {
-        if (filter) await getAction(client, uninstallFilter)({ filter })
+        if (filter) await uninstallFilter(client, { filter })
         unwatch()
       }
     })

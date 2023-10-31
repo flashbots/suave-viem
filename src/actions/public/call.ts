@@ -37,7 +37,7 @@ import type { RequestErrorType } from '../../utils/buildRequest.js'
 import {
   type GetChainContractAddressErrorType,
   getChainContractAddress,
-} from '../../utils/chain/getChainContractAddress.js'
+} from '../../utils/chain.js'
 import {
   type NumberToHexErrorType,
   numberToHex,
@@ -151,12 +151,12 @@ export async function call<TChain extends Chain | undefined>(
     const blockNumberHex = blockNumber ? numberToHex(blockNumber) : undefined
     const block = blockNumberHex || blockTag
 
-    const chainFormat = client.chain?.formatters?.transactionRequest?.format
-    const format = chainFormat || formatTransactionRequest
-
+    const format =
+      client.chain?.formatters?.transactionRequest?.format ||
+      formatTransactionRequest
     const request = format({
       // Pick out extra data that might exist on the chain's transaction request type.
-      ...extract(rest, { format: chainFormat }),
+      ...extract(rest, { format }),
       from: account?.address,
       accessList,
       data,

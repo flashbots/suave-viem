@@ -1,4 +1,4 @@
-import { defineChain } from '../../utils/chain/defineChain.js'
+import { defineChain } from '../../utils/chain.js'
 
 export const crossbell = /*#__PURE__*/ defineChain({
   id: 3_737,

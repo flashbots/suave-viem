@@ -20,7 +20,7 @@ import {
 import {
   type GetChainContractAddressErrorType,
   getChainContractAddress,
-} from '../../utils/chain/getChainContractAddress.js'
+} from '../../utils/chain.js'
 import { type TrimErrorType, trim } from '../../utils/data/trim.js'
 import { type ToHexErrorType, toHex } from '../../utils/encoding/toHex.js'
 import { isNullUniversalResolverError } from '../../utils/ens/errors.js'
@@ -29,7 +29,6 @@ import {
   type PacketToBytesErrorType,
   packetToBytes,
 } from '../../utils/ens/packetToBytes.js'
-import { getAction } from '../../utils/getAction.js'
 import {
   type ReadContractParameters,
   readContract,
@@ -119,10 +118,7 @@ export async function getEnsAddress<TChain extends Chain | undefined,>(
         : { args: [namehash(name)] }),
     })
 
-    const res = await getAction(
-      client,
-      readContract,
-    )({
+    const res = await readContract(client, {
       address: universalResolverAddress,
       abi: universalResolverResolveAbi,
       functionName: 'resolve',

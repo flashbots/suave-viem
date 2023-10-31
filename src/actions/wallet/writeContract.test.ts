@@ -18,6 +18,7 @@ import { getTransaction } from '../public/getTransaction.js'
 import { simulateContract } from '../public/simulateContract.js'
 import { mine } from '../test/mine.js'
 
+import * as sendTransaction from './sendTransaction.js'
 import { writeContract } from './writeContract.js'
 
 test('default', async () => {
@@ -131,14 +132,14 @@ describe('args: chain', () => {
 })
 
 test('args: dataSuffix', async () => {
-  const spy = vi.spyOn(walletClient, 'sendTransaction')
+  const spy = vi.spyOn(sendTransaction, 'sendTransaction')
   await writeContract(walletClient, {
     ...wagmiContractConfig,
     account: accounts[0].address,
     functionName: 'mint',
     dataSuffix: '0x12345678',
   })
-  expect(spy).toHaveBeenCalledWith({
+  expect(spy).toHaveBeenCalledWith(walletClient, {
     account: accounts[0].address,
     data: '0x1249c58b12345678',
     to: wagmiContractConfig.address,

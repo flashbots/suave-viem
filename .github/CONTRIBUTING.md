@@ -112,7 +112,6 @@ VITE_ANVIL_FORK_URL=https://rpc
 VITE_ANVIL_BLOCK_TIME=1
 VITE_ANVIL_BLOCK_NUMBER=16280770
 VITE_NETWORK_TRANSPORT_MODE=http
-VITE_ANVIL_PORT=8545
 ```
 
 `VITE_ANVIL_FORK_URL` can be for any RPC service provider (e.g. Alchemy or Infura) for the mainnet. Now you are ready to run the tests!
@@ -262,7 +261,7 @@ Example:
 
 ```ts
 // src/chains/definitions/example.ts
-import { defineChain } from '../../utils/chain/defineChain.js'
+import { defineChain } from '../../utils/chain.js'
 
 export const mainnet = /*#__PURE__*/ defineChain({
   id: 1,

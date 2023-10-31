@@ -1,7 +1,6 @@
-import type { Address } from 'abitype'
-import { describe, expectTypeOf, test } from 'vitest'
+import { expectTypeOf, test } from 'vitest'
 
-import type { Account, JsonRpcAccount } from '../accounts/types.js'
+import type { JsonRpcAccount } from '../accounts/types.js'
 import { localhost } from '../chains/index.js'
 import { type Client, createClient } from './createClient.js'
 import { http } from './transports/http.js'
@@ -43,61 +42,22 @@ test('without account', () => {
   expectTypeOf(client.account).toEqualTypeOf(undefined)
 })
 
-describe('extend', () => {
-  test('default', () => {
-    const client = createClient({
-      chain: localhost,
-      transport: http(),
-    })
-
-    const extended = client
-      .extend((config) => ({
-        getChainId: async () => config.chain.id,
-        foo: 'bar',
-      }))
-      .extend(() => ({}))
-      .extend((config) => ({ bar: `${config.foo}baz` }))
-
-    expectTypeOf(extended).toMatchTypeOf<Client>()
-    expectTypeOf(extended.bar).toEqualTypeOf<'barbaz'>()
-    expectTypeOf(extended.foo).toEqualTypeOf<'bar'>()
-    expectTypeOf(extended.getChainId).toEqualTypeOf<() => Promise<1337>>()
+test('extend', () => {
+  const client = createClient({
+    chain: localhost,
+    transport: http(),
   })
 
-  test('protected action', () => {
-    const client = createClient({
-      chain: localhost,
-      transport: http(),
-    })
-
-    client.extend(() => ({
-      async sendTransaction(args) {
-        expectTypeOf(args.account).toEqualTypeOf<Address | Account>()
-        expectTypeOf(args.to).toEqualTypeOf<Address | null | undefined>()
-        expectTypeOf(args.value).toEqualTypeOf<bigint | undefined>()
-        return '0x'
-      },
+  const extended = client
+    .extend((config) => ({
+      getChainId: () => config.chain.id,
+      foo: 'bar',
     }))
+    .extend(() => ({}))
+    .extend((config) => ({ bar: `${config.foo}baz` }))
 
-    client.extend(() => ({
-      // @ts-expect-error: Type 'string' is not assignable to type 'Promise<`0x${string}`>'.
-      sendTransaction() {
-        return '0x'
-      },
-    }))
-
-    client.extend(() => ({
-      // @ts-expect-error: Type '"bogus"' is not assignable to type '`0x${string}`'.
-      async sendTransaction() {
-        return 'bogus'
-      },
-    }))
-
-    client.extend(() => ({
-      // @ts-expect-error: Type 'SendTransactionParameters<Chain | undefined, Account | undefined, TChainOverride>' is not assignable to type 'number'.
-      async sendTransaction(_args: number) {
-        return '0x'
-      },
-    }))
-  })
+  expectTypeOf(extended).toMatchTypeOf<Client>()
+  expectTypeOf(extended.bar).toEqualTypeOf<'barbaz'>()
+  expectTypeOf(extended.foo).toEqualTypeOf<'bar'>()
+  expectTypeOf(extended.getChainId).toEqualTypeOf<() => 1337>()
 })

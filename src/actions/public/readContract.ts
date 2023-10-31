@@ -22,7 +22,6 @@ import {
   type GetContractErrorReturnType,
   getContractError,
 } from '../../utils/errors/getContractError.js'
-import { getAction } from '../../utils/getAction.js'
 
 import { type CallErrorType, type CallParameters, call } from './call.js'
 
@@ -92,10 +91,7 @@ export async function readContract<
     functionName,
   } as unknown as EncodeFunctionDataParameters<TAbi, TFunctionName>)
   try {
-    const { data } = await getAction(
-      client,
-      call,
-    )({
+    const { data } = await call(client, {
       data: calldata,
       to: address,
       ...callRequest,

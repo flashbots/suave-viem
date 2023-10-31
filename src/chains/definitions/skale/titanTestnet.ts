@@ -1,4 +1,4 @@
-import { defineChain } from '../../../utils/chain/defineChain.js'
+import { defineChain } from '../../../utils/chain.js'
 
 export const skaleTitanTestnet = /*#__PURE__*/ defineChain({
   id: 1_517_929_550,

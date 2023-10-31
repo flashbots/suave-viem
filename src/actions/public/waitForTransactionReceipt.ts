@@ -9,7 +9,6 @@ import type { ErrorType } from '../../errors/utils.js'
 import type { Chain } from '../../types/chain.js'
 import type { Hash } from '../../types/misc.js'
 import type { Transaction } from '../../types/transaction.js'
-import { getAction } from '../../utils/getAction.js'
 import { type ObserveErrorType, observe } from '../../utils/observe.js'
 import { withRetry } from '../../utils/promise/withRetry.js'
 import { stringify } from '../../utils/stringify.js'
@@ -141,10 +140,7 @@ export async function waitForTransactionReceipt<
       observerId,
       { onReplaced, resolve, reject },
       (emit) => {
-        const _unwatch = getAction(
-          client,
-          watchBlockNumber,
-        )({
+        const _unwatch = watchBlockNumber(client, {
           emitMissed: true,
           emitOnBegin: true,
           poll: true,
@@ -182,10 +178,7 @@ export async function waitForTransactionReceipt<
                 retrying = true
                 await withRetry(
                   async () => {
-                    transaction = (await getAction(
-                      client,
-                      getTransaction,
-                    )({ hash })) as GetTransactionReturnType<TChain>
+                    transaction = await getTransaction(client, { hash })
                     if (transaction.blockNumber)
                       blockNumber = transaction.blockNumber
                   },
@@ -199,7 +192,7 @@ export async function waitForTransactionReceipt<
               }
 
               // Get the receipt to check if it's been processed.
-              receipt = await getAction(client, getTransactionReceipt)({ hash })
+              receipt = await getTransactionReceipt(client, { hash })
 
               // Check if we have enough confirmations. If not, continue polling.
               if (
@@ -222,16 +215,13 @@ export async function waitForTransactionReceipt<
                   replacedTransaction = transaction
 
                   // Let's retrieve the transactions from the current block.
-                  const block = await getAction(
-                    client,
-                    getBlock,
-                  )({
+                  const block = await getBlock(client, {
                     blockNumber,
                     includeTransactions: true,
                   })
 
                   const replacementTransaction = (
-                    block.transactions as {} as Transaction[]
+                    block.transactions as Transaction[]
                   ).find(
                     ({ from, nonce }) =>
                       from === replacedTransaction!.from &&
@@ -242,10 +232,7 @@ export async function waitForTransactionReceipt<
                   if (!replacementTransaction) return
 
                   // If we found a replacement transaction, return it's receipt.
-                  receipt = await getAction(
-                    client,
-                    getTransactionReceipt,
-                  )({
+                  receipt = await getTransactionReceipt(client, {
                     hash: replacementTransaction.hash,
                   })
 

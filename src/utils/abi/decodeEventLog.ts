@@ -124,15 +124,17 @@ export function decodeEventLog<
 
   // Decode topics (indexed args).
   const indexedInputs = inputs.filter((x) => 'indexed' in x && x.indexed)
-  for (let i = 0; i < indexedInputs.length; i++) {
-    const param = indexedInputs[i]
-    const topic = argTopics[i]
-    if (!topic)
-      throw new DecodeLogTopicsMismatch({
-        abiItem,
-        param: param as AbiParameter & { indexed: boolean },
-      })
-    args[param.name || i] = decodeTopic({ param, value: topic })
+  if (argTopics.length > 0) {
+    for (let i = 0; i < indexedInputs.length; i++) {
+      const param = indexedInputs[i]
+      const topic = argTopics[i]
+      if (!topic)
+        throw new DecodeLogTopicsMismatch({
+          abiItem,
+          param: param as AbiParameter & { indexed: boolean },
+        })
+      args[param.name || i] = decodeTopic({ param, value: topic })
+    }
   }
 
   // Decode data (non-indexed args).

@@ -36,7 +36,6 @@ import type { GetChain } from '../../types/chain.js'
 import type { TransactionSerializable } from '../../types/transaction.js'
 import type { UnionOmit } from '../../types/utils.js'
 import type { FormattedTransactionRequest } from '../../utils/formatters/transactionRequest.js'
-import { getAction } from '../../utils/getAction.js'
 import type {
   AssertRequestErrorType,
   AssertRequestParameters,
@@ -119,7 +118,7 @@ export type PrepareTransactionRequestErrorType =
 export async function prepareTransactionRequest<
   TChain extends Chain | undefined,
   TAccount extends Account | undefined,
-  TChainOverride extends Chain | undefined = undefined,
+  TChainOverride extends Chain | undefined,
 >(
   client: Client<Transport, TChain, TAccount>,
   args: PrepareTransactionRequestParameters<TChain, TAccount, TChainOverride>,
@@ -130,15 +129,12 @@ export async function prepareTransactionRequest<
   if (!account_) throw new AccountNotFoundError()
   const account = parseAccount(account_)
 
-  const block = await getAction(client, getBlock)({ blockTag: 'latest' })
+  const block = await getBlock(client, { blockTag: 'latest' })
 
   const request = { ...args, from: account.address }
 
   if (typeof nonce === 'undefined')
-    request.nonce = await getAction(
-      client,
-      getTransactionCount,
-    )({
+    request.nonce = await getTransactionCount(client, {
       address: account.address,
       blockTag: 'pending',
     })
@@ -193,10 +189,7 @@ export async function prepareTransactionRequest<
   }
 
   if (typeof gas === 'undefined')
-    request.gas = await getAction(
-      client,
-      estimateGas,
-    )({
+    request.gas = await estimateGas(client, {
       ...request,
       account: { address: account.address, type: 'json-rpc' },
     } as EstimateGasParameters)

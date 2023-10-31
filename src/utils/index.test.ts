@@ -45,7 +45,6 @@ test('exports utils', () => {
       "encodeFunctionResult": [Function],
       "encodePacked": [Function],
       "extract": [Function],
-      "extractChain": [Function],
       "extractFunctionName": [Function],
       "extractFunctionParams": [Function],
       "extractFunctionParts": [Function],

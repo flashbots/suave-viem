@@ -1,4 +1,4 @@
-import { defineChain } from '../../utils/chain/defineChain.js'
+import { defineChain } from '../../utils/chain.js'
 
 export const gobi = /*#__PURE__*/ defineChain({
   id: 1_663,

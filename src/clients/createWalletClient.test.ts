@@ -265,7 +265,6 @@ describe('args: transport', () => {
         "signTypedData": [Function],
         "switchChain": [Function],
         "transport": {
-          "fetchOptions": undefined,
           "key": "http",
           "name": "HTTP JSON-RPC",
           "request": [Function],
@@ -432,7 +431,6 @@ test('extend', () => {
       "getGasPrice": [Function],
       "getLogs": [Function],
       "getPermissions": [Function],
-      "getProof": [Function],
       "getStorageAt": [Function],
       "getTransaction": [Function],
       "getTransactionConfirmations": [Function],
@@ -481,7 +479,6 @@ test('extend', () => {
       "stopImpersonatingAccount": [Function],
       "switchChain": [Function],
       "transport": {
-        "fetchOptions": undefined,
         "key": "http",
         "name": "HTTP JSON-RPC",
         "request": [Function],

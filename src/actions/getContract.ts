@@ -11,7 +11,8 @@ import type {
 } from 'abitype'
 
 import type { Account } from '../accounts/types.js'
-import type { Client } from '../clients/createClient.js'
+import type { PublicClient } from '../clients/createPublicClient.js'
+import type { WalletClient } from '../clients/createWalletClient.js'
 import type { Transport } from '../clients/transports/createTransport.js'
 import type { Chain } from '../types/chain.js'
 import type {
@@ -28,7 +29,6 @@ import type {
 } from '../types/utils.js'
 
 import type { ErrorType } from '../errors/utils.js'
-import { getAction } from '../utils/getAction.js'
 import {
   type CreateContractEventFilterParameters,
   type CreateContractEventFilterReturnType,
@@ -70,9 +70,9 @@ export type GetContractParameters<
   TChain extends Chain | undefined = Chain | undefined,
   TAccount extends Account | undefined = Account | undefined,
   TAbi extends Abi | readonly unknown[] = Abi,
-  TPublicClient extends Client<TTransport, TChain> | unknown = unknown,
+  TPublicClient extends PublicClient<TTransport, TChain> | unknown = unknown,
   TWalletClient extends
-    | Client<TTransport, TChain, TAccount>
+    | WalletClient<TTransport, TChain, TAccount>
     | unknown = unknown,
   TAddress extends Address = Address,
 > = {
@@ -106,8 +106,8 @@ export type GetContractParameters<
 
 export type GetContractReturnType<
   TAbi extends Abi | readonly unknown[] = Abi,
-  TPublicClient extends Client | unknown = unknown,
-  TWalletClient extends Client | unknown = unknown,
+  TPublicClient extends PublicClient | unknown = unknown,
+  TWalletClient extends WalletClient | unknown = unknown,
   TAddress extends Address = Address,
   _EventNames extends string = TAbi extends Abi
     ? Abi extends TAbi
@@ -126,7 +126,7 @@ export type GetContractReturnType<
     : string,
   _Narrowable extends boolean = IsNarrowable<TAbi, Abi>,
 > = Prettify<
-  (TPublicClient extends Client
+  (TPublicClient extends PublicClient
     ? (IsNever<_ReadFunctionNames> extends true
         ? unknown
         : {
@@ -316,7 +316,7 @@ export type GetContractReturnType<
               }
             })
     : unknown) &
-    (TWalletClient extends Client
+    (TWalletClient extends WalletClient
       ? IsNever<_WriteFunctionNames> extends true
         ? unknown
         : {
@@ -421,11 +421,11 @@ export function getContract<
   const TAbi extends Abi | readonly unknown[],
   TChain extends Chain | undefined = Chain | undefined,
   TAccount extends Account | undefined = Account | undefined,
-  TPublicClient extends Client<TTransport, TChain> | undefined =
-    | Client<TTransport, TChain>
+  TPublicClient extends PublicClient<TTransport, TChain> | undefined =
+    | PublicClient<TTransport, TChain>
     | undefined,
-  TWalletClient extends Client<TTransport, TChain, TAccount> | undefined =
-    | Client<TTransport, TChain, TAccount>
+  TWalletClient extends WalletClient<TTransport, TChain, TAccount> | undefined =
+    | WalletClient<TTransport, TChain, TAccount>
     | undefined,
 >({
   abi,
@@ -486,10 +486,7 @@ export function getContract<
               ]
             ) => {
               const { args, options } = getFunctionParameters(parameters)
-              return getAction(
-                publicClient,
-                readContract,
-              )({
+              return readContract(publicClient, {
                 abi,
                 address,
                 functionName,
@@ -516,10 +513,7 @@ export function getContract<
               ]
             ) => {
               const { args, options } = getFunctionParameters(parameters)
-              return getAction(
-                publicClient,
-                simulateContract,
-              )({
+              return simulateContract(publicClient, {
                 abi,
                 address,
                 functionName,
@@ -552,10 +546,7 @@ export function getContract<
                 parameters,
                 abiEvent!,
               )
-              return getAction(
-                publicClient,
-                createContractEventFilter,
-              )({
+              return createContractEventFilter(publicClient, {
                 abi,
                 address,
                 eventName,
@@ -586,10 +577,7 @@ export function getContract<
                 parameters,
                 abiEvent!,
               )
-              return getAction(
-                publicClient,
-                getContractEvents,
-              )({
+              return getContractEvents(publicClient, {
                 abi,
                 address,
                 eventName,
@@ -620,10 +608,7 @@ export function getContract<
                 parameters,
                 abiEvent!,
               )
-              return getAction(
-                publicClient,
-                watchContractEvent,
-              )({
+              return watchContractEvent(publicClient, {
                 abi,
                 address,
                 eventName,
@@ -653,10 +638,7 @@ export function getContract<
               ]
             ) => {
               const { args, options } = getFunctionParameters(parameters)
-              return getAction(
-                walletClient,
-                writeContract,
-              )({
+              return writeContract(walletClient, {
                 abi,
                 address,
                 functionName,
@@ -691,10 +673,7 @@ export function getContract<
             ) => {
               const { args, options } = getFunctionParameters(parameters)
               const client = (publicClient ?? walletClient)!
-              return getAction(
-                client,
-                estimateContractGas,
-              )({
+              return estimateContractGas(client, {
                 abi,
                 address,
                 functionName,
@@ -702,7 +681,7 @@ export function getContract<
                 ...options,
                 account:
                   (options as EstimateContractGasParameters).account ??
-                  (walletClient as unknown as Client).account,
+                  (walletClient as unknown as WalletClient).account,
               } as any)
             }
           },

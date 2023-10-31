@@ -27,7 +27,6 @@ test('default', () => {
       },
       "request": [Function],
       "value": {
-        "fetchOptions": undefined,
         "url": "https://mockapi.com/rpc",
       },
     }
@@ -53,7 +52,6 @@ describe('config', () => {
         },
         "request": [Function],
         "value": {
-          "fetchOptions": undefined,
           "url": "https://mockapi.com/rpc",
         },
       }
@@ -78,7 +76,6 @@ describe('config', () => {
         },
         "request": [Function],
         "value": {
-          "fetchOptions": undefined,
           "url": "https://mockapi.com/rpc",
         },
       }
@@ -101,36 +98,6 @@ describe('config', () => {
         },
         "request": [Function],
         "value": {
-          "fetchOptions": undefined,
-          "url": "https://mockapi.com/rpc",
-        },
-      }
-    `)
-  })
-
-  test('fetchOptions', () => {
-    const transport = http('https://mockapi.com/rpc', {
-      fetchOptions: { headers: { Authorization: 'wagmi' } },
-    })({})
-
-    expect(transport).toMatchInlineSnapshot(`
-      {
-        "config": {
-          "key": "http",
-          "name": "HTTP JSON-RPC",
-          "request": [Function],
-          "retryCount": 3,
-          "retryDelay": 150,
-          "timeout": 10000,
-          "type": "http",
-        },
-        "request": [Function],
-        "value": {
-          "fetchOptions": {
-            "headers": {
-              "Authorization": "wagmi",
-            },
-          },
           "url": "https://mockapi.com/rpc",
         },
       }

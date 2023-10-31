@@ -1,4 +1,4 @@
-import { defineChain } from '../../utils/chain/defineChain.js'
+import { defineChain } from '../../utils/chain.js'
 
 export const modeTestnet = /*#__PURE__*/ defineChain({
   id: 919,
@@ -17,12 +17,6 @@ export const modeTestnet = /*#__PURE__*/ defineChain({
     default: {
       name: 'Blockscout',
       url: 'https://sepolia.explorer.mode.network',
-    },
-  },
-  contracts: {
-    multicall3: {
-      address: '0xBAba8373113Fb7a68f195deF18732e01aF8eDfCF',
-      blockCreated: 3019007,
     },
   },
   testnet: true,

@@ -36,9 +36,6 @@ const block: RpcBlock = {
   transactionsRoot:
     '0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421',
   uncles: [],
-  withdrawals: [],
-  withdrawalsRoot:
-    '0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421',
 }
 
 test('deserializes block', () => {
@@ -69,8 +66,6 @@ test('deserializes block', () => {
       "transactions": [],
       "transactionsRoot": "0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421",
       "uncles": [],
-      "withdrawals": [],
-      "withdrawalsRoot": "0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421",
     }
   `)
 })
@@ -118,8 +113,6 @@ test('nullish values', () => {
       "transactions": [],
       "transactionsRoot": "0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421",
       "uncles": [],
-      "withdrawals": [],
-      "withdrawalsRoot": "0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421",
     }
   `)
 })

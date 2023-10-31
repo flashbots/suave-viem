@@ -4,7 +4,6 @@ import type { ErrorType } from '../../errors/utils.js'
 import type { Chain } from '../../types/chain.js'
 import type { Hash } from '../../types/misc.js'
 import type { FormattedTransactionReceipt } from '../../utils/formatters/transactionReceipt.js'
-import { getAction } from '../../utils/getAction.js'
 
 import {
   type GetBlockNumberErrorType,
@@ -67,8 +66,8 @@ export async function getTransactionConfirmations<
   { hash, transactionReceipt }: GetTransactionConfirmationsParameters<TChain>,
 ): Promise<GetTransactionConfirmationsReturnType> {
   const [blockNumber, transaction] = await Promise.all([
-    getAction(client, getBlockNumber)({}),
-    hash ? getAction(client, getTransaction)({ hash }) : undefined,
+    getBlockNumber(client),
+    hash ? getTransaction(client, { hash }) : undefined,
   ])
   const transactionBlockNumber =
     transactionReceipt?.blockNumber || transaction?.blockNumber

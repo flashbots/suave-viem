@@ -136,12 +136,12 @@ export async function estimateGas<
 
     assertRequest(args as AssertRequestParameters)
 
-    const chainFormat = client.chain?.formatters?.transactionRequest?.format
-    const format = chainFormat || formatTransactionRequest
-
+    const format =
+      client.chain?.formatters?.transactionRequest?.format ||
+      formatTransactionRequest
     const request = format({
       // Pick out extra data that might exist on the chain's transaction request type.
-      ...extract(rest, { format: chainFormat }),
+      ...extract(rest, { format }),
       from: account.address,
       accessList,
       data,

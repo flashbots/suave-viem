@@ -1,4 +1,4 @@
-import { defineChain } from '../../../utils/chain/defineChain.js'
+import { defineChain } from '../../../utils/chain.js'
 
 export const skaleNebulaTestnet = /*#__PURE__*/ defineChain({
   id: 503_129_905,

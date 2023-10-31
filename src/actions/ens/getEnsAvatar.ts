@@ -8,7 +8,6 @@ import {
   type ParseAvatarRecordErrorType,
   parseAvatarRecord,
 } from '../../utils/ens/avatar/parseAvatarRecord.js'
-import { getAction } from '../../utils/getAction.js'
 
 import {
   type GetEnsTextErrorType,
@@ -68,10 +67,7 @@ export async function getEnsAvatar<TChain extends Chain | undefined>(
     universalResolverAddress,
   }: GetEnsAvatarParameters,
 ): Promise<GetEnsAvatarReturnType> {
-  const record = await getAction(
-    client,
-    getEnsText,
-  )({
+  const record = await getEnsText(client, {
     blockNumber,
     blockTag,
     key: 'avatar',

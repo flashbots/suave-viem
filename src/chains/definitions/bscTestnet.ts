@@ -1,4 +1,4 @@
-import { defineChain } from '../../utils/chain/defineChain.js'
+import { defineChain } from '../../utils/chain.js'
 
 export const bscTestnet = /*#__PURE__*/ defineChain({
   id: 97,

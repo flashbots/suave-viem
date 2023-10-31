@@ -121,7 +121,7 @@ const success = await walletClient.watchAsset({
 })
 ```
 
-### options.image
+### options.address
 
 - **Type:** `string`
 

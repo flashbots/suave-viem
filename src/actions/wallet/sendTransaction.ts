@@ -22,7 +22,7 @@ import type { RequestErrorType } from '../../utils/buildRequest.js'
 import {
   type AssertCurrentChainErrorType,
   assertCurrentChain,
-} from '../../utils/chain/assertCurrentChain.js'
+} from '../../utils/chain.js'
 import {
   type GetTransactionErrorReturnType,
   getTransactionError,
@@ -32,7 +32,6 @@ import {
   type FormattedTransactionRequest,
   formatTransactionRequest,
 } from '../../utils/formatters/transactionRequest.js'
-import { getAction } from '../../utils/getAction.js'
 import {
   type AssertRequestErrorType,
   type AssertRequestParameters,
@@ -124,7 +123,7 @@ export type SendTransactionErrorType =
 export async function sendTransaction<
   TChain extends Chain | undefined,
   TAccount extends Account | undefined,
-  TChainOverride extends Chain | undefined = undefined,
+  TChainOverride extends Chain | undefined,
 >(
   client: Client<Transport, TChain, TAccount>,
   args: SendTransactionParameters<TChain, TAccount, TChainOverride>,
@@ -155,7 +154,7 @@ export async function sendTransaction<
 
     let chainId
     if (chain !== null) {
-      chainId = await getAction(client, getChainId)({})
+      chainId = await getChainId(client)
       assertCurrentChain({
         currentChainId: chainId,
         chain,
@@ -164,10 +163,7 @@ export async function sendTransaction<
 
     if (account.type === 'local') {
       // Prepare the request for signing (assign appropriate fees, etc.)
-      const request = await getAction(
-        client,
-        prepareTransactionRequest,
-      )({
+      const request = await prepareTransactionRequest(client, {
         account,
         accessList,
         chain,
@@ -182,7 +178,7 @@ export async function sendTransaction<
         ...rest,
       } as any)
 
-      if (!chainId) chainId = await getAction(client, getChainId)({})
+      if (!chainId) chainId = await getChainId(client)
 
       const serializer = chain?.serializers?.transaction
       const serializedTransaction = (await account.signTransaction(
@@ -192,20 +188,16 @@ export async function sendTransaction<
         } as TransactionSerializable,
         { serializer },
       )) as Hash
-      return await getAction(
-        client,
-        sendRawTransaction,
-      )({
+      return await sendRawTransaction(client, {
         serializedTransaction,
       })
     }
 
-    const chainFormat = client.chain?.formatters?.transactionRequest?.format
-    const format = chainFormat || formatTransactionRequest
-
+    const format =
+      chain?.formatters?.transactionRequest?.format || formatTransactionRequest
     const request = format({
       // Pick out extra data that might exist on the chain's transaction request type.
-      ...extract(rest, { format: chainFormat }),
+      ...extract(rest, { format }),
       accessList,
       data,
       from: account.address,

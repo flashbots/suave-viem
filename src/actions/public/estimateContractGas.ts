@@ -20,7 +20,6 @@ import {
   type GetContractErrorReturnType,
   getContractError,
 } from '../../utils/errors/getContractError.js'
-import { getAction } from '../../utils/getAction.js'
 import {
   type EstimateGasErrorType,
   type EstimateGasParameters,
@@ -96,10 +95,7 @@ export async function estimateContractGas<
     functionName,
   } as unknown as EncodeFunctionDataParameters<TAbi, TFunctionName>)
   try {
-    const gas = await getAction(
-      client,
-      estimateGas,
-    )({
+    const gas = await estimateGas(client, {
       data,
       to: address,
       ...request,

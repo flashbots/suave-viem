@@ -19,7 +19,6 @@ import type {
   FeeValuesLegacy,
   FeeValuesType,
 } from '../../types/fee.js'
-import { getAction } from '../../utils/getAction.js'
 import type { PrepareTransactionRequestParameters } from '../wallet/prepareTransactionRequest.js'
 import {
   type EstimateMaxPriorityFeePerGasErrorType,
@@ -126,7 +125,7 @@ export async function internal_estimateFeesPerGas<
     (base * BigInt(Math.ceil(baseFeeMultiplier * denominator))) /
     BigInt(denominator)
 
-  const block = block_ ? block_ : await getAction(client, getBlock)({})
+  const block = block_ ? block_ : await getBlock(client)
 
   if (typeof chain?.fees?.estimateFeesPerGas === 'function')
     return chain.fees.estimateFeesPerGas({
@@ -162,8 +161,7 @@ export async function internal_estimateFeesPerGas<
     } as EstimateFeesPerGasReturnType<type>
   }
 
-  const gasPrice =
-    request?.gasPrice ?? multiply(await getAction(client, getGasPrice)({}))
+  const gasPrice = request?.gasPrice ?? multiply(await getGasPrice(client))
   return {
     gasPrice,
   } as EstimateFeesPerGasReturnType<type>

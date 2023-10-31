@@ -15,7 +15,6 @@ import {
 } from '../../utils/data/isBytesEqual.js'
 import type { IsHexErrorType } from '../../utils/data/isHex.js'
 import type { ToHexErrorType } from '../../utils/encoding/toHex.js'
-import { getAction } from '../../utils/getAction.js'
 import { encodeDeployData, isHex, toHex } from '../../utils/index.js'
 import { type CallErrorType, type CallParameters, call } from './call.js'
 
@@ -55,10 +54,7 @@ export async function verifyHash<TChain extends Chain | undefined,>(
   const signatureHex = isHex(signature) ? signature : toHex(signature)
 
   try {
-    const { data } = await getAction(
-      client,
-      call,
-    )({
+    const { data } = await call(client, {
       data: encodeDeployData({
         abi: universalSignatureValidatorAbi,
         args: [address, hash, signatureHex],
