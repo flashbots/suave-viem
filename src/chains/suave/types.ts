@@ -19,14 +19,16 @@ export enum SuaveTxTypes {
 
 export type SuaveTxType = '0x0' | `${SuaveTxTypes}`
 
+type FeeValues<TQuantity> = FeeValuesLegacy<TQuantity>
+
 type TransactionBase<
   TQuantity,
   TIndex,
   TType,
   TPending extends boolean,
 > = TransactionBase_<TQuantity, TIndex, TPending> &
-  FeeValuesLegacy<TQuantity> & {
-    accessList?: never
+  FeeValues<TQuantity> & {
+    accessList?: AccessList
     chainId: TIndex
     type: TType
   }
@@ -42,8 +44,8 @@ type TransactionRequestBase<TQuantity, TIndex, TType> = Omit<
   TransactionRequestBase_<TQuantity, TIndex>,
   'from'
 > &
-  FeeValuesLegacy<TQuantity> & {
-    accessList?: never
+  FeeValues<TQuantity> & {
+    accessList?: AccessList
     chainId: TIndex
     type: TType
   }
@@ -68,7 +70,7 @@ export type SuaveRpcBlock<
 
 export type TransactionSuave<
   TPending extends boolean = boolean,
-  TType = SuaveTxType,
+  TType extends SuaveTxType = SuaveTxType,
   TQuantity = bigint,
   TIndex = number,
 > = TransactionBase<TQuantity, TIndex, TType, TPending> & {
@@ -89,9 +91,13 @@ export type TransactionSuave<
  * and/or signing transactions.
  */
 export type RpcTransactionSuave<
-  TType extends SuaveTxType = SuaveTxType,
+  TType extends SuaveTxType,
   TPending extends boolean = boolean,
-> = TransactionSuave<TPending, TType, Hex, Hex>
+> = TransactionSuave<TPending, TType, Hex, Hex> & {
+  executionNode: Address
+  requestRecord: ConfidentialComputeRecord<TPending, Hex, Hex>
+  confidentialComputeResult: Hex
+}
 
 export type ConfidentialComputeRecord<
   TPending extends boolean = true,
@@ -116,7 +122,7 @@ export type ConfidentialComputeRecordRpc<TPending extends boolean = true,> =
 export type TransactionRequestSuave<
   TQuantity = bigint,
   TIndex = number,
-  TType =
+  TType extends SuaveTxType =
     | SuaveTxTypes.ConfidentialRequest
     | SuaveTxTypes.ConfidentialRecord
     | '0x0',
@@ -133,7 +139,7 @@ export type RpcTransactionRequestSuave<
   TIndex = Hex,
   TType extends SuaveTxType = SuaveTxTypes.ConfidentialRequest,
 > = TransactionRequestBase<TQuantity, TIndex, TType> &
-  FeeValuesLegacy<TQuantity> & {
+  FeeValues<TQuantity> & {
     executionNode?: Address
     isConfidential?: boolean
     confidentialInputs: Hex
@@ -160,11 +166,10 @@ export type TransactionSerializableEIP2930<
   TQuantity = bigint,
   TIndex = number,
 > = TransactionSerializableBase<TQuantity, TIndex> &
-  Partial<FeeValuesLegacy<TQuantity>> & {
+  FeeValues<TQuantity> & {
     accessList?: AccessList
     chainId: TIndex
     yParity?: TIndex
-    gasPrice?: TQuantity
   }
 
 export type TransactionSerializableSuave<
@@ -172,8 +177,6 @@ export type TransactionSerializableSuave<
   TIndex = number,
   TType = SuaveTxType,
 > = TransactionSerializableEIP2930<TQuantity, TIndex> & {
-  // chainId: TIndex
-  /// data is an alias for input
   executionNode?: Address
   confidentialInputs?: Hex
   confidentialInputsHash?: Hash

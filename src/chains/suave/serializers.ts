@@ -17,6 +17,7 @@ import {
   hexToNumber,
   isAddress,
   isHex,
+  // serializeTransaction,
 } from '../../index.js'
 import type { Hex, Signature } from '../../types/misc.js'
 import { concatHex } from '../../utils/data/concat.js'
@@ -221,10 +222,10 @@ export const serializeConfidentialComputeRequest = (
 
 // Define the Suave serializers object
 // export const serializersSuave = {
-//   transaction: (tx: TransactionRequestSuave, sig: Signature) => {
+//   transaction: (tx: TransactionRequestSuave, sig?: Signature) => {
 //     console.log(`tx: ${tx}`, `sig: ${sig}`)
 //     if (tx.type === SuaveTxTypes.ConfidentialRequest) {
-//       return serializeTransactionSuave(tx as TransactionSerializableSuave, , sig)
+//       return serializeConfidentialComputeRequest(tx as TransactionSerializableSuave, , sig)
 //     }
 //     return serializeTransaction(tx, sig)
 //   },

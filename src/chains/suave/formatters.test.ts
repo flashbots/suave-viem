@@ -1,18 +1,12 @@
 import { describe, expect, test } from 'vitest'
-
 import { type Hex, numberToHex, zeroAddress } from '~viem/index.js'
 import { suaveRigil } from '../index.js'
-import type {
-  ConfidentialComputeRecordRpc,
-  SuaveRpcTransaction,
-  SuaveTransactionRequest,
+import {
+  type ConfidentialComputeRecordRpc,
+  type RpcTransactionSuave,
+  SuaveTxTypes,
+  type TransactionRequestSuave,
 } from './types.js'
-
-// Assuming you have similar actions for the Suave chain like the Celo ones provided.
-// import { hexToBigInt } from '~viem/index.js'
-// import { getBlock } from '../../actions/public/getBlock.js'
-// import { getTransaction } from '../../actions/public/getTransaction.js'
-// import { getTransactionReceipt } from '../../actions/public/getTransactionReceipt.js'
 
 // describe('block', () => {
 //   test('formatter', () => {
@@ -43,13 +37,14 @@ describe('transaction', () => {
       // maxFeePerGas: '0x1' as Hex,
       // maxPriorityFeePerGas: '0x1' as Hex,
       type: '0x42' as `0x42`,
+      typeHex: '0x42' as `0x42`,
     } as ConfidentialComputeRecordRpc
 
     const inputTransactionRpc = {
       blockHash:
         '0x8756d7614991fafffd2c788d7213122a2145629860575fb52be80cbef128fbb6',
       chainId: numberToHex(suaveRigil.id),
-      executionNode: '0x0' as Hex,
+      executionNode: '0x2100000000210000000021000000002100000000' as Hex,
       requestRecord,
       confidentialComputeResult: '0x0' as Hex,
       blockNumber: '0x10' as Hex,
@@ -65,9 +60,9 @@ describe('transaction', () => {
       input: '0x0' as Hex,
       to: '0x1300000000130000000013000000001300000000' as Hex,
       value: '0x0' as Hex,
-      type: '0x50',
-      typeHex: '0x50',
-    } as SuaveRpcTransaction
+      type: SuaveTxTypes.Suave,
+      typeHex: SuaveTxTypes.Suave,
+    } as RpcTransactionSuave<SuaveTxTypes.Suave>
 
     const formattedTransaction = transaction.format(inputTransactionRpc)
     expect(formattedTransaction).toMatchInlineSnapshot(`
@@ -77,7 +72,7 @@ describe('transaction', () => {
       "blockNumber": 16n,
       "chainId": 16813125,
       "confidentialComputeResult": "0x0",
-      "executionNode": "0x0",
+      "executionNode": "0x2100000000210000000021000000002100000000",
       "from": "0x0000000000000000000000000000000000000000",
       "gas": 19n,
       "gasPrice": 256n,
@@ -98,14 +93,12 @@ describe('transaction', () => {
         "gasPrice": 4096n,
         "hash": "0x3303d96ec5d3387da51f2fc815ea3e88c5b534383f86eef02a9200f0c6fd5713",
         "input": "0x0",
-        "maxFeePerGas": undefined,
-        "maxPriorityFeePerGas": undefined,
         "nonce": 0,
         "r": "0x0",
         "s": "0x0",
         "to": "0x1300000000130000000013000000001300000000",
         "transactionIndex": null,
-        "type": "confidentialRecord",
+        "type": "0x42",
         "typeHex": "0x42",
         "v": 0n,
         "value": 0n,
@@ -113,8 +106,8 @@ describe('transaction', () => {
       "s": "0x0",
       "to": "0x1300000000130000000013000000001300000000",
       "transactionIndex": 0,
-      "type": "suave",
-      "typeHex": "0x0",
+      "type": "0x50",
+      "typeHex": "0x50",
       "v": 0n,
       "value": 0n,
     }
@@ -127,14 +120,14 @@ describe('transaction', () => {
 //     const { transactionReceipt } = suaveRigil.formatters!
 
 //     const inputReceipt = {
-//       // ... input fields based on SuaveRpcTransactionReceiptOverrides
+//       // ... input fields based on RpcTransactionSuaveReceiptOverrides
 //     }
 
 //     const formattedReceipt = transactionReceipt.format(inputReceipt)
 
 //     expect(formattedReceipt).toMatchInlineSnapshot(`
 //       {
-//         // ... Expected fields here based on the SuaveRpcTransactionReceiptOverrides format
+//         // ... Expected fields here based on the RpcTransactionSuaveReceiptOverrides format
 //       }
 //     `)
 //   })
@@ -143,7 +136,7 @@ describe('transaction', () => {
 describe('transactionRequest', () => {
   test('formatter (confidential)', () => {
     const { transactionRequest } = suaveRigil.formatters!
-    const inputRequest: SuaveTransactionRequest = {
+    const inputRequest: TransactionRequestSuave = {
       from: zeroAddress,
       to: zeroAddress,
       gas: 1n,
@@ -160,13 +153,15 @@ describe('transactionRequest', () => {
       // Data  *hexutil.Bytes `json:"data"`
       data: '0x0',
       // input: '0x0',
-      type: 'suave',
+      type: SuaveTxTypes.ConfidentialRequest,
     }
     const formattedRequest = transactionRequest.format(inputRequest)
 
+    console.log('formatted', formattedRequest)
+
     expect(formattedRequest).toMatchInlineSnapshot(`
       {
-        "chainId": 16813125,
+        "chainId": "0x1008c45",
         "confidentialInputs": "0x13131313",
         "data": "0x0",
         "executionNode": "0x0000000000000000000000000000000000000000",
@@ -178,7 +173,7 @@ describe('transactionRequest', () => {
         "maxPriorityFeePerGas": undefined,
         "nonce": "0xd",
         "to": "0x0000000000000000000000000000000000000000",
-        "type": "0x50",
+        "type": "0x43",
         "value": "0x0",
       }
     `)
@@ -186,15 +181,13 @@ describe('transactionRequest', () => {
 
   test('formatter (standard)', () => {
     const { transactionRequest } = suaveRigil.formatters!
-    const inputRequest: SuaveTransactionRequest = {
+    const inputRequest: TransactionRequestSuave = {
       chainId: suaveRigil.id,
       from: zeroAddress,
       to: zeroAddress,
       gas: 1n,
       gasPrice: 0n,
       value: 0n,
-      executionNode: zeroAddress,
-      confidentialInputs: '0x0',
       // confidentialResult omitted
       nonce: 13,
       // We accept "data" and "input" for backwards-compatibility reasons.
@@ -203,16 +196,16 @@ describe('transactionRequest', () => {
       // Data  *hexutil.Bytes `json:"data"`
       data: '0x0',
       // input: '0x0',
-      type: 'suave',
+      type: '0x0',
     }
     const formattedRequest = transactionRequest.format(inputRequest)
+
+    // console.log("formatted", formattedRequest)
 
     expect(formattedRequest).toMatchInlineSnapshot(`
       {
         "chainId": 16813125,
-        "confidentialInputs": "0x0",
         "data": "0x0",
-        "executionNode": "0x0000000000000000000000000000000000000000",
         "from": "0x0000000000000000000000000000000000000000",
         "gas": "0x1",
         "gasPrice": "0x0",
@@ -220,7 +213,7 @@ describe('transactionRequest', () => {
         "maxPriorityFeePerGas": undefined,
         "nonce": "0xd",
         "to": "0x0000000000000000000000000000000000000000",
-        "type": "0x50",
+        "type": undefined,
         "value": "0x0",
       }
     `)

@@ -23,16 +23,20 @@ export function getSuaveWallet<
   TChain extends Chain | undefined = undefined,
 >(
   params: { transport: TTransport; chain: TChain },
-  privateKey?: Hex,
-): WalletClient<TTransport, TChain, PrivateKeyAccount> {
+  privateKey: Hex,
+): WalletClient<
+  TTransport,
+  TChain,
+  PrivateKeyAccount // TODO: generalize account types (required to make metamask transport work)
+> {
   return createWalletClient({
     account: privateKey ? privateKeyToAccount(privateKey) : undefined,
     transport: params.transport,
     chain: params.chain,
   }).extend((client) => ({
     async sendTransaction(txRequest: TransactionRequestSuave) {
-      console.log('wallet address', client.account.address)
-      const preparedTx = await client.prepareTransactionRequest<TChain>(
+      console.log('wallet address', client.account?.address)
+      const preparedTx = await client.prepareTransactionRequest(
         txRequest as any,
       )
       console.log('prepared request', preparedTx)
@@ -53,21 +57,21 @@ export function getSuaveWallet<
         value: txRequest.value,
         data: txRequest.data,
         confidentialInputs: txRequest.confidentialInputs,
-      } as TransactionSerializableSuave
+      }
 
       let fullTx: Hex
       if (txRequest.type === SuaveTxTypes.ConfidentialRequest) {
-        const signedComputeRecord = (await this.signTransaction({
+        const signedComputeRecord = await this.signTransaction({
           ...payload,
           type: SuaveTxTypes.ConfidentialRecord,
-        })) as SuaveTxTypes.ConfidentialRecord
+        })
 
         fullTx = serializeConfidentialComputeRequest(
           {
             ...payload,
             nonce: preparedTx.nonce,
             type: SuaveTxTypes.ConfidentialRequest,
-            from: client.account.address,
+            // from: client.account.address,
           } as TransactionSerializableSuave,
           signedComputeRecord,
         )
@@ -79,11 +83,11 @@ export function getSuaveWallet<
         params: [fullTx],
       })
     },
-    async signTransaction(txRequest: TransactionSerializableSuave) {
+    async signTransaction(txRequest: TransactionRequestSuave) {
       console.log('im in signTransaction rn', txRequest.type)
       if (txRequest.type === SuaveTxTypes.ConfidentialRequest) {
         // sign confidential compute record
-        const signedComputeRecord = await client.account.signTransaction(
+        const signedComputeRecord = await client.account?.signTransaction(
           {
             ...txRequest,
             type: SuaveTxTypes.ConfidentialRecord,
