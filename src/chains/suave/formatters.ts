@@ -32,7 +32,7 @@ import {
 
 export const formattersSuave = {
   block: /*#__PURE__*/ defineBlock({
-    // exclude: ['difficulty', 'gasLimit', 'mixHash', 'nonce', 'uncles'],
+    exclude: ['difficulty', 'gasLimit', 'miner', 'mixHash', 'nonce', 'uncles'],
     format(
       args: SuaveBlockOverrides & {
         transactions:

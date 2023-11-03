@@ -47,19 +47,13 @@ describe('block', () => {
       uncles: [],
     }
     const formattedBlock = block.format(inputBlock)
-    // TODO: test block with full txs instead of hashes
     expect(formattedBlock).toMatchInlineSnapshot(`
     {
       "baseFeePerGas": 593345576n,
-      "difficulty": 2n,
       "extraData": "0xd983010c00846765746889676f312e32302e3130856c696e757800000000000059ef44f64ed372a15256091c83b05f5baed1aa0e5bec25bdaa0429fcf32600884ed7c748ef6537a2b8d9cc4a99e8758ae1de406e18f522990381e47290a42e2100",
-      "gasLimit": 30000000n,
       "gasUsed": 27371n,
       "hash": "0xbe3e3c4205915e175df10e39a69d8dcbd4ca5b3e7dff2549a71edbc891a39e63",
       "logsBloom": "0x00400000000000000000000800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000",
-      "miner": "0x0000000000000000000000000000000000000000",
-      "mixHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
-      "nonce": "0x0000000000000000",
       "number": 4n,
       "parentHash": "0xe96d8ed683827eb8e6405c7c04354d41b6878a7ab14f4a501d0966e6f8e96827",
       "receiptsRoot": "0xe546cca7622a906d721d722c3682fa634126ac32d0a0d29045e573205ef941c5",
@@ -72,7 +66,6 @@ describe('block', () => {
         "0x53acb8d180079aa0cc37f5cf3143f71eaffbedde5047b7ed8abaf3c1e6d0d059",
       ],
       "transactionsRoot": "0x5b7fdbd60e4a948b077d615314474b83cad6b8a07b9272fadd85c807395a913a",
-      "uncles": [],
     }
     `)
   })
@@ -131,8 +124,6 @@ describe('block', () => {
             to: '0x8f21fdd6b4f4cacd33151777a46c122797c8bf17',
             gas: '0xf4240',
             gasPrice: '0x3518320e',
-            // maxPriorityFeePerGas: undefined,
-            // maxFeePerGas: undefined,
             value: '0x0',
             input:
               '0xd8f55db90000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000000000000c0c90db5a779ab544cb9105c6ec1118f290000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000010000000000000000000000008f21fdd6b4f4cacd33151777a46c122797c8bf170000000000000000000000000000000000000000000000000000000000000000',
@@ -159,15 +150,10 @@ describe('block', () => {
     expect(formattedBlock).toMatchInlineSnapshot(`
     {
       "baseFeePerGas": 593345576n,
-      "difficulty": 2n,
       "extraData": "0xd983010c00846765746889676f312e32302e3130856c696e757800000000000059ef44f64ed372a15256091c83b05f5baed1aa0e5bec25bdaa0429fcf32600884ed7c748ef6537a2b8d9cc4a99e8758ae1de406e18f522990381e47290a42e2100",
-      "gasLimit": 30000000n,
       "gasUsed": 27371n,
       "hash": "0xbe3e3c4205915e175df10e39a69d8dcbd4ca5b3e7dff2549a71edbc891a39e63",
       "logsBloom": "0x00400000000000000000000800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000",
-      "miner": "0x0000000000000000000000000000000000000000",
-      "mixHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
-      "nonce": "0x0000000000000000",
       "number": 4n,
       "parentHash": "0xe96d8ed683827eb8e6405c7c04354d41b6878a7ab14f4a501d0966e6f8e96827",
       "receiptsRoot": "0xe546cca7622a906d721d722c3682fa634126ac32d0a0d29045e573205ef941c5",
@@ -217,7 +203,6 @@ describe('block', () => {
         },
       ],
       "transactionsRoot": "0x5b7fdbd60e4a948b077d615314474b83cad6b8a07b9272fadd85c807395a913a",
-      "uncles": [],
     }
     `)
   })
@@ -242,8 +227,6 @@ describe('transaction', () => {
       r: '0x0' as Hex,
       s: '0x0' as Hex,
       v: '0x0' as Hex,
-      // maxFeePerGas: '0x1' as Hex,
-      // maxPriorityFeePerGas: '0x1' as Hex,
       type: '0x42' as `0x42`,
       typeHex: '0x42' as `0x42`,
     } as ConfidentialComputeRecordRpc
@@ -354,20 +337,11 @@ describe('transactionRequest', () => {
       executionNode: zeroAddress,
       confidentialInputs: '0x13131313',
       chainId: suaveRigil.id,
-      // confidentialResult omitted
       nonce: 13,
-      // We accept "data" and "input" for backwards-compatibility reasons.
-      // "input" is the newer name and should be preferred by clients.
-      // Issue detail: https://github.com/ethereum/go-ethereum/issues/15628
-      // Data  *hexutil.Bytes `json:"data"`
       data: '0x0',
-      // input: '0x0',
       type: SuaveTxTypes.ConfidentialRequest,
     }
     const formattedRequest = transactionRequest.format(inputRequest)
-
-    console.log('formatted', formattedRequest)
-
     expect(formattedRequest).toMatchInlineSnapshot(`
       {
         "chainId": "0x1008c45",
@@ -396,20 +370,11 @@ describe('transactionRequest', () => {
       gas: 1n,
       gasPrice: 0n,
       value: 0n,
-      // confidentialResult omitted
       nonce: 13,
-      // We accept "data" and "input" for backwards-compatibility reasons.
-      // "input" is the newer name and should be preferred by clients.
-      // Issue detail: https://github.com/ethereum/go-ethereum/issues/15628
-      // Data  *hexutil.Bytes `json:"data"`
       data: '0x0',
-      // input: '0x0',
       type: '0x0',
     }
     const formattedRequest = transactionRequest.format(inputRequest)
-
-    // console.log("formatted", formattedRequest)
-
     expect(formattedRequest).toMatchInlineSnapshot(`
       {
         "chainId": 16813125,
