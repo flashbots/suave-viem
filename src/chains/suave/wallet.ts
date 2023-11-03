@@ -39,9 +39,6 @@ export function getSuaveWallet<
       const preparedTx = await client.prepareTransactionRequest(
         txRequest as any,
       )
-      console.log('prepared request', preparedTx)
-      // if (txRequest.chainId)
-
       const payload = {
         ...txRequest,
         confidentialInputsHash: txRequest.confidentialInputs
@@ -71,7 +68,6 @@ export function getSuaveWallet<
             ...payload,
             nonce: preparedTx.nonce,
             type: SuaveTxTypes.ConfidentialRequest,
-            // from: client.account.address,
           } as TransactionSerializableSuave,
           signedComputeRecord,
         )

@@ -1,16 +1,3 @@
-// // Import necessary utilities and types
-// import { InvalidAddressError } from '../../errors/address.js'
-// import { InvalidChainIdError } from '../../errors/chain.js'
-// import type { ChainSerializers } from '../../types/chain.js'
-// import type { Signature } from '../../types/misc.js'
-// import { isAddress } from '../../utils/address/isAddress.js'
-// import { toHex } from '../../utils/encoding/toHex.js'
-// import { toRlp } from '../../utils/encoding/toRlp.js'
-// import type {
-//   SuaveTransactionSerializable,
-//   TransactionSerializedSuave,
-// } from './types.js' // Adjust the import path
-
 import {
   InvalidSerializedTransactionError,
   hexToBigInt,
@@ -188,12 +175,6 @@ export const serializeConfidentialComputeRequest = (
     transaction.confidentialInputsHash ??
     keccak256(transaction.confidentialInputs || '0x')
 
-  /*
-  type ConfidentialComputeRequest struct {
-    ConfidentialComputeRecord
-    ConfidentialInputs []byte
-  }
-  */
   const serializedTransaction: (Hex | Hex[])[] = [
     [
       ccRecord.nonce ? numberToHex(ccRecord.nonce) : '0x',
