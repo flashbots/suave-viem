@@ -20,7 +20,7 @@ import {
 
 export function getSuaveWallet<
   TTransport extends Transport,
-  TChain extends Chain | undefined = undefined,
+  TChain extends Chain,
 >(
   params: { transport: TTransport; chain: TChain },
   privateKey: Hex,
@@ -49,7 +49,6 @@ export function getSuaveWallet<
         gas: txRequest.gas,
         gasPrice: txRequest.gasPrice,
         nonce: preparedTx.nonce,
-        // from: client.account.address,
         to: txRequest.to,
         value: txRequest.value,
         data: txRequest.data,
@@ -80,7 +79,6 @@ export function getSuaveWallet<
       })
     },
     async signTransaction(txRequest: TransactionRequestSuave) {
-      console.log('im in signTransaction rn', txRequest.type)
       if (txRequest.type === SuaveTxTypes.ConfidentialRequest) {
         // sign confidential compute record
         const signedComputeRecord = await client.account?.signTransaction(

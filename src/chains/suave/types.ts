@@ -2,7 +2,7 @@ import type { Address } from 'abitype'
 import type { Block, BlockTag } from '../../types/block.js'
 import type { FeeValuesLegacy } from '../../types/fee.js'
 import type { Hash, Hex } from '../../types/misc.js'
-import type { RpcBlock, RpcTransactionReceipt } from '../../types/rpc.js'
+import type { RpcTransactionReceipt } from '../../types/rpc.js'
 import type {
   AccessList,
   TransactionBase as TransactionBase_,
@@ -55,18 +55,28 @@ export type SuaveBlockOverrides = {} // Add any specific block overrides if nece
 export type SuaveBlock<
   TIncludeTransactions extends boolean = boolean,
   TBlockTag extends BlockTag = BlockTag,
-> = Block<
-  bigint,
-  TIncludeTransactions,
-  TBlockTag,
-  TransactionSuave<TBlockTag extends 'pending' ? true : false>
+  TQuantity = bigint,
+  TIndex = number,
+> = Omit<
+  Block<
+    TQuantity,
+    TIncludeTransactions,
+    TBlockTag,
+    TransactionSuave<
+      TBlockTag extends 'pending' ? true : false,
+      SuaveTxType,
+      TQuantity,
+      TIndex
+    >
+  >,
+  'sealFields'
 > &
   SuaveBlockOverrides
 
 export type SuaveRpcBlock<
   TBlockTag extends BlockTag = BlockTag,
   TIncludeTransactions extends boolean = boolean,
-> = RpcBlock<TBlockTag, TIncludeTransactions> & SuaveBlockOverrides
+> = SuaveBlock<TIncludeTransactions, TBlockTag, Hex, Hex> // RpcBlock<TBlockTag, TIncludeTransactions> & SuaveBlockOverrides
 
 export type TransactionSuave<
   TPending extends boolean = boolean,
@@ -75,12 +85,7 @@ export type TransactionSuave<
   TIndex = number,
 > = TransactionBase<TQuantity, TIndex, TType, TPending> & {
   executionNode: Address
-  requestRecord: ConfidentialComputeRecord<
-    TPending,
-    TQuantity,
-    TIndex,
-    SuaveTxTypes.ConfidentialRecord
-  >
+  requestRecord: ConfidentialComputeRecord<TPending, TQuantity, TIndex>
   confidentialComputeResult: Hex
   type: TType
 }
@@ -103,17 +108,27 @@ export type ConfidentialComputeRecord<
   TPending extends boolean = true,
   TQuantity = bigint,
   TIndex = number,
-  TType extends SuaveTxType = SuaveTxTypes.ConfidentialRecord,
 > = Omit<
   Omit<
-    Omit<TransactionBase<TQuantity, TIndex, TType, TPending>, 'blockHash'>,
-    'transactionIndex'
+    Omit<
+      Omit<
+        TransactionBase<
+          TQuantity,
+          TIndex,
+          SuaveTxTypes.ConfidentialRecord,
+          TPending
+        >,
+        'blockHash'
+      >,
+      'transactionIndex'
+    >,
+    'blockNumber'
   >,
-  'blockNumber'
+  'from'
 > & {
   executionNode: Address // Assuming address is a string type
   confidentialInputsHash: Hash // This might need to be adjusted to the actual Ethereum Transaction type
-  type: TType
+  type: SuaveTxTypes.ConfidentialRecord
 }
 
 export type ConfidentialComputeRecordRpc<TPending extends boolean = true,> =

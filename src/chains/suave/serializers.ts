@@ -103,7 +103,8 @@ const safeHexToNumber = (hex: Hex) => {
   return hexToNumber(hex)
 }
 
-const deserializeSignedComputeRecord = (signedComputeRecord: Hex) => {
+/// TODO: move to parsers.ts
+const parseSignedComputeRecord = (signedComputeRecord: Hex) => {
   const transactionArray = toTransactionArray(signedComputeRecord)
   const [
     nonce,
@@ -170,7 +171,7 @@ export const serializeConfidentialComputeRequest = (
   if (transaction.type !== SuaveTxTypes.ConfidentialRequest) {
     throw new Error('Invalid transaction type') // TODO: make this a custom error
   }
-  const ccRecord = deserializeSignedComputeRecord(signedComputeRecord)
+  const ccRecord = parseSignedComputeRecord(signedComputeRecord)
   const confidentialInputsHash =
     transaction.confidentialInputsHash ??
     keccak256(transaction.confidentialInputs || '0x')
@@ -201,9 +202,14 @@ export const serializeConfidentialComputeRequest = (
   ]) as SuaveTxTypes.ConfidentialRequest
 }
 
+/* This does not work.
+  - viem has a fixed signature scheme
+  - ccRequest txs have to serialize as a ccRecord first, have the account sign it, then re-serialize as a ccRequest
+  - as an alternative to configuring the serializers here, we override sendTransaction and signTransaction in the wallet
+*/
 // Define the Suave serializers object
 // export const serializersSuave = {
-//   transaction: (tx: TransactionRequestSuave, sig?: Signature) => {
+//   transaction: (tx: TransactionSerializableSuave, sig?: Signature) => {
 //     console.log(`tx: ${tx}`, `sig: ${sig}`)
 //     if (tx.type === SuaveTxTypes.ConfidentialRequest) {
 //       return serializeConfidentialComputeRequest(tx as TransactionSerializableSuave, , sig)
