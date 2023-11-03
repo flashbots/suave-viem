@@ -3,6 +3,7 @@ import { type Hex, numberToHex, zeroAddress } from '~viem/index.js'
 import { suaveRigil } from '../index.js'
 import {
   type ConfidentialComputeRecordRpc,
+  type RpcTransactionReceiptSuave,
   type RpcTransactionSuave,
   type SuaveRpcBlock,
   SuaveTxTypes,
@@ -306,23 +307,110 @@ describe('transaction', () => {
   })
 })
 
-// describe('transactionReceipt', () => {
-//   test('formatter', () => {
-//     const { transactionReceipt } = suaveRigil.formatters!
+describe('transactionReceipt', () => {
+  test('formatter', () => {
+    const { transactionReceipt } = suaveRigil.formatters!
 
-//     const inputReceipt = {
-//       // ... input fields based on RpcTransactionSuaveReceiptOverrides
-//     }
+    const inputReceipt: RpcTransactionReceiptSuave = {
+      blockHash:
+        '0x254eecc07b2c034bd9ea619c75992d4c491eb5d4576e98f3c8cbd5b4ad456a2a',
+      blockNumber: '0x3',
+      contractAddress: null,
+      cumulativeGasUsed: '0x7c14',
+      effectiveGasPrice: '0x3518320e',
+      from: '0xbe69d72ca5f88acba033a063df5dbe43a4148de0',
+      gasUsed: '0x7c14',
+      logs: [
+        {
+          address: '0x8f21fdd6b4f4cacd33151777a46c122797c8bf17',
+          topics: [
+            '0x83481d5b04dea534715acad673a8177a46fc93882760f36bdc16ccac439d504e',
+          ],
+          data: '0xbef01c5c5f3655619d1e24fcc9a5f37b000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000006000000000000000000000000000000000000000000000000000000000000000010000000000000000000000008f21fdd6b4f4cacd33151777a46c122797c8bf17',
+          blockNumber: '0x3',
+          transactionHash:
+            '0xa123928f4eadf4bccad09a143f7f549d21eff9e772ee9db90d11a0e65b125711',
+          transactionIndex: '0x0',
+          blockHash:
+            '0x254eecc07b2c034bd9ea619c75992d4c491eb5d4576e98f3c8cbd5b4ad456a2a',
+          logIndex: '0x0',
+          removed: false,
+        },
+        {
+          address: '0x8f21fdd6b4f4cacd33151777a46c122797c8bf17',
+          topics: [
+            '0xdab8306bad2ca820d05b9eff8da2e3016d372c15f00bb032f758718b9cda3950',
+          ],
+          data: '0xbef01c5c5f3655619d1e24fcc9a5f37b000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000040000000000000000000000000000000000000000000000000000000000000003d7b22546f223a22307832316332306464346562303030663862343132613532353065386132373566353135353232326131222c2244617461223a22227d000000',
+          blockNumber: '0x3',
+          transactionHash:
+            '0xa123928f4eadf4bccad09a143f7f549d21eff9e772ee9db90d11a0e65b125711',
+          transactionIndex: '0x0',
+          blockHash:
+            '0x254eecc07b2c034bd9ea619c75992d4c491eb5d4576e98f3c8cbd5b4ad456a2a',
+          logIndex: '0x1',
+          removed: false,
+        },
+      ],
+      logsBloom:
+        '0x00400000000000000000000800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000010000000000000000000002000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000001000000000000010000000000000000000000000000000000000000000000000000',
+      status: '0x1',
+      to: '0x8f21fdd6b4f4cacd33151777a46c122797c8bf17',
+      transactionHash:
+        '0xa123928f4eadf4bccad09a143f7f549d21eff9e772ee9db90d11a0e65b125711',
+      transactionIndex: '0x0',
+      type: '0x50',
+    }
 
-//     const formattedReceipt = transactionReceipt.format(inputReceipt)
+    const formattedReceipt = transactionReceipt.format(inputReceipt)
 
-//     expect(formattedReceipt).toMatchInlineSnapshot(`
-//       {
-//         // ... Expected fields here based on the RpcTransactionSuaveReceiptOverrides format
-//       }
-//     `)
-//   })
-// })
+    expect(formattedReceipt).toMatchInlineSnapshot(`
+      {
+        "blockHash": "0x254eecc07b2c034bd9ea619c75992d4c491eb5d4576e98f3c8cbd5b4ad456a2a",
+        "blockNumber": 3n,
+        "contractAddress": null,
+        "cumulativeGasUsed": 31764n,
+        "effectiveGasPrice": 890778126n,
+        "from": "0xbe69d72ca5f88acba033a063df5dbe43a4148de0",
+        "gasUsed": 31764n,
+        "logs": [
+          {
+            "address": "0x8f21fdd6b4f4cacd33151777a46c122797c8bf17",
+            "blockHash": "0x254eecc07b2c034bd9ea619c75992d4c491eb5d4576e98f3c8cbd5b4ad456a2a",
+            "blockNumber": 3n,
+            "data": "0xbef01c5c5f3655619d1e24fcc9a5f37b000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000006000000000000000000000000000000000000000000000000000000000000000010000000000000000000000008f21fdd6b4f4cacd33151777a46c122797c8bf17",
+            "logIndex": 0,
+            "removed": false,
+            "topics": [
+              "0x83481d5b04dea534715acad673a8177a46fc93882760f36bdc16ccac439d504e",
+            ],
+            "transactionHash": "0xa123928f4eadf4bccad09a143f7f549d21eff9e772ee9db90d11a0e65b125711",
+            "transactionIndex": 0,
+          },
+          {
+            "address": "0x8f21fdd6b4f4cacd33151777a46c122797c8bf17",
+            "blockHash": "0x254eecc07b2c034bd9ea619c75992d4c491eb5d4576e98f3c8cbd5b4ad456a2a",
+            "blockNumber": 3n,
+            "data": "0xbef01c5c5f3655619d1e24fcc9a5f37b000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000040000000000000000000000000000000000000000000000000000000000000003d7b22546f223a22307832316332306464346562303030663862343132613532353065386132373566353135353232326131222c2244617461223a22227d000000",
+            "logIndex": 1,
+            "removed": false,
+            "topics": [
+              "0xdab8306bad2ca820d05b9eff8da2e3016d372c15f00bb032f758718b9cda3950",
+            ],
+            "transactionHash": "0xa123928f4eadf4bccad09a143f7f549d21eff9e772ee9db90d11a0e65b125711",
+            "transactionIndex": 0,
+          },
+        ],
+        "logsBloom": "0x00400000000000000000000800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000010000000000000000000002000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000001000000000000010000000000000000000000000000000000000000000000000000",
+        "status": "success",
+        "to": "0x8f21fdd6b4f4cacd33151777a46c122797c8bf17",
+        "transactionHash": "0xa123928f4eadf4bccad09a143f7f549d21eff9e772ee9db90d11a0e65b125711",
+        "transactionIndex": 0,
+        "type": "0x50",
+      }
+    `)
+  })
+})
 
 describe('transactionRequest', () => {
   const { transactionRequest } = suaveRigil.formatters!

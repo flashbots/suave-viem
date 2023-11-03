@@ -33,13 +33,6 @@ type TransactionBase<
     type: TType
   }
 
-type RpcTransaction<TPending extends boolean = boolean> = TransactionBase<
-  Hex,
-  Hex,
-  Hex,
-  TPending
->
-
 type TransactionRequestBase<TQuantity, TIndex, TType> = Omit<
   TransactionRequestBase_<TQuantity, TIndex>,
   'from'
@@ -76,7 +69,7 @@ export type SuaveBlock<
 export type SuaveRpcBlock<
   TBlockTag extends BlockTag = BlockTag,
   TIncludeTransactions extends boolean = boolean,
-> = SuaveBlock<TIncludeTransactions, TBlockTag, Hex, Hex> // RpcBlock<TBlockTag, TIncludeTransactions> & SuaveBlockOverrides
+> = SuaveBlock<TIncludeTransactions, TBlockTag, Hex, Hex>
 
 export type TransactionSuave<
   TPending extends boolean = boolean,
@@ -167,14 +160,10 @@ export type SuaveTransactionReceiptOverrides = {
   confidentialComputeResult: Hex | null
 }
 
-export type SuaveTransactionReceipt = TransactionReceipt &
+export type TransactionReceiptSuave = TransactionReceipt &
   SuaveTransactionReceiptOverrides
 
-export type SuaveRpcTransactionReceipt = RpcTransactionReceipt & {
-  executionNode: Address
-  confidentialComputeRequest: RpcTransaction
-  confidentialComputeResult: Hex
-}
+export type RpcTransactionReceiptSuave = RpcTransactionReceipt & {}
 
 /// Original sans `type: 'eip2930'`
 export type TransactionSerializableEIP2930<

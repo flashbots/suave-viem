@@ -13,19 +13,22 @@ import {
   defineTransaction,
   formatTransaction,
 } from '../../utils/formatters/transaction.js'
-import { defineTransactionReceipt } from '../../utils/formatters/transactionReceipt.js'
+import {
+  defineTransactionReceipt,
+  formatTransactionReceipt,
+} from '../../utils/formatters/transactionReceipt.js'
 import {
   defineTransactionRequest,
   formatTransactionRequest,
 } from '../../utils/formatters/transactionRequest.js'
 import {
   type ConfidentialComputeRecord,
+  type RpcTransactionReceiptSuave,
   type RpcTransactionRequestSuave,
   type RpcTransactionSuave,
   type SuaveBlockOverrides,
-  type SuaveTransactionReceipt,
-  type SuaveTransactionReceiptOverrides,
   type SuaveTxType,
+  type TransactionReceiptSuave,
   type TransactionRequestSuave,
   type TransactionSuave,
 } from './types.js'
@@ -112,23 +115,10 @@ export const formattersSuave = {
     },
   }),
   transactionReceipt: /*#__PURE__*/ defineTransactionReceipt({
-    format(args: SuaveTransactionReceiptOverrides): SuaveTransactionReceipt {
-      const {
-        executionNode,
-        confidentialComputeRequest,
-        confidentialComputeResult,
-        ...baseProps
-      } = args
-
+    format(args: RpcTransactionReceiptSuave): TransactionReceiptSuave {
       return {
-        ...baseProps,
-        executionNode,
-        confidentialComputeRequest: {
-          ...confidentialComputeRequest,
-        },
-        confidentialComputeResult,
-        // signature fields
-      } as SuaveTransactionReceipt
+        ...formatTransactionReceipt(args),
+      } as TransactionReceiptSuave
     },
   }),
   transactionRequest: /*#__PURE__*/ defineTransactionRequest({

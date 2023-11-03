@@ -85,25 +85,36 @@ async function testSendCCRequest() {
     - it stringifies integer values without hexifying them */
   }
 
-  if (adminWallet.account.type === 'local') {
-    const fund = await adminWallet.sendTransaction(fundTx)
-    console.log('sent fund tx', fund)
-  }
-
-  // const test = await wallet.signTransaction(ccrReq)
-  // console.log('signed tx', test)
+  const fund = await adminWallet.sendTransaction(fundTx)
+  console.log('sent fund tx', fund)
 
   const res = await wallet.sendTransaction(ccrReq)
-  // const res = await wallet.sendRawTransaction({serializedTransaction: ccrSigned})
-
   console.log(`sent tx: ${res}`)
 }
 
 async function testGettingStuff() {
-  const latestBlock = await publicClients.suaveLocal.getBlock({
-    includeTransactions: true,
-  })
-  console.log('latestBlock', latestBlock)
+  const eth = await publicClients.suaveLocal
+  // get last 2 blocks
+  const latestBlockNum = await eth.getBlockNumber()
+  const latestBlocks = [
+    await publicClients.suaveLocal.getBlock({
+      includeTransactions: false,
+      blockNumber: latestBlockNum - 1n,
+    }),
+    await publicClients.suaveLocal.getBlock({
+      includeTransactions: false,
+      blockNumber: latestBlockNum,
+    }),
+  ]
+  console.log('latestBlock', latestBlocks)
+
+  // get tx receipt
+  for (const block of latestBlocks) {
+    const receipt = await publicClients.suaveLocal.getTransactionReceipt({
+      hash: block.transactions[0],
+    })
+    console.log('receipt', receipt)
+  }
 }
 
 async function main() {
