@@ -93,9 +93,25 @@ async function testSendCCRequest() {
   })
   console.log('simulated fund tx', fundSim)
 
-  // send tx to suave
+  // send fund tx
   const fund = await adminWallet.sendTransaction(fundTx)
   console.log('sent fund tx', fund)
+
+  // wait for fund tx to land
+  while (true) {
+    try {
+      const fundReceipt = await publicClients.suaveLocal.getTransactionReceipt({
+        hash: fund
+      })
+      if (fundReceipt) {
+        console.log('fund tx landed', fundReceipt)
+        break
+      }
+    } catch (e) {
+      console.warn((e as Error).message)
+    }
+    await sleep(4000)
+  }
 
   const ccrReq: TransactionRequestSuave = {
     executionNode: '0xb5feafbdd752ad52afb7e1bd2e40432a485bbb7f',
