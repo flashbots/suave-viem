@@ -101,7 +101,7 @@ async function testSendCCRequest() {
   while (true) {
     try {
       const fundReceipt = await publicClients.suaveLocal.getTransactionReceipt({
-        hash: fund
+        hash: fund,
       })
       if (fundReceipt) {
         console.log('fund tx landed', fundReceipt)
