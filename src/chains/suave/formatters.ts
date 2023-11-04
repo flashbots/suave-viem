@@ -109,6 +109,7 @@ export const formattersSuave = {
           typeHex: args.typeHex,
         } as TransactionSuave
       } else {
+        console.log('formatting regular tx')
         // Handle as regular Ethereum transaction
         return formatTransaction(args as RpcTransaction) as Transaction
       }
@@ -116,6 +117,7 @@ export const formattersSuave = {
   }),
   transactionReceipt: /*#__PURE__*/ defineTransactionReceipt({
     format(args: RpcTransactionReceiptSuave): TransactionReceiptSuave {
+      console.log('formatting tx receipt')
       return {
         ...formatTransactionReceipt(args),
       } as TransactionReceiptSuave

@@ -98,7 +98,7 @@ export type RpcTransactionSuave<
 }
 
 export type ConfidentialComputeRecord<
-  TPending extends boolean = true,
+  TPending extends boolean = false,
   TQuantity = bigint,
   TIndex = number,
 > = Omit<
@@ -124,7 +124,7 @@ export type ConfidentialComputeRecord<
   type: SuaveTxTypes.ConfidentialRecord
 }
 
-export type ConfidentialComputeRecordRpc<TPending extends boolean = true,> =
+export type ConfidentialComputeRecordRpc<TPending extends boolean = false> =
   ConfidentialComputeRecord<TPending, Hex, Hex>
 
 export type TransactionRequestSuave<

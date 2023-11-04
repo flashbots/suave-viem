@@ -1,3 +1,4 @@
+import { sleep } from 'bun'
 import { http, Hex, createPublicClient } from 'viem'
 import { mainnet, polygon, suaveRigil } from 'viem/chains'
 import { SuaveTxTypes, TransactionRequestSuave } from 'viem/chains/suave/types'
@@ -30,11 +31,27 @@ publicClients.suaveLocal.watchPendingTransactions({
     console.log('pending', transactions)
     for (const hash of transactions) {
       const fullTx = await publicClients.suaveLocal.getTransaction({ hash })
-      console.log('fullTx', fullTx)
-      const receipt = await publicClients.suaveLocal.getTransactionReceipt({
-        hash,
-      })
-      console.log('receipt', receipt)
+      console.log('(pending) fullTx', fullTx)
+      const timeoutStart = new Date()
+      const timeout = 30 * 1000
+      while (true) {
+        if (new Date().getTime() - timeoutStart.getTime() > timeout) {
+          console.warn('timeout: never found tx receipt', hash)
+          break
+        }
+        await sleep(4000)
+        try {
+          const receipt = await publicClients.suaveLocal.getTransactionReceipt({
+            hash,
+          })
+          console.log('receipt', receipt)
+          break
+        } catch (e) {
+          console.warn((e as Error).message)
+        }
+        const fullTx = await publicClients.suaveLocal.getTransaction({ hash })
+        console.log('(pending) fullTx', fullTx)
+      }
     }
   },
 })
@@ -59,22 +76,32 @@ console.log('admin', adminWallet.account.address)
 console.log('wallet', wallet.account.address)
 
 async function testSendCCRequest() {
+  const gasPrice = await publicClients.suaveLocal.getGasPrice()
   const fundTx: TransactionRequestSuave = {
     type: '0x0',
-    value: 500000000000000000n, // 0.5 ETH
-    gasPrice: 100000000n,
-    from: adminWallet.account.address,
+    value: 100000000000000001n, // 0.1 ETH, 1 wei extra to make the resulting balance act like a nonce if tx succeeds
+    gasPrice: gasPrice + 1000000000n,
     chainId: suaveRigil.id,
     to: wallet.account.address,
     gas: 21000n,
   }
+  // simulate tx first
+  const fundSim = await publicClients.suaveLocal.call({
+    account: adminWallet.account.address,
+    from: adminWallet.account.address,
+    ...fundTx,
+  })
+  console.log('simulated fund tx', fundSim)
+
+  // send tx to suave
+  const fund = await adminWallet.sendTransaction(fundTx)
+  console.log('sent fund tx', fund)
 
   const ccrReq: TransactionRequestSuave = {
     executionNode: '0xb5feafbdd752ad52afb7e1bd2e40432a485bbb7f',
     confidentialInputs:
       '0x000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000fd7b22626c6f636b4e756d626572223a22307830222c22747873223a5b2230786638363538303064383235323038393461646263653931303332643333396338336463653834316336346566643261393232383165653664383230336538383038343032303131386164613038376337386234353663653762343234386237313565353164326465656236343031363032343832333735663130663037396663666637373934383830653731613035373366336364343133396437323037643165316235623263323365353438623061316361336533373034343739656334653939316362356130623661323930225d2c2270657263656e74223a31307d000000',
     to: '0x8f21Fdd6B4f4CacD33151777A46c122797c8BF17',
-    from: wallet.account.address,
     gasPrice: 10000000000n,
     gas: 420000n,
     type: SuaveTxTypes.ConfidentialRequest,
@@ -84,10 +111,6 @@ async function testSendCCRequest() {
     - not defining them makes eth_estimateGas try & fail
     - it stringifies integer values without hexifying them */
   }
-
-  const fund = await adminWallet.sendTransaction(fundTx)
-  console.log('sent fund tx', fund)
-
   const res = await wallet.sendTransaction(ccrReq)
   console.log(`sent tx: ${res}`)
 }
@@ -122,4 +145,7 @@ async function main() {
   await testGettingStuff()
 }
 
-main()
+main().then(() => {
+  console.log('done')
+  // process.exit(0)
+})

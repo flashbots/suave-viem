@@ -35,47 +35,27 @@ export function getSuaveWallet<
     chain: params.chain,
   }).extend((client) => ({
     async sendTransaction(txRequest: TransactionRequestSuave) {
-      console.log('wallet address', client.account?.address)
       const preparedTx = await client.prepareTransactionRequest(
         txRequest as any,
       )
-      const payload = {
+      let payload: TransactionRequestSuave = {
         ...txRequest,
-        confidentialInputsHash: txRequest.confidentialInputs
-          ? keccak256(txRequest.confidentialInputs)
-          : '0x',
-        executionNode: txRequest.executionNode,
-        chainId: txRequest.chainId,
-        gas: txRequest.gas,
-        gasPrice: txRequest.gasPrice,
+        from: preparedTx.from,
         nonce: preparedTx.nonce,
-        to: txRequest.to,
-        value: txRequest.value,
-        data: txRequest.data,
-        confidentialInputs: txRequest.confidentialInputs,
       }
-
-      let fullTx: Hex
       if (txRequest.type === SuaveTxTypes.ConfidentialRequest) {
-        const signedComputeRecord = await this.signTransaction({
+        payload = {
           ...payload,
-          type: SuaveTxTypes.ConfidentialRecord,
-        })
-
-        fullTx = serializeConfidentialComputeRequest(
-          {
-            ...payload,
-            nonce: preparedTx.nonce,
-            type: SuaveTxTypes.ConfidentialRequest,
-          } as TransactionSerializableSuave,
-          signedComputeRecord,
-        )
-      } else {
-        fullTx = await this.signTransaction(payload)
+          confidentialInputsHash: txRequest.confidentialInputs
+            ? keccak256(txRequest.confidentialInputs)
+            : '0x',
+        } as TransactionRequestSuave
       }
+
+      const signedTx = await this.signTransaction(payload)
       return client.request({
         method: 'eth_sendRawTransaction',
-        params: [fullTx],
+        params: [signedTx],
       })
     },
     async signTransaction(txRequest: TransactionRequestSuave) {
@@ -103,12 +83,13 @@ export function getSuaveWallet<
         const preparedTx = await client.prepareTransactionRequest(
           txRequest as any,
         )
+        if (!txRequest.confidentialInputs) {
+          throw new Error('confidentialInputs is required')
+        }
         return await client.account.signTransaction(
           {
             ...txRequest,
-            confidentialInputsHash: txRequest.confidentialInputs
-              ? keccak256(txRequest.confidentialInputs)
-              : '0x',
+            confidentialInputsHash: keccak256(txRequest.confidentialInputs),
             type: SuaveTxTypes.ConfidentialRecord,
             chainId: txRequest.chainId,
             gas: txRequest.gas,
