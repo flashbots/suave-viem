@@ -20,7 +20,6 @@ export const rpcTransactionType = {
   legacy: '0x0',
   eip2930: '0x1',
   eip1559: '0x2',
-  suave: '0x50',
 } as const
 
 export type FormatTransactionRequestErrorType = ErrorType
