@@ -19,7 +19,9 @@ import {
   type TransactionSerializedSuave,
 } from './types.js'
 
-// Define a function to serialize Suave transactions
+/** Serializes a ConfidentialComputeRecord transaction.
+Satisfies `ChainSerializers.transaction`
+*/
 export const serializeConfidentialComputeRecord = (
   transaction: TransactionSerializableSuave,
   signature?: Signature,
@@ -31,11 +33,9 @@ export const serializeConfidentialComputeRecord = (
   if (!transaction.executionNode) {
     throw new Error('execution node is required') // TODO: make this a custom error
   }
+
   // Extract fields from the transaction
   const {
-    // r,
-    // s,
-    // v,
     chainId,
     nonce,
     gas,
@@ -46,34 +46,17 @@ export const serializeConfidentialComputeRecord = (
     executionNode,
     confidentialInputs,
   } = transaction
+
   // Serialize the transaction fields into an array
   const serializedTransaction: Hex[] = [
-    /*
-    type ConfidentialComputeRecord struct {
-      Nonce    uint64
-      GasPrice *big.Int
-      Gas      uint64
-      To       *common.Address `rlp:"nil"`
-      Value    *big.Int
-      Data     []byte
-
-      ExecutionNode          common.Address
-      ConfidentialInputsHash common.Hash
-
-      ChainID *big.Int
-      V, R, S *big.Int
-    */
-
     nonce ? numberToHex(nonce) : '0x',
     gasPrice ? numberToHex(gasPrice) : '0x',
     gas ? numberToHex(gas) : '0x',
     to ?? '0x',
     value ? numberToHex(value) : '0x',
     data ?? '0x', // data
-
     executionNode,
     confidentialInputs ? keccak256(confidentialInputs) : '0x',
-
     chainId ? numberToHex(chainId) : '0x',
   ]
 
@@ -160,13 +143,12 @@ const parseSignedComputeRecord = (signedComputeRecord: Hex) => {
   return ccRecord
 }
 
-/** RLP serialization for ConfidentialComputeRequest. `_signature is ignored`
+/** RLP serialization for ConfidentialComputeRequest.
  * because the signature from ConfidentialComputeRecord is used instead.
  */
 export const serializeConfidentialComputeRequest = (
   transaction: TransactionSerializableSuave,
   signedComputeRecord: Hex,
-  _signature?: Signature,
 ): SuaveTxTypes.ConfidentialRequest => {
   if (transaction.type !== SuaveTxTypes.ConfidentialRequest) {
     throw new Error('Invalid transaction type') // TODO: make this a custom error
