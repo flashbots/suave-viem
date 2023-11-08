@@ -153,10 +153,13 @@ export const serializeConfidentialComputeRequest = (
   if (transaction.type !== SuaveTxTypes.ConfidentialRequest) {
     throw new Error('Invalid transaction type') // TODO: make this a custom error
   }
+  if (!transaction.confidentialInputs) {
+    throw new Error('confidentialInputs is required') // TODO: make this a custom error
+  }
   const ccRecord = parseSignedComputeRecord(signedComputeRecord)
   const confidentialInputsHash =
     transaction.confidentialInputsHash ??
-    keccak256(transaction.confidentialInputs || '0x')
+    keccak256(transaction.confidentialInputs)
 
   const serializedTransaction: (Hex | Hex[])[] = [
     [
