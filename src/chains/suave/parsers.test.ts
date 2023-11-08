@@ -1,31 +1,86 @@
-// import { expect, test } from 'vitest'
+import { describe, expect, test } from 'vitest'
+import { accounts } from '~test/src/constants.js'
+import { http, keccak256 } from '~viem/index.js'
+import { suaveRigil } from '../index.js'
+import {
+  parseSignedComputeRecord,
+  parseSignedComputeRequest,
+} from './parsers.js'
+import { serializeConfidentialComputeRecord } from './serializers.js'
+import { SuaveTxTypes, type TransactionRequestSuave } from './types.js'
+import { getSuaveWallet } from './wallet.js'
 
-// import { accounts } from '~test/src/constants.js'
-// import {
-//   parseEther,
-//   parseTransaction as parseTransaction_,
-//   serializeTransaction,
-//   toRlp,
-// } from '../../index.js'
-// import { parseTransactionSuave } from './parsers.js'
-// import { serializeTransactionSuave } from './serializers.js'
-// import type { TransactionSerializableSuave } from './types.js'
+describe('Suave Transaction Parsers', () => {
+  const wallet = getSuaveWallet(
+    {
+      transport: http(suaveRigil.rpcUrls.local.http[0]),
+      chain: suaveRigil,
+    },
+    accounts[0].privateKey,
+  )
+  const sampleTx = {
+    to: accounts[1].address,
+    data: '0x13',
+    gas: 100n,
+    gasPrice: 100n,
+    type: '0x43',
+    chainId: 0x33,
+    executionNode: accounts[1].address,
+    confidentialInputs: '0x42424242',
+  } as TransactionRequestSuave
 
-// test('should be able to parse a standard Suave transaction', () => {
-//   const signedTransaction = /* Sample Suave signed transaction */;
+  test('parses a signed ConfidentialComputeRequest', async () => {
+    const signedTransaction = await wallet.signTransaction(sampleTx)
+    expect(parseSignedComputeRequest(signedTransaction)).toMatchInlineSnapshot(`
+    {
+      "chainId": ${sampleTx.chainId},
+      "confidentialInputs": "${sampleTx.confidentialInputs}",
+      "data": "${sampleTx.data}",
+      "executionNode": "${sampleTx.executionNode}",
+      "gas": 100n,
+      "gasPrice": 100n,
+      "nonce": 0,
+      "r": "0xe5e7720a3006927f6fc388cfaf5fd258a6664975ff387fac2b37197b7d305a81",
+      "s": "0x7f89b8a98f04e02e4e810c7b575c6736ad36c9ee1fe98c73e0b8f74d1e522968",
+      "to": "${sampleTx.to}",
+      "type": "0x43",
+      "v": 1n,
+      "value": 0n,
+    }
+  `)
+  })
 
-//   expect(parseTransactionSuave(signedTransaction)).toMatchInlineSnapshot(`
-//     {
-//       "chainId": /* Some chain ID */,
-//       "gas": /* Some gas amount */,
-//       "to": /* Some address */,
-//       "value": /* Some value */,
-//       "ExecutionNode": /* Execution Node value */,
-//       "ConfidentialComputeRequest": /* Compute Request value */,
-//       "ConfidentialComputeResult": /* Compute Result value */
-//     }
-//   `)
-// })
+  test('parses a signed ConfidentialComputeRecord', async () => {
+    const signedTransaction = await wallet.signTransaction(sampleTx)
+    const { r, s, v } = parseSignedComputeRequest(signedTransaction)
+    const record = {
+      ...sampleTx,
+      type: SuaveTxTypes.ConfidentialRecord,
+    }
+    const serializedRecord = serializeConfidentialComputeRecord(record, {
+      r: r!,
+      s: s!,
+      v: v!,
+    })
+    expect(parseSignedComputeRecord(serializedRecord)).toMatchInlineSnapshot(`
+    {
+      "chainId": ${sampleTx.chainId},
+      "confidentialInputsHash": "${keccak256(sampleTx.confidentialInputs!)}",
+      "data": "${sampleTx.data}",
+      "executionNode": "${sampleTx.executionNode}",
+      "gas": 100n,
+      "gasPrice": 100n,
+      "nonce": 0,
+      "r": "0xe5e7720a3006927f6fc388cfaf5fd258a6664975ff387fac2b37197b7d305a81",
+      "s": "0x7f89b8a98f04e02e4e810c7b575c6736ad36c9ee1fe98c73e0b8f74d1e522968",
+      "to": "${sampleTx.to}",
+      "type": "0x42",
+      "v": 1n,
+      "value": 0n,
+    }
+    `)
+  })
+})
 
 // test('should parse a Suave transaction with data', () => {
 //   const transactionWithData = {
@@ -93,4 +148,3 @@
 // })
 
 // // ... Additional tests specific to your needs ...
-

@@ -1,8 +1,5 @@
 import {
-  InvalidSerializedTransactionError,
   InvalidSerializedTransactionTypeError,
-  hexToBigInt,
-  hexToNumber,
   isAddress,
   isHex,
 } from '../../index.js'
@@ -11,19 +8,18 @@ import { concatHex } from '../../utils/data/concat.js'
 import { numberToHex, toHex } from '../../utils/encoding/toHex.js'
 import { toRlp } from '../../utils/encoding/toRlp.js'
 import { keccak256 } from '../../utils/hash/keccak256.js'
-import { toTransactionArray } from '../../utils/transaction/parseTransaction.js'
 import {
   InvalidConfidentialRecordError,
   InvalidConfidentialRequestError,
 } from './errors/transaction.js'
+import { parseSignedComputeRecord } from './parsers.js'
 import {
-  type SuaveTxType,
   SuaveTxTypes,
   type TransactionSerializableSuave,
   type TransactionSerializedSuave,
 } from './types.js'
 
-/** Serializes a ConfidentialComputeRecord transaction. Conforms to [ConfidentialComputeRequest Spec](https://github.com/flashbots/suave-specs/blob/main/specs/rigil/suave-chain.md?plain=1#L137-L149).
+/** Serializes a ConfidentialComputeRecord transaction. Conforms to [ConfidentialComputeRequest Spec](https://github.com/flashbots/suave-specs/blob/main/specs/rigil/suave-chain.md?plain=1#L135-L158).
 Satisfies `ChainSerializers.transaction`
 */
 export const serializeConfidentialComputeRecord = (
@@ -82,75 +78,8 @@ export const serializeConfidentialComputeRecord = (
   ]) as TransactionSerializedSuave
 }
 
-const safeHexToBigInt = (hex: Hex) => {
-  if (hex === '0x') return 0n
-  return hexToBigInt(hex)
-}
-
-const safeHexToNumber = (hex: Hex) => {
-  if (hex === '0x') return 0
-  return hexToNumber(hex)
-}
-
-/// TODO: move to parsers.ts
-const parseSignedComputeRecord = (signedComputeRecord: Hex) => {
-  const transactionArray = toTransactionArray(signedComputeRecord)
-  const [
-    nonce,
-    gasPrice,
-    gas,
-    to,
-    value,
-    data,
-    executionNode,
-    confidentialInputsHash,
-    chainId,
-    v,
-    r,
-    s,
-  ] = transactionArray
-
-  if (transactionArray.length !== 12) {
-    throw new InvalidSerializedTransactionError({
-      attributes: {
-        nonce,
-        to,
-        data,
-        gas,
-        executionNode,
-        confidentialInputsHash,
-        value,
-        gasPrice,
-        chainId,
-        v,
-        r,
-        s,
-      },
-      serializedTransaction: signedComputeRecord,
-      type: '0x42' as SuaveTxType,
-    })
-  }
-
-  const ccRecord: Partial<TransactionSerializableSuave> = {
-    nonce: safeHexToNumber(nonce as Hex),
-    to: to as Hex,
-    data: data as Hex,
-    gas: hexToBigInt(gas as Hex),
-    executionNode: executionNode as Hex,
-    confidentialInputsHash: confidentialInputsHash as Hex,
-    value: safeHexToBigInt(value as Hex),
-    gasPrice: safeHexToBigInt(gasPrice as Hex),
-    chainId: hexToNumber(chainId as Hex),
-    v: safeHexToBigInt(v as Hex),
-    r: r as Hex,
-    s: s as Hex,
-  }
-
-  return ccRecord
-}
-
 /** RLP serialization for ConfidentialComputeRequest.
- * Conforms to [ConfidentialComputeRequest Spec](https://github.com/flashbots/suave-specs/blob/main/specs/rigil/suave-chain.md?plain=1#L156-L171).
+ * Conforms to [ConfidentialComputeRequest Spec](https://github.com/flashbots/suave-specs/blob/main/specs/rigil/suave-chain.md?plain=1#L164-L180).
  */
 export const serializeConfidentialComputeRequest = (
   transaction: TransactionSerializableSuave,

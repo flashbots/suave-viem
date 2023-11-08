@@ -24,6 +24,7 @@
     "size": "size-limit",
     "test": "vitest -c ./test/vitest.config.ts dev",
     "test:formatter": "vitest -c ./test/vitest.config.ts ./src/chains/suave/formatters.test.ts",
+    "test:parser": "vitest -c ./test/vitest.config.ts ./src/chains/suave/parsers.test.ts",
     "test:cov": "vitest dev -c ./test/vitest.config.ts --coverage",
     "test:ci": "CI=true vitest -c ./test/vitest.config.ts --coverage --retry=3 --bail=1",
     "test:typecheck": "SKIP_GLOBAL_SETUP=true vitest typecheck -c ./test/vitest.config.ts",
