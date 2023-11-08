@@ -141,10 +141,10 @@ export const formattersSuave = {
           type: args.type,
           gasPrice: toHex(args.gasPrice),
           chainId: toHex(args.chainId),
-          // We omit the ConfidentialComputeRequest here
         } as RpcTransactionRequestSuave
       } else {
-        return formatTransactionRequest(args as any) as any // TODO : Handle as regular Ethereum transaction
+        // handle as regular ethereum transaction
+        return formatTransactionRequest(args as any) as any
       }
     },
   }),

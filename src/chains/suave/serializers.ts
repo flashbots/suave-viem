@@ -1,5 +1,6 @@
 import {
   InvalidSerializedTransactionError,
+  InvalidSerializedTransactionTypeError,
   hexToBigInt,
   hexToNumber,
   isAddress,
@@ -11,6 +12,10 @@ import { numberToHex, toHex } from '../../utils/encoding/toHex.js'
 import { toRlp } from '../../utils/encoding/toRlp.js'
 import { keccak256 } from '../../utils/hash/keccak256.js'
 import { toTransactionArray } from '../../utils/transaction/parseTransaction.js'
+import {
+  InvalidConfidentialRecordError,
+  InvalidConfidentialRequestError,
+} from './errors/transaction.js'
 import {
   type SuaveTxType,
   SuaveTxTypes,
@@ -27,10 +32,12 @@ export const serializeConfidentialComputeRecord = (
 ): TransactionSerializedSuave => {
   console.log('txType', transaction.type)
   if (transaction.type !== SuaveTxTypes.ConfidentialRecord) {
-    throw new Error('Invalid transaction type') // TODO: make this a custom error
+    throw new InvalidSerializedTransactionTypeError({
+      serializedType: transaction.type,
+    })
   }
   if (!transaction.executionNode) {
-    throw new Error('execution node is required') // TODO: make this a custom error
+    throw new InvalidConfidentialRecordError({ missingField: 'executionNode' })
   }
 
   // Extract fields from the transaction
@@ -150,10 +157,14 @@ export const serializeConfidentialComputeRequest = (
   signedComputeRecord: Hex,
 ): SuaveTxTypes.ConfidentialRequest => {
   if (transaction.type !== SuaveTxTypes.ConfidentialRequest) {
-    throw new Error('Invalid transaction type') // TODO: make this a custom error
+    throw new InvalidSerializedTransactionTypeError({
+      serializedType: transaction.type,
+    })
   }
   if (!transaction.confidentialInputs) {
-    throw new Error('confidentialInputs is required') // TODO: make this a custom error
+    throw new InvalidConfidentialRequestError({
+      missingField: 'confidentialInputs',
+    })
   }
   const ccRecord = parseSignedComputeRecord(signedComputeRecord)
   const confidentialInputsHash =
@@ -221,30 +232,30 @@ export function assertTransactionSuave(
     s,
     v,
   } = transaction
-  if (chainId && chainId <= 0) throw new Error('invalid chain ID') // TODO: custom err
-  if (to && !isAddress(to)) throw new Error('invalid to address') // TODO: custom err
+  if (chainId && chainId <= 0) throw new Error('invalid chain ID')
+  if (to && !isAddress(to)) throw new Error('invalid to address')
   if (!gasPrice) throw new Error('gasPrice is required')
 
   if (confidentialInputs && !isHex(confidentialInputs))
-    throw new Error('invalid confidentialInputs') // TODO: custom err
+    throw new Error('invalid confidentialInputs')
 
   if (confidentialInputsHash && !isHex(confidentialInputsHash))
-    throw new Error('invalid confidentialInputsHash') // TODO: custom err
+    throw new Error('invalid confidentialInputsHash')
 
-  if (gas && gas <= 0) throw new Error('invalid gas') // TODO: custom err
+  if (gas && gas <= 0) throw new Error('invalid gas')
 
-  if (data && !isHex(data)) throw new Error('invalid data') // TODO: custom err
+  if (data && !isHex(data)) throw new Error('invalid data')
 
-  if (value && value < 0) throw new Error('invalid value') // TODO: custom err
+  if (value && value < 0) throw new Error('invalid value')
 
   if (maxPriorityFeePerGas && maxPriorityFeePerGas < 0)
-    throw new Error('invalid maxPriorityFeePerGas') // TODO: custom err
+    throw new Error('invalid maxPriorityFeePerGas')
 
-  if (maxFeePerGas && maxFeePerGas < 0) throw new Error('invalid maxFeePerGas') // TODO: custom err
+  if (maxFeePerGas && maxFeePerGas < 0) throw new Error('invalid maxFeePerGas')
 
-  if (r && !isHex(r)) throw new Error('invalid r') // TODO: custom err
+  if (r && !isHex(r)) throw new Error('invalid r')
 
-  if (s && !isHex(s)) throw new Error('invalid s') // TODO: custom err
+  if (s && !isHex(s)) throw new Error('invalid s')
 
-  if (v && !isHex(v)) throw new Error('invalid v') // TODO: custom err
+  if (v && !isHex(v)) throw new Error('invalid v')
 }
