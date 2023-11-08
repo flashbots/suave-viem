@@ -4,7 +4,6 @@ import {
   hexToNumber,
   isAddress,
   isHex,
-  // serializeTransaction,
 } from '../../index.js'
 import type { Hex, Signature } from '../../types/misc.js'
 import { concatHex } from '../../utils/data/concat.js'
@@ -19,7 +18,7 @@ import {
   type TransactionSerializedSuave,
 } from './types.js'
 
-/** Serializes a ConfidentialComputeRecord transaction.
+/** Serializes a ConfidentialComputeRecord transaction. Conforms to [ConfidentialComputeRequest Spec](https://github.com/flashbots/suave-specs/blob/main/specs/rigil/suave-chain.md?plain=1#L137-L149).
 Satisfies `ChainSerializers.transaction`
 */
 export const serializeConfidentialComputeRecord = (
@@ -144,7 +143,7 @@ const parseSignedComputeRecord = (signedComputeRecord: Hex) => {
 }
 
 /** RLP serialization for ConfidentialComputeRequest.
- * because the signature from ConfidentialComputeRecord is used instead.
+ * Conforms to [ConfidentialComputeRequest Spec](https://github.com/flashbots/suave-specs/blob/main/specs/rigil/suave-chain.md?plain=1#L156-L171).
  */
 export const serializeConfidentialComputeRequest = (
   transaction: TransactionSerializableSuave,
@@ -187,7 +186,8 @@ export const serializeConfidentialComputeRequest = (
   ]) as SuaveTxTypes.ConfidentialRequest
 }
 
-/* This does not work.
+/* The following does not work. It's left here as a reminder of how it should be written,
+  in case we change the signature scheme to match the standard implementation.
   - viem has a fixed signature scheme
   - ccRequest txs have to serialize as a ccRecord first, have the account sign it, then re-serialize as a ccRequest
   - as an alternative to configuring the serializers here, we override sendTransaction and signTransaction in the wallet
