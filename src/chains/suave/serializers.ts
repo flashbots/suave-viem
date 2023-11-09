@@ -156,6 +156,7 @@ export function assertTransactionSuave(
     maxFeePerGas,
     confidentialInputs,
     confidentialInputsHash,
+    executionNode,
     to,
     r,
     s,
@@ -167,6 +168,9 @@ export function assertTransactionSuave(
 
   if (confidentialInputs && !isHex(confidentialInputs))
     throw new Error('invalid confidentialInputs')
+
+  if (executionNode && !isHex(executionNode))
+    throw new Error('invalid executionNode')
 
   if (confidentialInputsHash && !isHex(confidentialInputsHash))
     throw new Error('invalid confidentialInputsHash')
@@ -182,9 +186,9 @@ export function assertTransactionSuave(
 
   if (maxFeePerGas && maxFeePerGas < 0) throw new Error('invalid maxFeePerGas')
 
-  if (r && !isHex(r)) throw new Error('invalid r')
+  if (r && !isHex(r)) throw new Error(`invalid r: ${r}`)
 
-  if (s && !isHex(s)) throw new Error('invalid s')
+  if (s && !isHex(s)) throw new Error(`invalid s: ${s}`)
 
-  if (v && !isHex(v)) throw new Error('invalid v')
+  if (v && v <= 0n) throw new Error(`invalid v: ${v}`)
 }

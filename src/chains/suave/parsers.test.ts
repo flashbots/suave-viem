@@ -5,9 +5,14 @@ import { suaveRigil } from '../index.js'
 import {
   parseSignedComputeRecord,
   parseSignedComputeRequest,
+  parseTransactionSuave,
 } from './parsers.js'
 import { serializeConfidentialComputeRecord } from './serializers.js'
-import { SuaveTxTypes, type TransactionRequestSuave } from './types.js'
+import {
+  type SuaveTxType,
+  SuaveTxTypes,
+  type TransactionRequestSuave,
+} from './types.js'
 import { getSuaveWallet } from './wallet.js'
 
 describe('Suave Transaction Parsers', () => {
@@ -80,40 +85,32 @@ describe('Suave Transaction Parsers', () => {
     }
     `)
   })
+
+  test('parseTransactionSuave parses all SUAVE tx types', async () => {
+    const serializedTx =
+      '0x42f8948064649470997970c51812dc3a010c7d01b50e0d17dc79c880139470997970c51812dc3a010c7d01b50e0d17dc79c8a0d7cb6956c73dec7e8487c45e7b79a1d62306f0abe3999229b25d5ba6c8a9a6b63301a0e5e7720a3006927f6fc388cfaf5fd258a6664975ff387fac2b37197b7d305a81a07f89b8a98f04e02e4e810c7b575c6736ad36c9ee1fe98c73e0b8f74d1e522968'
+    const parsedTx = parseTransactionSuave(serializedTx)
+    expect(parsedTx.type).toBe(SuaveTxTypes.ConfidentialRecord)
+
+    const serializedTx2 =
+      '0x43f89bf8948064649470997970c51812dc3a010c7d01b50e0d17dc79c880139470997970c51812dc3a010c7d01b50e0d17dc79c8a0d7cb6956c73dec7e8487c45e7b79a1d62306f0abe3999229b25d5ba6c8a9a6b63301a0e5e7720a3006927f6fc388cfaf5fd258a6664975ff387fac2b37197b7d305a81a07f89b8a98f04e02e4e810c7b575c6736ad36c9ee1fe98c73e0b8f74d1e5229688442424242'
+    const parsedTx2 = parseTransactionSuave(serializedTx2)
+    expect(parsedTx2.type).toBe(SuaveTxTypes.ConfidentialRequest)
+
+    const serializedTx3 = await wallet.signTransaction({
+      to: accounts[1].address,
+      data: '0x13',
+      gas: 100n,
+      gasPrice: 100n,
+      type: '0x0',
+      chainId: 0x33,
+    })
+    const parsedTx3 = parseTransactionSuave(serializedTx3 as SuaveTxType)
+    expect(parsedTx3.type).toBe('0x0')
+  })
 })
 
-// test('should parse a Suave transaction with data', () => {
-//   const transactionWithData = {
-//     ...transaction,
-//     data: '0x1234', // Example data for this test
-//   }
-
-//   const serialized = serializeTransactionSuave(transactionWithData)
-
-//   expect(parseTransactionSuave(serialized)).toMatchInlineSnapshot(`
-//     {
-//       ...otherTransactionDetails,
-//       "data": "0x1234"
-//     }
-//   `)
-// })
-
-// test('should parse a Suave transaction with Execution Node', () => {
-//   const transactionWithNode = {
-//     ...transaction,
-//     ExecutionNode: accounts[1].address,  // Example address
-//   }
-
-//   const serialized = serializeTransactionSuave(transactionWithNode)
-
-//   expect(parseTransactionSuave(serialized)).toMatchInlineSnapshot(`
-//     {
-//       ...otherTransactionDetails,
-//       "ExecutionNode": "0x70997970c51812dc3a010c7d01b50e0d17dc79c8"
-//     }
-//   `)
-// })
-
+// TODO: Add tests for invalid transactions
 // test('invalid transaction (all missing)', () => {
 //   expect(() =>
 //     parseTransactionSuave(`0xYourPrefix${toRlp([]).slice(2)}`),
