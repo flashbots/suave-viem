@@ -13,7 +13,8 @@
       "tsconfig.json",
       "tsconfig.*.json",
       "generated.ts",
-      "vectors/*.json"
+      "vectors/*.json",
+      "playgrounds"
     ]
   },
   "formatter": {

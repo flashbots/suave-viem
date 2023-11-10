@@ -26,7 +26,7 @@ export const serializeConfidentialComputeRecord = (
   transaction: TransactionSerializableSuave,
   signature?: Signature,
 ): TransactionSerializedSuave => {
-  console.log('txType', transaction.type)
+  console.debug('serializeConfidentialComputeRecord', transaction)
   if (transaction.type !== SuaveTxTypes.ConfidentialRecord) {
     throw new InvalidSerializedTransactionTypeError({
       serializedType: transaction.type,
@@ -35,10 +35,14 @@ export const serializeConfidentialComputeRecord = (
   if (!transaction.executionNode) {
     throw new InvalidConfidentialRecordError({ missingField: 'executionNode' })
   }
+  if (!transaction.confidentialInputs && !transaction.confidentialInputsHash) {
+    throw new InvalidConfidentialRecordError({
+      missingField: 'confidentialInputs or confidentialInputsHash',
+    })
+  }
 
-  // Extract fields from the transaction
+  // Extract fields from the original request
   const {
-    chainId,
     nonce,
     gas,
     gasPrice,
@@ -51,24 +55,19 @@ export const serializeConfidentialComputeRecord = (
 
   // Serialize the transaction fields into an array
   const serializedTransaction: Hex[] = [
+    executionNode,
+    confidentialInputs ? keccak256(confidentialInputs) : '0x',
     nonce ? numberToHex(nonce) : '0x',
     gasPrice ? numberToHex(gasPrice) : '0x',
     gas ? numberToHex(gas) : '0x',
     to ?? '0x',
     value ? numberToHex(value) : '0x',
     data ?? '0x', // data
-    executionNode,
-    confidentialInputs ? keccak256(confidentialInputs) : '0x',
-    chainId ? numberToHex(chainId) : '0x',
   ]
 
   // Append the signature to the serialized transaction if provided
   if (signature) {
-    serializedTransaction.push(
-      signature.v === 27n ? '0x' : '0x01', // yParity
-      signature.r,
-      signature.s,
-    )
+    serializedTransaction.push(toHex(signature.v), signature.r, signature.s)
   }
 
   // Concatenate the serialized transaction array into a single string using RLP encoding
@@ -85,6 +84,7 @@ export const serializeConfidentialComputeRequest = (
   transaction: TransactionSerializableSuave,
   signedComputeRecord: Hex,
 ): SuaveTxTypes.ConfidentialRequest => {
+  console.debug('serializeConfidentialComputeRequest', transaction)
   if (transaction.type !== SuaveTxTypes.ConfidentialRequest) {
     throw new InvalidSerializedTransactionTypeError({
       serializedType: transaction.type,
@@ -93,6 +93,11 @@ export const serializeConfidentialComputeRequest = (
   if (!transaction.confidentialInputs) {
     throw new InvalidConfidentialRequestError({
       missingField: 'confidentialInputs',
+    })
+  }
+  if (!transaction.executionNode) {
+    throw new InvalidConfidentialRequestError({
+      missingField: 'executionNode',
     })
   }
   const ccRecord = parseSignedComputeRecord(signedComputeRecord)
@@ -109,15 +114,15 @@ export const serializeConfidentialComputeRequest = (
       ccRecord.value ? toHex(ccRecord.value) : '0x',
       ccRecord.data ?? '0x', // data
 
-      ccRecord.executionNode ?? '0x',
+      transaction.executionNode,
       confidentialInputsHash,
 
-      ccRecord.chainId ? numberToHex(ccRecord.chainId) : '0x',
+      transaction.chainId ? numberToHex(transaction.chainId) : '0x',
       ccRecord.v === 27n ? '0x' : '0x1', // yParity
       ccRecord.r as Hex,
       ccRecord.s as Hex,
     ],
-    transaction.confidentialInputs ?? '0x',
+    transaction.confidentialInputs,
   ]
 
   return concatHex([

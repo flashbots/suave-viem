@@ -36,6 +36,7 @@ describe('Suave Transaction Parsers', () => {
 
   test('parses a signed ConfidentialComputeRequest', async () => {
     const signedTransaction = await wallet.signTransaction(sampleTx)
+    console.log('signed confidentialRequest', signedTransaction)
     expect(parseSignedComputeRequest(signedTransaction)).toMatchInlineSnapshot(`
     {
       "chainId": ${sampleTx.chainId},
@@ -45,11 +46,11 @@ describe('Suave Transaction Parsers', () => {
       "gas": 100n,
       "gasPrice": 100n,
       "nonce": 0,
-      "r": "0xe5e7720a3006927f6fc388cfaf5fd258a6664975ff387fac2b37197b7d305a81",
-      "s": "0x7f89b8a98f04e02e4e810c7b575c6736ad36c9ee1fe98c73e0b8f74d1e522968",
+      "r": "0x502ec36261e4b88251ef11134fa6304a0e8ae65200efb9a606ee9eef4343346d",
+      "s": "0x0e01ac9093d1bbeee267ee6ac81838a7a4d6ebe62ab3b33753311496b083122f",
       "to": "${sampleTx.to}",
       "type": "0x43",
-      "v": 1n,
+      "v": 0n,
       "value": 0n,
     }
   `)
@@ -67,20 +68,20 @@ describe('Suave Transaction Parsers', () => {
       s: s!,
       v: v!,
     })
+    console.log('serializedRecord', serializedRecord)
     expect(parseSignedComputeRecord(serializedRecord)).toMatchInlineSnapshot(`
     {
-      "chainId": ${sampleTx.chainId},
       "confidentialInputsHash": "${keccak256(sampleTx.confidentialInputs!)}",
       "data": "${sampleTx.data}",
       "executionNode": "${sampleTx.executionNode}",
       "gas": 100n,
       "gasPrice": 100n,
       "nonce": 0,
-      "r": "0xe5e7720a3006927f6fc388cfaf5fd258a6664975ff387fac2b37197b7d305a81",
-      "s": "0x7f89b8a98f04e02e4e810c7b575c6736ad36c9ee1fe98c73e0b8f74d1e522968",
+      "r": "0x502ec36261e4b88251ef11134fa6304a0e8ae65200efb9a606ee9eef4343346d",
+      "s": "0x0e01ac9093d1bbeee267ee6ac81838a7a4d6ebe62ab3b33753311496b083122f",
       "to": "${sampleTx.to}",
       "type": "0x42",
-      "v": 1n,
+      "v": 0n,
       "value": 0n,
     }
     `)
@@ -88,12 +89,12 @@ describe('Suave Transaction Parsers', () => {
 
   test('parseTransactionSuave parses all SUAVE tx types', async () => {
     const serializedTx =
-      '0x42f8948064649470997970c51812dc3a010c7d01b50e0d17dc79c880139470997970c51812dc3a010c7d01b50e0d17dc79c8a0d7cb6956c73dec7e8487c45e7b79a1d62306f0abe3999229b25d5ba6c8a9a6b63301a0e5e7720a3006927f6fc388cfaf5fd258a6664975ff387fac2b37197b7d305a81a07f89b8a98f04e02e4e810c7b575c6736ad36c9ee1fe98c73e0b8f74d1e522968'
+      '0x42f8939470997970c51812dc3a010c7d01b50e0d17dc79c8a0d7cb6956c73dec7e8487c45e7b79a1d62306f0abe3999229b25d5ba6c8a9a6b68064649470997970c51812dc3a010c7d01b50e0d17dc79c8801300a0502ec36261e4b88251ef11134fa6304a0e8ae65200efb9a606ee9eef4343346da00e01ac9093d1bbeee267ee6ac81838a7a4d6ebe62ab3b33753311496b083122f'
     const parsedTx = parseTransactionSuave(serializedTx)
     expect(parsedTx.type).toBe(SuaveTxTypes.ConfidentialRecord)
 
     const serializedTx2 =
-      '0x43f89bf8948064649470997970c51812dc3a010c7d01b50e0d17dc79c880139470997970c51812dc3a010c7d01b50e0d17dc79c8a0d7cb6956c73dec7e8487c45e7b79a1d62306f0abe3999229b25d5ba6c8a9a6b63301a0e5e7720a3006927f6fc388cfaf5fd258a6664975ff387fac2b37197b7d305a81a07f89b8a98f04e02e4e810c7b575c6736ad36c9ee1fe98c73e0b8f74d1e5229688442424242'
+      '0x43f89bf8948064649470997970c51812dc3a010c7d01b50e0d17dc79c880139470997970c51812dc3a010c7d01b50e0d17dc79c8a0d7cb6956c73dec7e8487c45e7b79a1d62306f0abe3999229b25d5ba6c8a9a6b63380a0502ec36261e4b88251ef11134fa6304a0e8ae65200efb9a606ee9eef4343346da00e01ac9093d1bbeee267ee6ac81838a7a4d6ebe62ab3b33753311496b083122f8442424242'
     const parsedTx2 = parseTransactionSuave(serializedTx2)
     expect(parsedTx2.type).toBe(SuaveTxTypes.ConfidentialRequest)
 

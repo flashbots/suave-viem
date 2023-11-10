@@ -97,21 +97,20 @@ export const parseSignedComputeRecord = (signedComputeRecord: Hex) => {
   }
   const transactionArray = toTransactionArray(signedComputeRecord)
   const [
+    executionNode,
+    confidentialInputsHash,
     nonce,
     gasPrice,
     gas,
     to,
     value,
     data,
-    executionNode,
-    confidentialInputsHash,
-    chainId,
     v,
     r,
     s,
   ] = transactionArray
 
-  if (transactionArray.length !== 12) {
+  if (transactionArray.length !== 11) {
     throw new InvalidSerializedTransactionError({
       attributes: {
         nonce,
@@ -122,7 +121,6 @@ export const parseSignedComputeRecord = (signedComputeRecord: Hex) => {
         confidentialInputsHash,
         value,
         gasPrice,
-        chainId,
         v,
         r,
         s,
@@ -141,7 +139,6 @@ export const parseSignedComputeRecord = (signedComputeRecord: Hex) => {
     confidentialInputsHash: confidentialInputsHash as Hex,
     value: safeHexToBigInt(value as Hex),
     gasPrice: safeHexToBigInt(gasPrice as Hex),
-    chainId: hexToNumber(chainId as Hex),
     v: safeHexToBigInt(v as Hex),
     r: r as Hex,
     s: s as Hex,
