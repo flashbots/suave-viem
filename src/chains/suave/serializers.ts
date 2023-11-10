@@ -32,8 +32,8 @@ export const serializeConfidentialComputeRecord = (
       serializedType: transaction.type,
     })
   }
-  if (!transaction.executionNode) {
-    throw new InvalidConfidentialRecordError({ missingField: 'executionNode' })
+  if (!transaction.kettleAddress) {
+    throw new InvalidConfidentialRecordError({ missingField: 'kettleAddress' })
   }
   if (!transaction.confidentialInputs && !transaction.confidentialInputsHash) {
     throw new InvalidConfidentialRecordError({
@@ -49,13 +49,13 @@ export const serializeConfidentialComputeRecord = (
     to,
     value,
     data,
-    executionNode,
+    kettleAddress,
     confidentialInputs,
   } = transaction
 
   // Serialize the transaction fields into an array
   const serializedTransaction: Hex[] = [
-    executionNode,
+    kettleAddress,
     confidentialInputs ? keccak256(confidentialInputs) : '0x',
     nonce ? numberToHex(nonce) : '0x',
     gasPrice ? numberToHex(gasPrice) : '0x',
@@ -95,9 +95,9 @@ export const serializeConfidentialComputeRequest = (
       missingField: 'confidentialInputs',
     })
   }
-  if (!transaction.executionNode) {
+  if (!transaction.kettleAddress) {
     throw new InvalidConfidentialRequestError({
-      missingField: 'executionNode',
+      missingField: 'kettleAddress',
     })
   }
   const ccRecord = parseSignedComputeRecord(signedComputeRecord)
@@ -114,7 +114,7 @@ export const serializeConfidentialComputeRequest = (
       ccRecord.value ? toHex(ccRecord.value) : '0x',
       ccRecord.data ?? '0x', // data
 
-      transaction.executionNode,
+      transaction.kettleAddress,
       confidentialInputsHash,
 
       transaction.chainId ? numberToHex(transaction.chainId) : '0x',
@@ -161,7 +161,7 @@ export function assertTransactionSuave(
     maxFeePerGas,
     confidentialInputs,
     confidentialInputsHash,
-    executionNode,
+    kettleAddress,
     to,
     r,
     s,
@@ -174,8 +174,8 @@ export function assertTransactionSuave(
   if (confidentialInputs && !isHex(confidentialInputs))
     throw new Error('invalid confidentialInputs')
 
-  if (executionNode && !isHex(executionNode))
-    throw new Error('invalid executionNode')
+  if (kettleAddress && !isHex(kettleAddress))
+    throw new Error('invalid kettleAddress')
 
   if (confidentialInputsHash && !isHex(confidentialInputsHash))
     throw new Error('invalid confidentialInputsHash')

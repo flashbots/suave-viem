@@ -54,7 +54,6 @@ export const formattersSuave = {
               type: '0x0',
             } as RpcTransaction),
             gasPrice: hexToBigInt(transaction.gasPrice as Hex),
-            executionNode: transaction.executionNode,
             confidentialComputeResult: transaction.confidentialComputeResult,
             type: transaction.type,
             typeHex: transaction.typeHex,
@@ -79,7 +78,6 @@ export const formattersSuave = {
           accessList: args.accessList,
           // ... then replace and add fields as needed
           gasPrice: hexToBigInt(args.gasPrice as Hex),
-          executionNode: args.executionNode,
           requestRecord: {
             // format confidential compute request as legacy tx
             ...{
@@ -96,7 +94,7 @@ export const formattersSuave = {
               transactionIndex: null,
             },
             // ... then replace and add fields as needed
-            executionNode: args.requestRecord.executionNode || undefined,
+            kettleAddress: args.requestRecord.kettleAddress || undefined,
             confidentialInputsHash: args.requestRecord.confidentialInputsHash,
             chainId:
               args.requestRecord.chainId &&
@@ -129,15 +127,15 @@ export const formattersSuave = {
         args.confidentialInputs &&
         !['0x', '0x0'].includes(args.confidentialInputs)
       ) {
-        const { executionNode } = args
+        const { kettleAddress, confidentialInputs } = args
         return {
           ...formatTransactionRequest({
             ...args,
             from: zeroAddress,
           } as TransactionRequestBase),
-          executionNode,
+          kettleAddress,
           isConfidential: true,
-          confidentialInputs: args.confidentialInputs,
+          confidentialInputs,
           type: args.type,
           gasPrice: toHex(args.gasPrice),
           chainId: toHex(args.chainId),

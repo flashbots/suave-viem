@@ -30,7 +30,7 @@ describe('Suave Transaction Parsers', () => {
     gasPrice: 100n,
     type: '0x43',
     chainId: 0x33,
-    executionNode: accounts[1].address,
+    kettleAddress: accounts[1].address,
     confidentialInputs: '0x42424242',
   } as TransactionRequestSuave
 
@@ -42,9 +42,9 @@ describe('Suave Transaction Parsers', () => {
       "chainId": ${sampleTx.chainId},
       "confidentialInputs": "${sampleTx.confidentialInputs}",
       "data": "${sampleTx.data}",
-      "executionNode": "${sampleTx.executionNode}",
       "gas": 100n,
       "gasPrice": 100n,
+      "kettleAddress": "${sampleTx.kettleAddress}",
       "nonce": 0,
       "r": "0x502ec36261e4b88251ef11134fa6304a0e8ae65200efb9a606ee9eef4343346d",
       "s": "0x0e01ac9093d1bbeee267ee6ac81838a7a4d6ebe62ab3b33753311496b083122f",
@@ -73,9 +73,9 @@ describe('Suave Transaction Parsers', () => {
     {
       "confidentialInputsHash": "${keccak256(sampleTx.confidentialInputs!)}",
       "data": "${sampleTx.data}",
-      "executionNode": "${sampleTx.executionNode}",
       "gas": 100n,
       "gasPrice": 100n,
+      "kettleAddress": "${sampleTx.kettleAddress}",
       "nonce": 0,
       "r": "0x502ec36261e4b88251ef11134fa6304a0e8ae65200efb9a606ee9eef4343346d",
       "s": "0x0e01ac9093d1bbeee267ee6ac81838a7a4d6ebe62ab3b33753311496b083122f",

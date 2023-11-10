@@ -77,7 +77,7 @@ export type TransactionSuave<
   TQuantity = bigint,
   TIndex = number,
 > = TransactionBase<TQuantity, TIndex, TType, TPending> & {
-  executionNode: Address
+  //kettleAddress: Address
   requestRecord: ConfidentialComputeRecord<TPending, TQuantity, TIndex>
   confidentialComputeResult: Hex
   type: TType
@@ -92,7 +92,7 @@ export type RpcTransactionSuave<
   TType extends SuaveTxType,
   TPending extends boolean = boolean,
 > = TransactionSuave<TPending, TType, Hex, Hex> & {
-  executionNode: Address
+  // kettleAddress: Address
   requestRecord: ConfidentialComputeRecord<TPending, Hex, Hex>
   confidentialComputeResult: Hex
 }
@@ -119,7 +119,7 @@ export type ConfidentialComputeRecord<
   >,
   'from'
 > & {
-  executionNode: Address // Assuming address is a string type
+  kettleAddress: Address // Assuming address is a string type
   confidentialInputsHash: Hash // This might need to be adjusted to the actual Ethereum Transaction type
   type: SuaveTxTypes.ConfidentialRecord
 }
@@ -138,7 +138,7 @@ export type TransactionRequestSuave<
   accessList?: AccessList
   type: TType
   from?: Address
-  executionNode?: Address
+  kettleAddress?: Address
   confidentialInputs?: Hex
 }
 
@@ -148,14 +148,14 @@ export type RpcTransactionRequestSuave<
   TType extends SuaveTxType = SuaveTxTypes.ConfidentialRequest,
 > = TransactionRequestBase<TQuantity, TIndex, TType> &
   FeeValues<TQuantity> & {
-    executionNode?: Address
+    kettleAddress?: Address
     isConfidential?: boolean
     confidentialInputs: Hex
     type?: TType
   }
 
 export type SuaveTransactionReceiptOverrides = {
-  executionNode: Address | null
+  kettleAddress: Address | null
   confidentialComputeRequest: ConfidentialComputeRecord | null
   confidentialComputeResult: Hex | null
 }
@@ -181,7 +181,7 @@ export type TransactionSerializableSuave<
   TIndex = number,
   TType = SuaveTxType,
 > = TransactionSerializableEIP2930<TQuantity, TIndex> & {
-  executionNode?: Address
+  kettleAddress?: Address
   confidentialInputs?: Hex
   confidentialInputsHash?: Hash
   signedComputeRecord?: Hex
