@@ -1,11 +1,20 @@
 import { sleep } from 'bun'
-import { http, Hex, createPublicClient } from 'viem'
+import {
+  http,
+  Address,
+  Hex,
+  createPublicClient,
+  encodeFunctionData,
+} from 'viem'
 import { mainnet, polygon, suaveRigil } from 'viem/chains'
 import { SuaveTxTypes, TransactionRequestSuave } from 'viem/chains/suave/types'
 import { getSuaveWallet } from 'viem/chains/suave/wallet'
+import ConfidentialWithLogs from './contracts/out/ConfidentialWithLogs.sol/ConfidentialWithLogs.json'
 
 ////////////////////////////////////////////////////////////////////
 // Clients
+
+const KETTLE_ADDRESS = '0xb5feafbdd752ad52afb7e1bd2e40432a485bbb7f'
 
 export const publicClients = {
   mainnet: createPublicClient({
@@ -114,7 +123,7 @@ async function testSendCCRequest() {
   }
 
   const ccrReq: TransactionRequestSuave = {
-    executionNode: '0xb5feafbdd752ad52afb7e1bd2e40432a485bbb7f',
+    kettleAddress: KETTLE_ADDRESS,
     confidentialInputs:
       '0x000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000fd7b22626c6f636b4e756d626572223a22307830222c22747873223a5b2230786638363538303064383235323038393463316331313333363833373238626361333233613362313664313938633930323064656535633231383230336538383038343032303131386164613038373866633936666533353930366134323339373235306135356463636135343736633435643538386437303965333330653933353732306233386465663364613034626434373239316635346665666338356532656439323466323637343737326432316266653061616566353030616466326437326531353866396137623933225d2c2270657263656e74223a31307d000000',
     to: '0xE7c7A4CCF98838006130754cADC270B605Ca0230',
@@ -156,9 +165,62 @@ async function testGettingStuff() {
   }
 }
 
+async function testDeployContract() {
+  // deploy contract
+  const contractHash = await adminWallet.deployContract({
+    abi: ConfidentialWithLogs.abi,
+    bytecode: ConfidentialWithLogs.bytecode.object as Hex,
+  })
+  console.log(`contract deployed at tx hash=${contractHash}`)
+  let contractAddress: Address
+
+  // wait for tx to land
+  while (true) {
+    try {
+      const receipt = await publicClients.suaveLocal.getTransactionReceipt({
+        hash: contractHash,
+      })
+      if (!receipt.contractAddress) {
+        throw new Error('no contract address')
+      }
+      contractAddress = receipt.contractAddress
+      break
+    } catch (e) {
+      console.warn((e as Error).message)
+      await sleep(4000)
+    }
+  }
+  // const contractAddress = '0x592829cc34f76f29cbc7070debcdeff98b02a34c'
+  console.log('contract address', contractAddress)
+
+  // send a ccRequest to interact with the contract
+  const secretNumber = '0x9001'
+  const calldata = encodeFunctionData({
+    abi: ConfidentialWithLogs.abi,
+    functionName: 'fetchBidConfidentialBundleData',
+  })
+  // console.log('key', key)
+  console.log('calldata', calldata)
+  const ccrReq: TransactionRequestSuave = {
+    type: SuaveTxTypes.ConfidentialRequest,
+    chainId: suaveRigil.id,
+    gasPrice: 10000000000n,
+    gas: 1420000n,
+    to: contractAddress,
+    data: calldata,
+    confidentialInputs: secretNumber,
+    kettleAddress: KETTLE_ADDRESS,
+  }
+  // console.log('wallet address', await wallet.getAddresses())
+  const ccrResult = await adminWallet.sendTransaction(ccrReq)
+  console.log('ccrResult', ccrResult)
+  // TODO: ccRequest contract bindings, so confidentialInputs and data fit the contract's interface
+}
+
 async function main() {
-  await testSendCCRequest()
-  await testGettingStuff()
+  // await testSendCCRequest()
+  // await testGettingStuff()
+  await testDeployContract()
 }
 
 main().then(() => {
