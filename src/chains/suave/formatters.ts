@@ -94,7 +94,7 @@ export const formattersSuave = {
               transactionIndex: null,
             },
             // ... then replace and add fields as needed
-            kettleAddress: args.requestRecord.kettleAddress || undefined,
+            kettleAddress: args.requestRecord.kettleAddress,
             confidentialInputsHash: args.requestRecord.confidentialInputsHash,
             chainId:
               args.requestRecord.chainId &&
@@ -134,7 +134,7 @@ export const formattersSuave = {
             from: zeroAddress,
           } as TransactionRequestBase),
           kettleAddress,
-          isConfidential: true,
+          // isConfidential: true, // TODO: where does this come from? where does it go? where does it come from, cotton-eyed joe?
           confidentialInputs,
           type: args.type,
           gasPrice: toHex(args.gasPrice),

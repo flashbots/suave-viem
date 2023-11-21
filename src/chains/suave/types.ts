@@ -21,22 +21,25 @@ export enum SuaveTxTypes {
 
 export type SuaveTxType = '0x0' | `${SuaveTxTypes}`
 
-type ConfidentialComputeRequestOverrides = {
+type ConfidentialOverrides = {
   kettleAddress?: Address
+}
+
+type ConfidentialComputeRequestOverrides = ConfidentialOverrides & {
   confidentialInputs?: Hex
 }
 
-type ConfidentialComputeRecordOverrides = {
+type ConfidentialComputeRecordOverrides = ConfidentialOverrides & {
   confidentialInputsHash?: Hash
 }
 
 export type SuaveBlockOverrides = {} // Add any specific block overrides if necessary for Suave
 
-export type SuaveTransactionReceiptOverrides = {
-  kettleAddress: Address | null
-  confidentialComputeRequest: ConfidentialComputeRecord | null
-  confidentialComputeResult: Hex | null
-}
+export type SuaveTransactionReceiptOverrides =
+  Partial<ConfidentialOverrides> & {
+    confidentialComputeRequest: ConfidentialComputeRecord | null
+    confidentialComputeResult: Hex | null
+  }
 
 /// BASE ETHEREUM TYPE EXTENSIONS ==============================================
 

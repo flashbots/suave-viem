@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.13;
 
-import "suave/Suave.sol";
+import "suave/libraries/Suave.sol";
 
 contract ConfidentialWithLogs {
     event SimResultEvent(

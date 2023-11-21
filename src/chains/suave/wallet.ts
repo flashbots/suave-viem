@@ -1,5 +1,5 @@
-import { sign } from '~viem/accounts/index.js'
 import { privateKeyToAccount } from '../../accounts/privateKeyToAccount.js'
+import { sign } from '../../accounts/utils/sign.js'
 import {
   type Chain,
   type PrivateKeyAccount,

@@ -21,10 +21,6 @@ export const suaveRigil = /*#__PURE__*/ defineChain(
         http: ['https://testnet.rpc.flashbots.net'],
         webSocket: ['wss://testnet.rpc.flashbots.net'],
       },
-      local: {
-        http: ['http://localhost:8545'],
-        webSocket: ['ws://localhost:8545'],
-      },
     },
     blockExplorers: {
       default: {

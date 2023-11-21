@@ -1,9 +1,11 @@
-import { isAddress, isHex } from '~viem/index.js'
+// import { isAddress, isHex } from '~viem/index.js'
 import {
   InvalidSerializedTransactionError,
   InvalidSerializedTransactionTypeError,
 } from '../../errors/transaction.js'
 import type { Hex } from '../../types/misc.js'
+import { isAddress } from '../../utils/address/isAddress.js'
+import { isHex } from '../../utils/data/isHex.js'
 import { hexToBigInt, hexToNumber } from '../../utils/encoding/fromHex.js'
 import { parseTransaction } from '../../utils/transaction/parseTransaction.js'
 import { toTransactionArray } from '../../utils/transaction/parseTransaction.js'

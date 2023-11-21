@@ -11,10 +11,15 @@ import { SuaveTxTypes, TransactionRequestSuave } from 'viem/chains/suave/types'
 import { getSuaveWallet } from 'viem/chains/suave/wallet'
 import ConfidentialWithLogs from './contracts/out/ConfidentialWithLogs.sol/ConfidentialWithLogs.json'
 
-////////////////////////////////////////////////////////////////////
-// Clients
-
-const KETTLE_ADDRESS = '0xb5feafbdd752ad52afb7e1bd2e40432a485bbb7f'
+const failEnv = (name: string) => {
+  throw new Error(`missing env var ${name}`)
+}
+if (!process.env.PRIVATE_KEY) {failEnv('PRIVATE_KEY')}
+if (!process.env.KETTLE_ADDRESS) {failEnv('KETTLE_ADDRESS')}
+if (!process.env.RPC_URL_HTTP) {console.warn('RPC_URL_HTTP not set. Defaulting to localhost:8545')}
+const KETTLE_ADDRESS = process.env.KETTLE_ADDRESS as Address
+const PRIVATE_KEY = process.env.PRIVATE_KEY as Hex
+const RPC_URL_HTTP = process.env.RPC_URL_HTTP || 'http://localhost:8545'
 
 export const publicClients = {
   mainnet: createPublicClient({
@@ -31,7 +36,7 @@ export const publicClients = {
   }),
   suaveLocal: createPublicClient({
     chain: suaveRigil,
-    transport: http(suaveRigil.rpcUrls.local.http[0]),
+    transport: http(RPC_URL_HTTP),
   }),
 }
 
@@ -69,15 +74,15 @@ export const publicClients = {
 const adminWallet = getSuaveWallet(
   {
     chain: suaveRigil,
-    transport: http(suaveRigil.rpcUrls.local.http[0]),
+    transport: http(RPC_URL_HTTP),
   },
-  process.env.PRIVATE_KEY! as Hex,
+  PRIVATE_KEY,
 )
 
 const wallet = getSuaveWallet(
   {
     chain: suaveRigil,
-    transport: http(suaveRigil.rpcUrls.local.http[0]),
+    transport: http(RPC_URL_HTTP),
   },
   '0x01000070530220062104600650003002001814120800043ff33603df10300012',
 )
@@ -184,6 +189,7 @@ const retryExceptionsWithTimeout = async (timeout_ms: number, fn: () => Promise<
 }
 
 async function testDeployContract() {
+
   // deploy contract
   const contractHash = await adminWallet.deployContract({
     abi: ConfidentialWithLogs.abi,
@@ -228,10 +234,19 @@ async function testDeployContract() {
   })
 }
 
+/** MEV-Share implementation on SUAVE.
+ *
+ * To run this, you'll need to deploy the contract first.
+ * See the [README](./README.md) for instructions.
+*/
+async function testSuaveBids() {}
+
 async function main() {
   // await testSendCCRequest()
   // await testGettingStuff()
-  await testDeployContract()
+  // await testDeployContract()
+
+
 }
 
 main().then(() => {
