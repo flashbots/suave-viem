@@ -13,6 +13,15 @@ import {
   type TransactionSerializedSuave,
 } from './types.js'
 
+const safeHex = (hex: Hex): Hex => {
+  if (hex === '0x0' || hex === '0x00') {
+    return '0x'
+  } else if (hex.length % 2 !== 0) {
+    return `0x0${hex.slice(2)}`
+  }
+  return hex
+}
+
 /** Serializes a ConfidentialComputeRecord transaction. Conforms to [ConfidentialComputeRequest Spec](https://github.com/flashbots/suave-specs/blob/main/specs/rigil/suave-chain.md?plain=1#L135-L158).
 Satisfies `ChainSerializers.transaction`
 */
@@ -64,7 +73,7 @@ export const serializeConfidentialComputeRecord = (
     numberToHex(gas),
     to ?? '0x',
     value ? numberToHex(value) : '0x',
-    data ?? '0x', // data
+    data ?? '0x',
   ].map(safeHex)
 
   // Concatenate the serialized transaction array into a single string using RLP encoding
@@ -74,21 +83,12 @@ export const serializeConfidentialComputeRecord = (
   ]) as TransactionSerializedSuave
 }
 
-const safeHex = (hex: Hex): Hex => {
-  if (hex === '0x0' || hex === '0x00') {
-    return '0x'
-  } else if (hex.length % 2 !== 0) {
-    return `0x0${hex.slice(2)}`
-  }
-  return hex
-}
-
 /** RLP serialization for ConfidentialComputeRequest.
  * Conforms to [ConfidentialComputeRequest Spec](https://github.com/flashbots/suave-specs/blob/main/specs/rigil/suave-chain.md?plain=1#L164-L180).
  */
 export const serializeConfidentialComputeRequest = (
   transaction: TransactionSerializableSuave,
-): SuaveTxTypes.ConfidentialRequest => {
+): `${SuaveTxTypes.ConfidentialRequest}${string}` => {
   if (transaction.type !== SuaveTxTypes.ConfidentialRequest) {
     throw new InvalidSerializedTransactionTypeError({
       serializedType: transaction.type,
@@ -172,7 +172,7 @@ export const serializeConfidentialComputeRequest = (
   ]) as SuaveTxTypes.ConfidentialRequest
 }
 
-/* The following does not work. It's left here as a reminder of how it should be written,
+/* The following does not work. It's left here as a reminder of how it typically should be written,
   in case we change the signature scheme to match the standard implementation.
   - viem has a fixed signature scheme
   - ccRequest txs have to serialize as a ccRecord first, have the account sign it, then re-serialize as a ccRequest

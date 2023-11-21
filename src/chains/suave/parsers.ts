@@ -88,66 +88,6 @@ export const parseSignedComputeRequest = (signedComputeRequest: Hex) => {
   return ccRequest
 }
 
-// export const parseSignedComputeRecord = (signedComputeRecord: Hex) => {
-//   const serializedType = signedComputeRecord.slice(0, 4)
-//   if (serializedType !== SuaveTxTypes.ConfidentialRecord) {
-//     throw new InvalidSerializedTransactionTypeError({
-//       serializedType: serializedType as Hex,
-//     })
-//   }
-//   const transactionArray = toTransactionArray(signedComputeRecord)
-//   const [
-//     kettleAddress,
-//     confidentialInputsHash,
-//     nonce,
-//     gasPrice,
-//     gas,
-//     to,
-//     value,
-//     data,
-//     v,
-//     r,
-//     s,
-//   ] = transactionArray
-
-//   if (transactionArray.length !== 11) {
-//     throw new InvalidSerializedTransactionError({
-//       attributes: {
-//         nonce,
-//         to,
-//         data,
-//         gas,
-//         kettleAddress,
-//         confidentialInputsHash,
-//         value,
-//         gasPrice,
-//         v,
-//         r,
-//         s,
-//       },
-//       serializedTransaction: signedComputeRecord,
-//       type: '0x42' as SuaveTxType,
-//     })
-//   }
-
-//   const ccRecord: Partial<TransactionSerializableSuave> = {
-//     nonce: safeHexToNumber(nonce as Hex),
-//     to: to as Hex,
-//     data: data as Hex,
-//     gas: hexToBigInt(gas as Hex),
-//     kettleAddress: kettleAddress as Hex,
-//     confidentialInputsHash: confidentialInputsHash as Hex,
-//     value: safeHexToBigInt(value as Hex),
-//     gasPrice: safeHexToBigInt(gasPrice as Hex),
-//     v: safeHexToBigInt(v as Hex),
-//     r: r as Hex,
-//     s: s as Hex,
-//     type: '0x42',
-//   }
-
-//   return ccRecord
-// }
-
 export type ParseTransactionSuaveReturnType<TType extends SuaveTxType,> =
   TransactionSerializableSuave<bigint, number, TType>
 

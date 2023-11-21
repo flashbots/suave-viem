@@ -33,7 +33,7 @@ async function signConfidentialComputeRecord(
   const signature = {
     r,
     s,
-    v: v === 27n ? 0n : 1n, // yParity
+    v: v === 27n ? 0n : 1n,
   }
   return {
     ...transaction,
@@ -85,7 +85,7 @@ export function getSuaveWallet<
           presignTx,
           privateKey,
         )
-        const fullTx = serializeConfidentialComputeRequest({
+        return serializeConfidentialComputeRequest({
           ...presignTx,
           confidentialInputs,
           type: SuaveTxTypes.ConfidentialRequest,
@@ -93,7 +93,6 @@ export function getSuaveWallet<
           s,
           v,
         })
-        return fullTx
       } else {
         return await client.account.signTransaction(txRequest as any)
       }
