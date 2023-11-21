@@ -181,5 +181,13 @@ export type TransactionSerializableSuave<
     type: TType
   }
 
-// Define a type for serialized Suave transactions
-export type TransactionSerializedSuave = `${SuaveTxType}${string}`
+/** Required format for a serialized SUAVE transaction.
+ *
+ * By default, this type can be used to represent any serialized SUAVE transaction.
+ *
+ * To restrict the type to a specific SUAVE transaction type, use your specific type as
+ * the generic TType argument, e.g. `TransactionSerializedSuave<'0x43'>`.
+ */
+export type TransactionSerializedSuave<
+  TType extends SuaveTxType = SuaveTxType,
+> = `${TType}${string}`

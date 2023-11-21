@@ -27,7 +27,7 @@ Satisfies `ChainSerializers.transaction`
 */
 export const serializeConfidentialComputeRecord = (
   transaction: TransactionSerializableSuave,
-): TransactionSerializedSuave => {
+): TransactionSerializedSuave<SuaveTxTypes.ConfidentialRecord> => {
   if (transaction.type !== SuaveTxTypes.ConfidentialRecord) {
     throw new InvalidSerializedTransactionTypeError({
       serializedType: transaction.type,
@@ -80,7 +80,7 @@ export const serializeConfidentialComputeRecord = (
   return concatHex([
     SuaveTxTypes.ConfidentialRecord,
     toRlp(preSerializedTransaction),
-  ]) as TransactionSerializedSuave
+  ]) as TransactionSerializedSuave<SuaveTxTypes.ConfidentialRecord>
 }
 
 /** RLP serialization for ConfidentialComputeRequest.
@@ -88,7 +88,7 @@ export const serializeConfidentialComputeRecord = (
  */
 export const serializeConfidentialComputeRequest = (
   transaction: TransactionSerializableSuave,
-): `${SuaveTxTypes.ConfidentialRequest}${string}` => {
+): TransactionSerializedSuave<SuaveTxTypes.ConfidentialRequest> => {
   if (transaction.type !== SuaveTxTypes.ConfidentialRequest) {
     throw new InvalidSerializedTransactionTypeError({
       serializedType: transaction.type,
@@ -169,7 +169,7 @@ export const serializeConfidentialComputeRequest = (
   return concatHex([
     SuaveTxTypes.ConfidentialRequest,
     toRlp(preSerializedTransaction),
-  ]) as SuaveTxTypes.ConfidentialRequest
+  ]) as TransactionSerializedSuave<SuaveTxTypes.ConfidentialRequest>
 }
 
 /* The following does not work. It's left here as a reminder of how it typically should be written,

@@ -90,9 +90,16 @@ export const parseSignedComputeRequest = (signedComputeRequest: Hex) => {
   return ccRequest
 }
 
-export type ParseTransactionSuaveReturnType<TType extends SuaveTxType,> =
+/** This type represents the return type of `parseTransactionSuave`.
+ *
+ * TType is used to inform the transaction type, which is only known after
+ * parsing. `SuaveTxType` can be used here type when the transaction
+ * type isn't yet known.
+ */
+export type ParseTransactionSuaveReturnType<TType extends SuaveTxType> =
   TransactionSerializableSuave<bigint, number, TType>
 
+/** Parse a serialized transaction into a SUAVE Transaction object. */
 export function parseTransactionSuave(
   serializedTransaction: TransactionSerializedSuave,
 ): ParseTransactionSuaveReturnType<SuaveTxType> {
