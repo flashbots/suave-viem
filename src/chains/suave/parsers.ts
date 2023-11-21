@@ -1,3 +1,4 @@
+import { isAddress, isHex } from '~viem/index.js'
 import {
   InvalidSerializedTransactionError,
   InvalidSerializedTransactionTypeError,
@@ -6,7 +7,6 @@ import type { Hex } from '../../types/misc.js'
 import { hexToBigInt, hexToNumber } from '../../utils/encoding/fromHex.js'
 import { parseTransaction } from '../../utils/transaction/parseTransaction.js'
 import { toTransactionArray } from '../../utils/transaction/parseTransaction.js'
-import { assertTransactionSuave } from './serializers.js'
 import {
   type SuaveTxType,
   SuaveTxTypes,
@@ -88,65 +88,65 @@ export const parseSignedComputeRequest = (signedComputeRequest: Hex) => {
   return ccRequest
 }
 
-export const parseSignedComputeRecord = (signedComputeRecord: Hex) => {
-  const serializedType = signedComputeRecord.slice(0, 4)
-  if (serializedType !== SuaveTxTypes.ConfidentialRecord) {
-    throw new InvalidSerializedTransactionTypeError({
-      serializedType: serializedType as Hex,
-    })
-  }
-  const transactionArray = toTransactionArray(signedComputeRecord)
-  const [
-    kettleAddress,
-    confidentialInputsHash,
-    nonce,
-    gasPrice,
-    gas,
-    to,
-    value,
-    data,
-    v,
-    r,
-    s,
-  ] = transactionArray
+// export const parseSignedComputeRecord = (signedComputeRecord: Hex) => {
+//   const serializedType = signedComputeRecord.slice(0, 4)
+//   if (serializedType !== SuaveTxTypes.ConfidentialRecord) {
+//     throw new InvalidSerializedTransactionTypeError({
+//       serializedType: serializedType as Hex,
+//     })
+//   }
+//   const transactionArray = toTransactionArray(signedComputeRecord)
+//   const [
+//     kettleAddress,
+//     confidentialInputsHash,
+//     nonce,
+//     gasPrice,
+//     gas,
+//     to,
+//     value,
+//     data,
+//     v,
+//     r,
+//     s,
+//   ] = transactionArray
 
-  if (transactionArray.length !== 11) {
-    throw new InvalidSerializedTransactionError({
-      attributes: {
-        nonce,
-        to,
-        data,
-        gas,
-        kettleAddress,
-        confidentialInputsHash,
-        value,
-        gasPrice,
-        v,
-        r,
-        s,
-      },
-      serializedTransaction: signedComputeRecord,
-      type: '0x42' as SuaveTxType,
-    })
-  }
+//   if (transactionArray.length !== 11) {
+//     throw new InvalidSerializedTransactionError({
+//       attributes: {
+//         nonce,
+//         to,
+//         data,
+//         gas,
+//         kettleAddress,
+//         confidentialInputsHash,
+//         value,
+//         gasPrice,
+//         v,
+//         r,
+//         s,
+//       },
+//       serializedTransaction: signedComputeRecord,
+//       type: '0x42' as SuaveTxType,
+//     })
+//   }
 
-  const ccRecord: Partial<TransactionSerializableSuave> = {
-    nonce: safeHexToNumber(nonce as Hex),
-    to: to as Hex,
-    data: data as Hex,
-    gas: hexToBigInt(gas as Hex),
-    kettleAddress: kettleAddress as Hex,
-    confidentialInputsHash: confidentialInputsHash as Hex,
-    value: safeHexToBigInt(value as Hex),
-    gasPrice: safeHexToBigInt(gasPrice as Hex),
-    v: safeHexToBigInt(v as Hex),
-    r: r as Hex,
-    s: s as Hex,
-    type: '0x42',
-  }
+//   const ccRecord: Partial<TransactionSerializableSuave> = {
+//     nonce: safeHexToNumber(nonce as Hex),
+//     to: to as Hex,
+//     data: data as Hex,
+//     gas: hexToBigInt(gas as Hex),
+//     kettleAddress: kettleAddress as Hex,
+//     confidentialInputsHash: confidentialInputsHash as Hex,
+//     value: safeHexToBigInt(value as Hex),
+//     gasPrice: safeHexToBigInt(gasPrice as Hex),
+//     v: safeHexToBigInt(v as Hex),
+//     r: r as Hex,
+//     s: s as Hex,
+//     type: '0x42',
+//   }
 
-  return ccRecord
-}
+//   return ccRecord
+// }
 
 export type ParseTransactionSuaveReturnType<TType extends SuaveTxType,> =
   TransactionSerializableSuave<bigint, number, TType>
@@ -156,11 +156,7 @@ export function parseTransactionSuave(
 ): ParseTransactionSuaveReturnType<SuaveTxType> {
   const serializedType = serializedTransaction.slice(0, 4)
   const parsedTx =
-    serializedType === SuaveTxTypes.ConfidentialRecord
-      ? (parseSignedComputeRecord(
-          serializedTransaction,
-        ) as ParseTransactionSuaveReturnType<'0x42'>)
-      : serializedType === SuaveTxTypes.ConfidentialRequest
+    serializedType === SuaveTxTypes.ConfidentialRequest
       ? (parseSignedComputeRequest(
           serializedTransaction,
         ) as ParseTransactionSuaveReturnType<'0x43'>)
@@ -171,4 +167,54 @@ export function parseTransactionSuave(
 
   assertTransactionSuave(parsedTx)
   return parsedTx
+}
+
+export function assertTransactionSuave(
+  transaction: TransactionSerializableSuave,
+) {
+  const {
+    chainId,
+    gasPrice,
+    gas,
+    data,
+    value,
+    maxPriorityFeePerGas,
+    maxFeePerGas,
+    confidentialInputs,
+    confidentialInputsHash,
+    kettleAddress,
+    to,
+    r,
+    s,
+    v,
+  } = transaction
+  if (chainId && chainId <= 0) throw new Error('invalid chain ID')
+  if (to && !isAddress(to)) throw new Error('invalid to address')
+  if (!gasPrice) throw new Error('gasPrice is required')
+
+  if (confidentialInputs && !isHex(confidentialInputs))
+    throw new Error('invalid confidentialInputs')
+
+  if (kettleAddress && !isHex(kettleAddress))
+    throw new Error('invalid kettleAddress')
+
+  if (confidentialInputsHash && !isHex(confidentialInputsHash))
+    throw new Error('invalid confidentialInputsHash')
+
+  if (gas && gas <= 0) throw new Error('invalid gas')
+
+  if (data && !isHex(data)) throw new Error('invalid data')
+
+  if (value && value < 0) throw new Error('invalid value')
+
+  if (maxPriorityFeePerGas && maxPriorityFeePerGas < 0)
+    throw new Error('invalid maxPriorityFeePerGas')
+
+  if (maxFeePerGas && maxFeePerGas < 0) throw new Error('invalid maxFeePerGas')
+
+  if (r && !isHex(r)) throw new Error(`invalid r: ${r}`)
+
+  if (s && !isHex(s)) throw new Error(`invalid s: ${s}`)
+
+  if (v && v <= 0n) throw new Error(`invalid v: ${v}`)
 }

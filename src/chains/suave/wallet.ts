@@ -1,3 +1,4 @@
+import { sign } from '~viem/accounts/index.js'
 import { privateKeyToAccount } from '../../accounts/privateKeyToAccount.js'
 import {
   type Chain,
@@ -17,6 +18,28 @@ import {
   type TransactionRequestSuave,
   type TransactionSerializableSuave,
 } from './types.js'
+
+async function signConfidentialComputeRecord(
+  transaction: TransactionSerializableSuave,
+  privateKey: Hex,
+): Promise<TransactionSerializableSuave> {
+  if (transaction.type !== SuaveTxTypes.ConfidentialRecord) {
+    throw new Error(
+      `transaction.type must be ConfidentialRecord (${SuaveTxTypes.ConfidentialRecord})`,
+    )
+  }
+  const serialized = serializeConfidentialComputeRecord(transaction)
+  const { r, s, v } = await sign({ hash: keccak256(serialized), privateKey })
+  const signature = {
+    r,
+    s,
+    v: v === 27n ? 0n : 1n, // yParity
+  }
+  return {
+    ...transaction,
+    ...signature,
+  }
+}
 
 export function getSuaveWallet<
   TTransport extends Transport,
@@ -38,18 +61,10 @@ export function getSuaveWallet<
       const preparedTx = await client.prepareTransactionRequest(
         txRequest as any,
       )
-      let payload: TransactionRequestSuave = {
+      const payload: TransactionRequestSuave = {
         ...txRequest,
         from: preparedTx.from,
         nonce: preparedTx.nonce,
-      }
-      if (txRequest.type === SuaveTxTypes.ConfidentialRequest) {
-        payload = {
-          ...payload,
-          confidentialInputsHash: txRequest.confidentialInputs
-            ? keccak256(txRequest.confidentialInputs)
-            : '0x',
-        } as TransactionRequestSuave
       }
 
       const signedTx = await this.signTransaction(payload)
@@ -60,49 +75,25 @@ export function getSuaveWallet<
     },
     async signTransaction(txRequest: TransactionRequestSuave) {
       if (txRequest.type === SuaveTxTypes.ConfidentialRequest) {
-        // sign confidential compute record
-        const signedComputeRecord = await client.account?.signTransaction(
-          {
-            ...txRequest,
-            type: SuaveTxTypes.ConfidentialRecord,
-          } as TransactionSerializableSuave,
-          {
-            serializer: serializeConfidentialComputeRecord,
-          },
-        )
-        // serialize as confidential compute request
-        const fullTx = serializeConfidentialComputeRequest(
-          {
-            ...txRequest,
-            type: SuaveTxTypes.ConfidentialRequest,
-          } as TransactionSerializableSuave,
-          signedComputeRecord,
-        )
-        return fullTx
-      } else if (txRequest.type === SuaveTxTypes.ConfidentialRecord) {
-        const preparedTx = await client.prepareTransactionRequest(
-          txRequest as any,
-        )
-        if (!txRequest.confidentialInputs) {
-          throw new Error('confidentialInputs is required')
+        const confidentialInputs = txRequest.confidentialInputs || '0x'
+        const presignTx = {
+          ...txRequest,
+          type: SuaveTxTypes.ConfidentialRecord,
+          confidentialInputsHash: keccak256(confidentialInputs),
         }
-        return await client.account.signTransaction(
-          {
-            ...txRequest,
-            confidentialInputsHash: keccak256(txRequest.confidentialInputs),
-            type: SuaveTxTypes.ConfidentialRecord,
-            chainId: txRequest.chainId,
-            gas: txRequest.gas,
-            gasPrice: txRequest.gasPrice,
-            nonce: preparedTx.nonce,
-            to: txRequest.to,
-            value: txRequest.value,
-            data: txRequest.data,
-          } as TransactionSerializableSuave,
-          {
-            serializer: serializeConfidentialComputeRecord,
-          },
+        const { r, s, v } = await signConfidentialComputeRecord(
+          presignTx,
+          privateKey,
         )
+        const fullTx = serializeConfidentialComputeRequest({
+          ...presignTx,
+          confidentialInputs,
+          type: SuaveTxTypes.ConfidentialRequest,
+          r,
+          s,
+          v,
+        })
+        return fullTx
       } else {
         return await client.account.signTransaction(txRequest as any)
       }

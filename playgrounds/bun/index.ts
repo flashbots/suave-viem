@@ -35,35 +35,36 @@ export const publicClients = {
   }),
 }
 
-publicClients.suaveLocal.watchPendingTransactions({
-  async onTransactions(transactions) {
-    console.log('pending', transactions)
-    for (const hash of transactions) {
-      const fullTx = await publicClients.suaveLocal.getTransaction({ hash })
-      console.log('(pending) fullTx', fullTx)
-      const timeoutStart = new Date()
-      const timeout = 30 * 1000
-      while (true) {
-        if (new Date().getTime() - timeoutStart.getTime() > timeout) {
-          console.warn('timeout: never found tx receipt', hash)
-          break
-        }
-        await sleep(4000)
-        try {
-          const receipt = await publicClients.suaveLocal.getTransactionReceipt({
-            hash,
-          })
-          console.log('receipt', receipt)
-          break
-        } catch (e) {
-          console.warn((e as Error).message)
-        }
-        const fullTx = await publicClients.suaveLocal.getTransaction({ hash })
-        console.log('(pending) fullTx', fullTx)
-      }
-    }
-  },
-})
+// uncomment to watch pending txs as they come in:
+// publicClients.suaveLocal.watchPendingTransactions({
+//   async onTransactions(transactions) {
+//     console.log('pending', transactions)
+//     for (const hash of transactions) {
+//       const fullTx = await publicClients.suaveLocal.getTransaction({ hash })
+//       console.log('(pending) fullTx', fullTx)
+//       const timeoutStart = new Date()
+//       const timeout = 30 * 1000
+//       while (true) {
+//         if (new Date().getTime() - timeoutStart.getTime() > timeout) {
+//           console.warn('timeout: never found tx receipt', hash)
+//           break
+//         }
+//         await sleep(4000)
+//         try {
+//           const receipt = await publicClients.suaveLocal.getTransactionReceipt({
+//             hash,
+//           })
+//           console.log('receipt', receipt)
+//           break
+//         } catch (e) {
+//           console.warn((e as Error).message)
+//         }
+//         const fullTx = await publicClients.suaveLocal.getTransaction({ hash })
+//         console.log('(pending) fullTx', fullTx)
+//       }
+//     }
+//   },
+// })
 
 const adminWallet = getSuaveWallet(
   {
@@ -165,42 +166,48 @@ async function testGettingStuff() {
   }
 }
 
+const retryExceptionsWithTimeout = async (timeout_ms: number, fn: () => Promise<any>) => {
+  const startTime = new Date().getTime()
+  while (true) {
+    if (new Date().getTime() - startTime > timeout_ms) {
+      console.warn("timed out")
+      break
+    }
+    try {
+      const res = await fn()
+      return res
+    } catch (e) {
+      console.warn((e as Error).message)
+      await sleep(4000)
+    }
+  }
+}
+
 async function testDeployContract() {
   // deploy contract
   const contractHash = await adminWallet.deployContract({
     abi: ConfidentialWithLogs.abi,
     bytecode: ConfidentialWithLogs.bytecode.object as Hex,
   })
-  console.log(`contract deployed at tx hash=${contractHash}`)
-  let contractAddress: Address
 
   // wait for tx to land
-  while (true) {
-    try {
-      const receipt = await publicClients.suaveLocal.getTransactionReceipt({
-        hash: contractHash,
-      })
-      if (!receipt.contractAddress) {
-        throw new Error('no contract address')
-      }
-      contractAddress = receipt.contractAddress
-      break
-    } catch (e) {
-      console.warn((e as Error).message)
-      await sleep(4000)
-    }
+  const contractAddress: Hex = await retryExceptionsWithTimeout(10 * 1000, async () => {
+    const receipt = await publicClients.suaveLocal.getTransactionReceipt({
+      hash: contractHash,
+    })
+    return receipt.contractAddress
+  })
+  if (!contractAddress) {
+    throw new Error('no contract address')
   }
-  // const contractAddress = '0x592829cc34f76f29cbc7070debcdeff98b02a34c'
-  console.log('contract address', contractAddress)
+  console.log(`contract deployed at address=${contractAddress} tx_hash=${contractHash}`)
 
   // send a ccRequest to interact with the contract
-  const secretNumber = '0x9001'
   const calldata = encodeFunctionData({
     abi: ConfidentialWithLogs.abi,
     functionName: 'fetchBidConfidentialBundleData',
+    args: [],
   })
-  // console.log('key', key)
-  console.log('calldata', calldata)
   const ccrReq: TransactionRequestSuave = {
     type: SuaveTxTypes.ConfidentialRequest,
     chainId: suaveRigil.id,
@@ -208,13 +215,17 @@ async function testDeployContract() {
     gas: 1420000n,
     to: contractAddress,
     data: calldata,
-    confidentialInputs: secretNumber,
+    confidentialInputs: '0x9001',
     kettleAddress: KETTLE_ADDRESS,
   }
-  // console.log('wallet address', await wallet.getAddresses())
   const ccrResult = await adminWallet.sendTransaction(ccrReq)
   console.log('ccrResult', ccrResult)
-  // TODO: ccRequest contract bindings, so confidentialInputs and data fit the contract's interface
+  retryExceptionsWithTimeout(10 * 1000, async () => {
+    const ccrReceipt = await publicClients.suaveLocal.getTransactionReceipt({
+      hash: ccrResult,
+    })
+    console.log('ccrReceipt', ccrReceipt)
+  })
 }
 
 async function main() {
@@ -225,5 +236,4 @@ async function main() {
 
 main().then(() => {
   console.log('done')
-  // process.exit(0)
 })

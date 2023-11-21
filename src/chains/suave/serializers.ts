@@ -1,18 +1,12 @@
-import {
-  InvalidSerializedTransactionTypeError,
-  isAddress,
-  isHex,
-} from '../../index.js'
-import type { Hex, Signature } from '../../types/misc.js'
+import { InvalidSerializedTransactionTypeError } from '../../index.js'
+import type { Hex } from '../../types/misc.js'
 import { concatHex } from '../../utils/data/concat.js'
 import { numberToHex, toHex } from '../../utils/encoding/toHex.js'
 import { toRlp } from '../../utils/encoding/toRlp.js'
-import { keccak256 } from '../../utils/hash/keccak256.js'
 import {
   InvalidConfidentialRecordError,
   InvalidConfidentialRequestError,
 } from './errors/transaction.js'
-import { parseSignedComputeRecord } from './parsers.js'
 import {
   SuaveTxTypes,
   type TransactionSerializableSuave,
@@ -24,9 +18,7 @@ Satisfies `ChainSerializers.transaction`
 */
 export const serializeConfidentialComputeRecord = (
   transaction: TransactionSerializableSuave,
-  signature?: Signature,
 ): TransactionSerializedSuave => {
-  console.debug('serializeConfidentialComputeRecord', transaction)
   if (transaction.type !== SuaveTxTypes.ConfidentialRecord) {
     throw new InvalidSerializedTransactionTypeError({
       serializedType: transaction.type,
@@ -34,11 +26,6 @@ export const serializeConfidentialComputeRecord = (
   }
   if (!transaction.kettleAddress) {
     throw new InvalidConfidentialRecordError({ missingField: 'kettleAddress' })
-  }
-  if (!transaction.confidentialInputs && !transaction.confidentialInputsHash) {
-    throw new InvalidConfidentialRecordError({
-      missingField: 'confidentialInputs or confidentialInputsHash',
-    })
   }
 
   // Extract fields from the original request
@@ -50,31 +37,50 @@ export const serializeConfidentialComputeRecord = (
     value,
     data,
     kettleAddress,
-    confidentialInputs,
+    confidentialInputsHash,
   } = transaction
 
+  if (!confidentialInputsHash) {
+    throw new InvalidConfidentialRecordError({
+      missingField: 'confidentialInputsHash',
+    })
+  }
+  if (nonce === undefined) {
+    throw new InvalidConfidentialRecordError({ missingField: 'nonce' })
+  }
+  if (gas === undefined) {
+    throw new InvalidConfidentialRecordError({ missingField: 'gas' })
+  }
+  if (gasPrice === undefined) {
+    throw new InvalidConfidentialRecordError({ missingField: 'gasPrice' })
+  }
+
   // Serialize the transaction fields into an array
-  const serializedTransaction: Hex[] = [
+  const preSerializedTransaction: Hex[] = [
     kettleAddress,
-    confidentialInputs ? keccak256(confidentialInputs) : '0x',
-    nonce ? numberToHex(nonce) : '0x',
-    gasPrice ? numberToHex(gasPrice) : '0x',
-    gas ? numberToHex(gas) : '0x',
+    confidentialInputsHash,
+    numberToHex(nonce),
+    numberToHex(gasPrice),
+    numberToHex(gas),
     to ?? '0x',
     value ? numberToHex(value) : '0x',
     data ?? '0x', // data
-  ]
-
-  // Append the signature to the serialized transaction if provided
-  if (signature) {
-    serializedTransaction.push(toHex(signature.v), signature.r, signature.s)
-  }
+  ].map(safeHex)
 
   // Concatenate the serialized transaction array into a single string using RLP encoding
   return concatHex([
     SuaveTxTypes.ConfidentialRecord,
-    toRlp(serializedTransaction),
+    toRlp(preSerializedTransaction),
   ]) as TransactionSerializedSuave
+}
+
+const safeHex = (hex: Hex): Hex => {
+  if (hex === '0x0' || hex === '0x00') {
+    return '0x'
+  } else if (hex.length % 2 !== 0) {
+    return `0x0${hex.slice(2)}`
+  }
+  return hex
 }
 
 /** RLP serialization for ConfidentialComputeRequest.
@@ -82,9 +88,7 @@ export const serializeConfidentialComputeRecord = (
  */
 export const serializeConfidentialComputeRequest = (
   transaction: TransactionSerializableSuave,
-  signedComputeRecord: Hex,
 ): SuaveTxTypes.ConfidentialRequest => {
-  console.debug('serializeConfidentialComputeRequest', transaction)
   if (transaction.type !== SuaveTxTypes.ConfidentialRequest) {
     throw new InvalidSerializedTransactionTypeError({
       serializedType: transaction.type,
@@ -95,39 +99,76 @@ export const serializeConfidentialComputeRequest = (
       missingField: 'confidentialInputs',
     })
   }
+  if (!transaction.confidentialInputsHash) {
+    throw new InvalidConfidentialRequestError({
+      missingField: 'confidentialInputsHash',
+    })
+  }
   if (!transaction.kettleAddress) {
     throw new InvalidConfidentialRequestError({
       missingField: 'kettleAddress',
     })
   }
-  const ccRecord = parseSignedComputeRecord(signedComputeRecord)
-  const confidentialInputsHash =
-    transaction.confidentialInputsHash ??
-    keccak256(transaction.confidentialInputs)
+  if (transaction.v === undefined) {
+    throw new InvalidConfidentialRequestError({
+      missingField: 'v',
+      found: transaction.v,
+    })
+  }
+  if (transaction.r === undefined) {
+    throw new InvalidConfidentialRequestError({
+      missingField: 'r',
+      found: transaction.r,
+    })
+  }
+  if (transaction.s === undefined) {
+    throw new InvalidConfidentialRequestError({
+      missingField: 's',
+      found: transaction.s,
+    })
+  }
+  if (transaction.nonce === undefined) {
+    throw new InvalidConfidentialRequestError({
+      missingField: 'nonce',
+      found: transaction.nonce,
+    })
+  }
+  if (!transaction.gas) {
+    throw new InvalidConfidentialRequestError({
+      missingField: 'gas',
+      found: transaction.gas,
+    })
+  }
+  if (!transaction.to) {
+    throw new InvalidConfidentialRequestError({
+      missingField: 'to',
+      found: transaction.to,
+    })
+  }
 
-  const serializedTransaction: (Hex | Hex[])[] = [
+  /* This is the final serialization step; what's sent to the JSON-RPC node.  */
+  const preSerializedTransaction: (Hex | Hex[])[] = [
     [
-      ccRecord.nonce ? numberToHex(ccRecord.nonce) : '0x',
-      ccRecord.gasPrice ? toHex(ccRecord.gasPrice) : '0x',
-      ccRecord.gas ? toHex(ccRecord.gas) : '0x',
-      ccRecord.to ?? '0x',
-      ccRecord.value ? toHex(ccRecord.value) : '0x',
-      ccRecord.data ?? '0x', // data
+      numberToHex(transaction.nonce),
+      toHex(transaction.gasPrice),
+      toHex(transaction.gas),
+      transaction.to,
+      toHex(transaction.value || 0),
+      transaction.data || '0x',
 
       transaction.kettleAddress,
-      confidentialInputsHash,
+      transaction.confidentialInputsHash,
 
-      transaction.chainId ? numberToHex(transaction.chainId) : '0x',
-      ccRecord.v === 27n ? '0x' : '0x1', // yParity
-      ccRecord.r as Hex,
-      ccRecord.s as Hex,
-    ],
-    transaction.confidentialInputs,
+      numberToHex(transaction.chainId),
+      toHex(transaction.v),
+      transaction.r,
+      transaction.s,
+    ].map(safeHex),
+    safeHex(transaction.confidentialInputs),
   ]
-
   return concatHex([
     SuaveTxTypes.ConfidentialRequest,
-    toRlp(serializedTransaction),
+    toRlp(preSerializedTransaction),
   ]) as SuaveTxTypes.ConfidentialRequest
 }
 
@@ -147,53 +188,3 @@ export const serializeConfidentialComputeRequest = (
 //     return serializeTransaction(tx, sig)
 //   },
 // } as const satisfies ChainSerializers
-
-export function assertTransactionSuave(
-  transaction: TransactionSerializableSuave,
-) {
-  const {
-    chainId,
-    gasPrice,
-    gas,
-    data,
-    value,
-    maxPriorityFeePerGas,
-    maxFeePerGas,
-    confidentialInputs,
-    confidentialInputsHash,
-    kettleAddress,
-    to,
-    r,
-    s,
-    v,
-  } = transaction
-  if (chainId && chainId <= 0) throw new Error('invalid chain ID')
-  if (to && !isAddress(to)) throw new Error('invalid to address')
-  if (!gasPrice) throw new Error('gasPrice is required')
-
-  if (confidentialInputs && !isHex(confidentialInputs))
-    throw new Error('invalid confidentialInputs')
-
-  if (kettleAddress && !isHex(kettleAddress))
-    throw new Error('invalid kettleAddress')
-
-  if (confidentialInputsHash && !isHex(confidentialInputsHash))
-    throw new Error('invalid confidentialInputsHash')
-
-  if (gas && gas <= 0) throw new Error('invalid gas')
-
-  if (data && !isHex(data)) throw new Error('invalid data')
-
-  if (value && value < 0) throw new Error('invalid value')
-
-  if (maxPriorityFeePerGas && maxPriorityFeePerGas < 0)
-    throw new Error('invalid maxPriorityFeePerGas')
-
-  if (maxFeePerGas && maxFeePerGas < 0) throw new Error('invalid maxFeePerGas')
-
-  if (r && !isHex(r)) throw new Error(`invalid r: ${r}`)
-
-  if (s && !isHex(s)) throw new Error(`invalid s: ${s}`)
-
-  if (v && v <= 0n) throw new Error(`invalid v: ${v}`)
-}

@@ -1,33 +1,28 @@
 import { BaseError } from '../../../errors/base.js'
 
-export type InvalidConfidentialRequestErrorType =
-  InvalidConfidentialRequestError & {
-    name: 'InvalidConfidentialRequestError'
-  }
-export class InvalidConfidentialRequestError extends BaseError {
-  override name = 'InvalidConfidentialRequest'
+export type MissingFieldErrorType = MissingFieldError & {
+  name: 'MissingFieldError'
+}
+export class MissingFieldError extends BaseError {
+  override name = 'MissingField'
 
   missingField: string
+  found: any
 
-  constructor({ missingField }: { missingField: string; message?: string }) {
-    super(`missing field: ${missingField}`)
+  constructor({
+    missingField,
+    found,
+  }: { missingField: string; found?: any; message?: string }) {
+    super(`missing field: '${missingField}'${found ? `. found ${found}` : ''}`)
 
     this.missingField = missingField
   }
 }
 
-export type InvalidConfidentialRecordErrorType =
-  InvalidConfidentialRecordError & {
-    name: 'InvalidConfidentialRecordError'
-  }
-export class InvalidConfidentialRecordError extends BaseError {
+export class InvalidConfidentialRequestError extends MissingFieldError {
+  override name = 'InvalidConfidentialRequest'
+}
+
+export class InvalidConfidentialRecordError extends MissingFieldError {
   override name = 'InvalidConfidentialRecord'
-
-  missingField: string
-
-  constructor({ missingField }: { missingField: string; message?: string }) {
-    super(`missing field: ${missingField}`)
-
-    this.missingField = missingField
-  }
 }
