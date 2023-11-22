@@ -1,9 +1,12 @@
+import { createPublicClient } from '../../clients/createPublicClient.js'
+import { type Hex } from '../../types/misc.js'
 import { defineChain } from '../../utils/chain.js'
 import { formattersSuave } from '../suave/formatters.js'
+import { getSuaveWallet } from '../suave/wallet.js'
 
 export const suaveRigil = /*#__PURE__*/ defineChain(
   {
-    id: 424242,
+    id: 16813125,
     name: 'Suave Rigil Testnet',
     network: 'rigil-testnet',
     nativeCurrency: {
@@ -29,8 +32,13 @@ export const suaveRigil = /*#__PURE__*/ defineChain(
     },
     contracts: {},
     testnet: true,
+    newWallet: (transport: any, privateKey: Hex) =>
+      getSuaveWallet({ transport, chain: suaveRigil }, privateKey),
+    newPublicClient: (transport: any) =>
+      createPublicClient({ transport, chain: suaveRigil }),
   },
   {
     formatters: formattersSuave,
+    // serializers: serializersSuave,
   },
 )

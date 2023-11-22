@@ -1,104 +1,478 @@
-// import { describe, expect, test } from 'vitest'
+import { describe, expect, test } from 'vitest'
+import { type Hex, numberToHex, zeroAddress } from '~viem/index.js'
+import { suaveRigil } from '../index.js'
+import {
+  type ConfidentialComputeRecordRpc,
+  type RpcTransactionReceiptSuave,
+  type RpcTransactionSuave,
+  type SuaveRpcBlock,
+  SuaveTxTypes,
+  type TransactionRequestSuave,
+} from './types.js'
 
-// // Assuming you have similar actions for the Suave chain like the Celo ones provided.
-// import { getBlock } from '../../actions/public/getBlock.js'
-// import { getTransaction } from '../../actions/public/getTransaction.js'
-// import { getTransactionReceipt } from '../../actions/public/getTransactionReceipt.js'
+describe('block', () => {
+  const { block } = suaveRigil.formatters!
 
-// import { suaveRigil } from '../index.js'
+  test('formatter (tx hashes)', () => {
+    const inputBlock: SuaveRpcBlock = {
+      baseFeePerGas: '0x235dbc28',
+      difficulty: '0x2',
+      extraData:
+        '0xd983010c00846765746889676f312e32302e3130856c696e757800000000000059ef44f64ed372a15256091c83b05f5baed1aa0e5bec25bdaa0429fcf32600884ed7c748ef6537a2b8d9cc4a99e8758ae1de406e18f522990381e47290a42e2100',
+      gasLimit: '0x1c9c380',
+      gasUsed: '0x6aeb',
+      hash: '0xbe3e3c4205915e175df10e39a69d8dcbd4ca5b3e7dff2549a71edbc891a39e63',
+      logsBloom:
+        '0x00400000000000000000000800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000',
+      miner: '0x0000000000000000000000000000000000000000',
+      mixHash:
+        '0x0000000000000000000000000000000000000000000000000000000000000000',
+      nonce: '0x0000000000000000',
+      number: '0x4',
+      parentHash:
+        '0xe96d8ed683827eb8e6405c7c04354d41b6878a7ab14f4a501d0966e6f8e96827',
+      receiptsRoot:
+        '0xe546cca7622a906d721d722c3682fa634126ac32d0a0d29045e573205ef941c5',
+      sha3Uncles:
+        '0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347',
+      size: '0x5f9',
+      stateRoot:
+        '0x38d581cf6f130e0f4f2ab517b22e4eeeb1a8bd40d3e39b4bf6b50bfd6e4857eb',
+      timestamp: numberToHex(1699046195),
+      totalDifficulty: '0x9',
+      transactions: [
+        '0x53acb8d180079aa0cc37f5cf3143f71eaffbedde5047b7ed8abaf3c1e6d0d059',
+      ],
+      transactionsRoot:
+        '0x5b7fdbd60e4a948b077d615314474b83cad6b8a07b9272fadd85c807395a913a',
+      uncles: [],
+    }
+    const formattedBlock = block.format(inputBlock)
+    expect(formattedBlock).toMatchInlineSnapshot(`
+    {
+      "baseFeePerGas": 593345576n,
+      "extraData": "0xd983010c00846765746889676f312e32302e3130856c696e757800000000000059ef44f64ed372a15256091c83b05f5baed1aa0e5bec25bdaa0429fcf32600884ed7c748ef6537a2b8d9cc4a99e8758ae1de406e18f522990381e47290a42e2100",
+      "gasUsed": 27371n,
+      "hash": "0xbe3e3c4205915e175df10e39a69d8dcbd4ca5b3e7dff2549a71edbc891a39e63",
+      "logsBloom": "0x00400000000000000000000800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000",
+      "number": 4n,
+      "parentHash": "0xe96d8ed683827eb8e6405c7c04354d41b6878a7ab14f4a501d0966e6f8e96827",
+      "receiptsRoot": "0xe546cca7622a906d721d722c3682fa634126ac32d0a0d29045e573205ef941c5",
+      "sha3Uncles": "0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347",
+      "size": 1529n,
+      "stateRoot": "0x38d581cf6f130e0f4f2ab517b22e4eeeb1a8bd40d3e39b4bf6b50bfd6e4857eb",
+      "timestamp": 1699046195n,
+      "totalDifficulty": 9n,
+      "transactions": [
+        "0x53acb8d180079aa0cc37f5cf3143f71eaffbedde5047b7ed8abaf3c1e6d0d059",
+      ],
+      "transactionsRoot": "0x5b7fdbd60e4a948b077d615314474b83cad6b8a07b9272fadd85c807395a913a",
+    }
+    `)
+  })
 
-// describe('block', () => {
-//   test('formatter', () => {
-//     const { block } = suaveRigil.formatters!
+  test('formatter (full txs)', () => {
+    const inputBlock: SuaveRpcBlock = {
+      baseFeePerGas: '0x235dbc28',
+      difficulty: '0x2',
+      extraData:
+        '0xd983010c00846765746889676f312e32302e3130856c696e757800000000000059ef44f64ed372a15256091c83b05f5baed1aa0e5bec25bdaa0429fcf32600884ed7c748ef6537a2b8d9cc4a99e8758ae1de406e18f522990381e47290a42e2100',
+      gasLimit: '0x1c9c380',
+      gasUsed: '0x6aeb',
+      hash: '0xbe3e3c4205915e175df10e39a69d8dcbd4ca5b3e7dff2549a71edbc891a39e63',
+      logsBloom:
+        '0x00400000000000000000000800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000',
+      miner: '0x0000000000000000000000000000000000000000',
+      mixHash:
+        '0x0000000000000000000000000000000000000000000000000000000000000000',
+      nonce: '0x0000000000000000',
+      number: '0x4',
+      parentHash:
+        '0xe96d8ed683827eb8e6405c7c04354d41b6878a7ab14f4a501d0966e6f8e96827',
+      receiptsRoot:
+        '0xe546cca7622a906d721d722c3682fa634126ac32d0a0d29045e573205ef941c5',
+      sha3Uncles:
+        '0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347',
+      size: '0x5f9',
+      stateRoot:
+        '0x38d581cf6f130e0f4f2ab517b22e4eeeb1a8bd40d3e39b4bf6b50bfd6e4857eb',
+      timestamp: '0x65419984',
+      totalDifficulty: '0x9',
+      transactions: [
+        {
+          blockHash:
+            '0xbe3e3c4205915e175df10e39a69d8dcbd4ca5b3e7dff2549a71edbc891a39e63',
+          blockNumber: '0x4',
+          from: '0xbe69d72ca5f88acba033a063df5dbe43a4148de0',
+          gas: '0xf4240',
+          gasPrice: '0x3518320e',
+          hash: '0x53acb8d180079aa0cc37f5cf3143f71eaffbedde5047b7ed8abaf3c1e6d0d059',
+          input:
+            '0xc0b9d28700000000000000000000000000000000000000000000000000000000000000201518a916067557098f425aad1b1614f10000000000000000000000000000000011176998e3484c2d95582c916403a54100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000c00000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000014000000000000000000000000000000000000000000000000000000000000000010000000000000000000000008f21fdd6b4f4cacd33151777a46c122797c8bf170000000000000000000000000000000000000000000000000000000000000001000000000000000000000000b5feafbdd752ad52afb7e1bd2e40432a485bbb7f00000000000000000000000000000000000000000000000000000000000000156d657673686172653a76303a6d61746368426964730000000000000000000000',
+          nonce: '0x3',
+          to: '0x8f21fdd6b4f4cacd33151777a46c122797c8bf17',
+          transactionIndex: '0x0',
+          value: '0x0',
+          type: '0x50',
+          typeHex: '0x50',
+          chainId: '0x1008c45',
+          requestRecord: {
+            type: '0x42' as any,
+            typeHex: '0x42',
+            chainId: '0x1008c45',
+            nonce: '0x3',
+            to: '0x8f21fdd6b4f4cacd33151777a46c122797c8bf17',
+            gas: '0xf4240',
+            gasPrice: '0x3518320e',
+            value: '0x0',
+            input:
+              '0xd8f55db90000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000000000000c0c90db5a779ab544cb9105c6ec1118f290000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000010000000000000000000000008f21fdd6b4f4cacd33151777a46c122797c8bf170000000000000000000000000000000000000000000000000000000000000000',
+            kettleAddress: '0xb5feafbdd752ad52afb7e1bd2e40432a485bbb7f',
+            confidentialInputsHash:
+              '0xd890046400e66fc2ae1841fd630f4c2eab51d8f238bf20f9a6785a73ff113741',
+            v: '0x1',
+            r: '0xd0c7f58b8c9b94f48fe4d606ed21d6fa8eb2a57f68b98a6365c97a44f16ad46',
+            s: '0x4762533922d26ba2435105191384710d322586bfdb2ee9f8c8f9b89234d68112',
+            hash: '0x800fab8954d4f1392030fa6b5dce0ccf4dcfdac30175201927d7be6dcb62a0a5',
+          },
+          confidentialComputeResult:
+            '0xc0b9d28700000000000000000000000000000000000000000000000000000000000000201518a916067557098f425aad1b1614f10000000000000000000000000000000011176998e3484c2d95582c916403a54100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000c00000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000014000000000000000000000000000000000000000000000000000000000000000010000000000000000000000008f21fdd6b4f4cacd33151777a46c122797c8bf170000000000000000000000000000000000000000000000000000000000000001000000000000000000000000b5feafbdd752ad52afb7e1bd2e40432a485bbb7f00000000000000000000000000000000000000000000000000000000000000156d657673686172653a76303a6d61746368426964730000000000000000000000',
+          v: '0x0',
+          r: '0x38bda742051df0c9c3853f197533c3dbc7113c7ef1b91bcb7cc268228fad01c',
+          s: '0x32581db9b1ff062e66d9ecd8e3c6168418f01498d9aa4722febac0f1c7b70f',
+        },
+      ],
+      transactionsRoot:
+        '0x5b7fdbd60e4a948b077d615314474b83cad6b8a07b9272fadd85c807395a913a',
+      uncles: [],
+    }
+    const formattedBlock = block.format(inputBlock)
+    expect(formattedBlock).toMatchInlineSnapshot(`
+    {
+      "baseFeePerGas": 593345576n,
+      "extraData": "0xd983010c00846765746889676f312e32302e3130856c696e757800000000000059ef44f64ed372a15256091c83b05f5baed1aa0e5bec25bdaa0429fcf32600884ed7c748ef6537a2b8d9cc4a99e8758ae1de406e18f522990381e47290a42e2100",
+      "gasUsed": 27371n,
+      "hash": "0xbe3e3c4205915e175df10e39a69d8dcbd4ca5b3e7dff2549a71edbc891a39e63",
+      "logsBloom": "0x00400000000000000000000800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000",
+      "number": 4n,
+      "parentHash": "0xe96d8ed683827eb8e6405c7c04354d41b6878a7ab14f4a501d0966e6f8e96827",
+      "receiptsRoot": "0xe546cca7622a906d721d722c3682fa634126ac32d0a0d29045e573205ef941c5",
+      "sha3Uncles": "0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347",
+      "size": 1529n,
+      "stateRoot": "0x38d581cf6f130e0f4f2ab517b22e4eeeb1a8bd40d3e39b4bf6b50bfd6e4857eb",
+      "timestamp": 1698797956n,
+      "totalDifficulty": 9n,
+      "transactions": [
+        {
+          "blockHash": "0xbe3e3c4205915e175df10e39a69d8dcbd4ca5b3e7dff2549a71edbc891a39e63",
+          "blockNumber": 4n,
+          "chainId": 16813125,
+          "confidentialComputeResult": "0xc0b9d28700000000000000000000000000000000000000000000000000000000000000201518a916067557098f425aad1b1614f10000000000000000000000000000000011176998e3484c2d95582c916403a54100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000c00000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000014000000000000000000000000000000000000000000000000000000000000000010000000000000000000000008f21fdd6b4f4cacd33151777a46c122797c8bf170000000000000000000000000000000000000000000000000000000000000001000000000000000000000000b5feafbdd752ad52afb7e1bd2e40432a485bbb7f00000000000000000000000000000000000000000000000000000000000000156d657673686172653a76303a6d61746368426964730000000000000000000000",
+          "from": "0xbe69d72ca5f88acba033a063df5dbe43a4148de0",
+          "gas": 1000000n,
+          "gasPrice": 890778126n,
+          "hash": "0x53acb8d180079aa0cc37f5cf3143f71eaffbedde5047b7ed8abaf3c1e6d0d059",
+          "input": "0xc0b9d28700000000000000000000000000000000000000000000000000000000000000201518a916067557098f425aad1b1614f10000000000000000000000000000000011176998e3484c2d95582c916403a54100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000c00000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000014000000000000000000000000000000000000000000000000000000000000000010000000000000000000000008f21fdd6b4f4cacd33151777a46c122797c8bf170000000000000000000000000000000000000000000000000000000000000001000000000000000000000000b5feafbdd752ad52afb7e1bd2e40432a485bbb7f00000000000000000000000000000000000000000000000000000000000000156d657673686172653a76303a6d61746368426964730000000000000000000000",
+          "nonce": 3,
+          "r": "0x38bda742051df0c9c3853f197533c3dbc7113c7ef1b91bcb7cc268228fad01c",
+          "requestRecord": {
+            "chainId": "0x1008c45",
+            "confidentialInputsHash": "0xd890046400e66fc2ae1841fd630f4c2eab51d8f238bf20f9a6785a73ff113741",
+            "gas": "0xf4240",
+            "gasPrice": "0x3518320e",
+            "hash": "0x800fab8954d4f1392030fa6b5dce0ccf4dcfdac30175201927d7be6dcb62a0a5",
+            "input": "0xd8f55db90000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000000000000c0c90db5a779ab544cb9105c6ec1118f290000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000010000000000000000000000008f21fdd6b4f4cacd33151777a46c122797c8bf170000000000000000000000000000000000000000000000000000000000000000",
+            "kettleAddress": "0xb5feafbdd752ad52afb7e1bd2e40432a485bbb7f",
+            "nonce": "0x3",
+            "r": "0xd0c7f58b8c9b94f48fe4d606ed21d6fa8eb2a57f68b98a6365c97a44f16ad46",
+            "s": "0x4762533922d26ba2435105191384710d322586bfdb2ee9f8c8f9b89234d68112",
+            "to": "0x8f21fdd6b4f4cacd33151777a46c122797c8bf17",
+            "type": "0x42",
+            "typeHex": "0x42",
+            "v": "0x1",
+            "value": "0x0",
+          },
+          "s": "0x32581db9b1ff062e66d9ecd8e3c6168418f01498d9aa4722febac0f1c7b70f",
+          "to": "0x8f21fdd6b4f4cacd33151777a46c122797c8bf17",
+          "transactionIndex": 0,
+          "type": "0x50",
+          "typeHex": "0x50",
+          "v": 0n,
+          "value": 0n,
+        },
+      ],
+      "transactionsRoot": "0x5b7fdbd60e4a948b077d615314474b83cad6b8a07b9272fadd85c807395a913a",
+    }
+    `)
+  })
+})
 
-//     const formattedBlock = block.format({
-//       randomness: 'sampleRandomValue',
-//       transactions: [
-//         {
-//           ExecutionNode: 'sampleExecutionNode',
-//           ConfidentialComputeRequest: 'sampleRequest',
-//           ConfidentialComputeResult: 'sampleResult',
-//           // ... other RpcTransaction fields if present
-//         },
-//       ],
-//     })
+describe('transaction', () => {
+  const { transaction } = suaveRigil.formatters!
 
-//     expect(formattedBlock).toMatchInlineSnapshot(`
-//       {
-//         "randomness": "sampleRandomValue",
-//         "transactions": [
-//           {
-//             "ExecutionNode": "sampleExecutionNode",
-//             "ConfidentialComputeRequest": "sampleRequest",
-//             "ConfidentialComputeResult": "sampleResult",
-//             // ... Other expected fields here
-//           }
-//         ]
-//       }
-//     `)
-//   })
-// })
+  test('formatter (RPC -> Transaction)', () => {
+    const requestRecord = {
+      from: zeroAddress,
+      to: '0x1300000000130000000013000000001300000000',
+      chainId: '0x1' as Hex,
+      gas: '0x13' as Hex,
+      gasPrice: '0x1000' as Hex,
+      kettleAddress: zeroAddress,
+      confidentialInputsHash: '0x0' as Hex,
+      hash: '0x3303d96ec5d3387da51f2fc815ea3e88c5b534383f86eef02a9200f0c6fd5713',
+      nonce: '0x0' as Hex,
+      input: '0x0' as Hex,
+      value: '0x0' as Hex,
+      r: '0x0' as Hex,
+      s: '0x0' as Hex,
+      v: '0x0' as Hex,
+      type: '0x42' as `0x42`,
+      typeHex: '0x42' as `0x42`,
+    } as ConfidentialComputeRecordRpc
 
-// describe('transaction', () => {
-//   test('formatter', () => {
-//     const { transaction } = suaveRigil.formatters!
+    const inputTransactionRpc = {
+      blockHash:
+        '0x8756d7614991fafffd2c788d7213122a2145629860575fb52be80cbef128fbb6',
+      chainId: numberToHex(suaveRigil.id),
+      requestRecord,
+      confidentialComputeResult: '0x0' as Hex,
+      blockNumber: '0x10' as Hex,
+      gasPrice: '0x100' as Hex,
+      hash: '0xcd6a47804736bf27ec2a5845c560adcdfab305b4e80452354bcf96fb472fd364',
+      nonce: '0x0' as Hex,
+      transactionIndex: '0x0' as Hex,
+      r: '0x0' as Hex,
+      s: '0x0' as Hex,
+      v: '0x0' as Hex,
+      from: zeroAddress,
+      gas: '0x13' as Hex,
+      input: '0x0' as Hex,
+      to: '0x1300000000130000000013000000001300000000' as Hex,
+      value: '0x0' as Hex,
+      type: SuaveTxTypes.Suave,
+      typeHex: SuaveTxTypes.Suave,
+    } as RpcTransactionSuave<SuaveTxTypes.Suave>
 
-//     const inputTransaction = {
-//       ExecutionNode: 'sampleExecutionNode',
-//       ConfidentialComputeRequest: 'sampleRequest',
-//       ConfidentialComputeResult: 'sampleResult',
-//       // ... other fields if present
-//     }
+    const formattedTransaction = transaction.format(inputTransactionRpc)
+    expect(formattedTransaction).toMatchInlineSnapshot(`
+    {
+      "accessList": undefined,
+      "blockHash": "0x8756d7614991fafffd2c788d7213122a2145629860575fb52be80cbef128fbb6",
+      "blockNumber": 16n,
+      "chainId": 16813125,
+      "confidentialComputeResult": "0x0",
+      "from": "0x0000000000000000000000000000000000000000",
+      "gas": 19n,
+      "gasPrice": 256n,
+      "hash": "0xcd6a47804736bf27ec2a5845c560adcdfab305b4e80452354bcf96fb472fd364",
+      "input": "0x0",
+      "maxFeePerGas": undefined,
+      "maxPriorityFeePerGas": undefined,
+      "nonce": 0,
+      "r": "0x0",
+      "requestRecord": {
+        "blockHash": null,
+        "blockNumber": null,
+        "chainId": 1,
+        "confidentialInputsHash": "0x0",
+        "from": "0x0000000000000000000000000000000000000000",
+        "gas": 19n,
+        "gasPrice": 4096n,
+        "hash": "0x3303d96ec5d3387da51f2fc815ea3e88c5b534383f86eef02a9200f0c6fd5713",
+        "input": "0x0",
+        "kettleAddress": "0x0000000000000000000000000000000000000000",
+        "nonce": 0,
+        "r": "0x0",
+        "s": "0x0",
+        "to": "0x1300000000130000000013000000001300000000",
+        "transactionIndex": null,
+        "type": "0x42",
+        "typeHex": "0x42",
+        "v": 0n,
+        "value": 0n,
+      },
+      "s": "0x0",
+      "to": "0x1300000000130000000013000000001300000000",
+      "transactionIndex": 0,
+      "type": "0x50",
+      "typeHex": "0x50",
+      "v": 0n,
+      "value": 0n,
+    }
+  `)
+  })
+})
 
-//     const formattedTransaction = transaction.format(inputTransaction)
+describe('transactionReceipt', () => {
+  test('formatter', () => {
+    const { transactionReceipt } = suaveRigil.formatters!
 
-//     expect(formattedTransaction).toMatchInlineSnapshot(`
-//       {
-//         "ExecutionNode": "sampleExecutionNode",
-//         "ConfidentialComputeRequest": "sampleRequest",
-//         "ConfidentialComputeResult": "sampleResult",
-//         // ... Other expected fields here
-//       }
-//     `)
-//   })
-// })
+    const inputReceipt: RpcTransactionReceiptSuave = {
+      blockHash:
+        '0x254eecc07b2c034bd9ea619c75992d4c491eb5d4576e98f3c8cbd5b4ad456a2a',
+      blockNumber: '0x3',
+      contractAddress: null,
+      cumulativeGasUsed: '0x7c14',
+      effectiveGasPrice: '0x3518320e',
+      from: '0xbe69d72ca5f88acba033a063df5dbe43a4148de0',
+      gasUsed: '0x7c14',
+      logs: [
+        {
+          address: '0x8f21fdd6b4f4cacd33151777a46c122797c8bf17',
+          topics: [
+            '0x83481d5b04dea534715acad673a8177a46fc93882760f36bdc16ccac439d504e',
+          ],
+          data: '0xbef01c5c5f3655619d1e24fcc9a5f37b000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000006000000000000000000000000000000000000000000000000000000000000000010000000000000000000000008f21fdd6b4f4cacd33151777a46c122797c8bf17',
+          blockNumber: '0x3',
+          transactionHash:
+            '0xa123928f4eadf4bccad09a143f7f549d21eff9e772ee9db90d11a0e65b125711',
+          transactionIndex: '0x0',
+          blockHash:
+            '0x254eecc07b2c034bd9ea619c75992d4c491eb5d4576e98f3c8cbd5b4ad456a2a',
+          logIndex: '0x0',
+          removed: false,
+        },
+        {
+          address: '0x8f21fdd6b4f4cacd33151777a46c122797c8bf17',
+          topics: [
+            '0xdab8306bad2ca820d05b9eff8da2e3016d372c15f00bb032f758718b9cda3950',
+          ],
+          data: '0xbef01c5c5f3655619d1e24fcc9a5f37b000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000040000000000000000000000000000000000000000000000000000000000000003d7b22546f223a22307832316332306464346562303030663862343132613532353065386132373566353135353232326131222c2244617461223a22227d000000',
+          blockNumber: '0x3',
+          transactionHash:
+            '0xa123928f4eadf4bccad09a143f7f549d21eff9e772ee9db90d11a0e65b125711',
+          transactionIndex: '0x0',
+          blockHash:
+            '0x254eecc07b2c034bd9ea619c75992d4c491eb5d4576e98f3c8cbd5b4ad456a2a',
+          logIndex: '0x1',
+          removed: false,
+        },
+      ],
+      logsBloom:
+        '0x00400000000000000000000800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000010000000000000000000002000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000001000000000000010000000000000000000000000000000000000000000000000000',
+      status: '0x1',
+      to: '0x8f21fdd6b4f4cacd33151777a46c122797c8bf17',
+      transactionHash:
+        '0xa123928f4eadf4bccad09a143f7f549d21eff9e772ee9db90d11a0e65b125711',
+      transactionIndex: '0x0',
+      type: '0x50',
+    }
 
-// describe('transactionReceipt', () => {
-//   test('formatter', () => {
-//     const { transactionReceipt } = suaveRigil.formatters!
+    const formattedReceipt = transactionReceipt.format(inputReceipt)
 
-//     const inputReceipt = {
-//       // ... input fields based on SuaveRpcTransactionReceiptOverrides
-//     }
+    expect(formattedReceipt).toMatchInlineSnapshot(`
+      {
+        "blockHash": "0x254eecc07b2c034bd9ea619c75992d4c491eb5d4576e98f3c8cbd5b4ad456a2a",
+        "blockNumber": 3n,
+        "contractAddress": null,
+        "cumulativeGasUsed": 31764n,
+        "effectiveGasPrice": 890778126n,
+        "from": "0xbe69d72ca5f88acba033a063df5dbe43a4148de0",
+        "gasUsed": 31764n,
+        "logs": [
+          {
+            "address": "0x8f21fdd6b4f4cacd33151777a46c122797c8bf17",
+            "blockHash": "0x254eecc07b2c034bd9ea619c75992d4c491eb5d4576e98f3c8cbd5b4ad456a2a",
+            "blockNumber": 3n,
+            "data": "0xbef01c5c5f3655619d1e24fcc9a5f37b000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000006000000000000000000000000000000000000000000000000000000000000000010000000000000000000000008f21fdd6b4f4cacd33151777a46c122797c8bf17",
+            "logIndex": 0,
+            "removed": false,
+            "topics": [
+              "0x83481d5b04dea534715acad673a8177a46fc93882760f36bdc16ccac439d504e",
+            ],
+            "transactionHash": "0xa123928f4eadf4bccad09a143f7f549d21eff9e772ee9db90d11a0e65b125711",
+            "transactionIndex": 0,
+          },
+          {
+            "address": "0x8f21fdd6b4f4cacd33151777a46c122797c8bf17",
+            "blockHash": "0x254eecc07b2c034bd9ea619c75992d4c491eb5d4576e98f3c8cbd5b4ad456a2a",
+            "blockNumber": 3n,
+            "data": "0xbef01c5c5f3655619d1e24fcc9a5f37b000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000040000000000000000000000000000000000000000000000000000000000000003d7b22546f223a22307832316332306464346562303030663862343132613532353065386132373566353135353232326131222c2244617461223a22227d000000",
+            "logIndex": 1,
+            "removed": false,
+            "topics": [
+              "0xdab8306bad2ca820d05b9eff8da2e3016d372c15f00bb032f758718b9cda3950",
+            ],
+            "transactionHash": "0xa123928f4eadf4bccad09a143f7f549d21eff9e772ee9db90d11a0e65b125711",
+            "transactionIndex": 0,
+          },
+        ],
+        "logsBloom": "0x00400000000000000000000800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000010000000000000000000002000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000001000000000000010000000000000000000000000000000000000000000000000000",
+        "status": "success",
+        "to": "0x8f21fdd6b4f4cacd33151777a46c122797c8bf17",
+        "transactionHash": "0xa123928f4eadf4bccad09a143f7f549d21eff9e772ee9db90d11a0e65b125711",
+        "transactionIndex": 0,
+        "type": "0x50",
+      }
+    `)
+  })
+})
 
-//     const formattedReceipt = transactionReceipt.format(inputReceipt)
+describe('transactionRequest', () => {
+  const { transactionRequest } = suaveRigil.formatters!
 
-//     expect(formattedReceipt).toMatchInlineSnapshot(`
-//       {
-//         // ... Expected fields here based on the SuaveRpcTransactionReceiptOverrides format
-//       }
-//     `)
-//   })
-// })
+  test('formatter (confidential)', () => {
+    const inputRequest: TransactionRequestSuave = {
+      from: zeroAddress,
+      to: zeroAddress,
+      gas: 1n,
+      gasPrice: 0x10000000n,
+      value: 0n,
+      kettleAddress: zeroAddress,
+      confidentialInputs: '0x13131313',
+      chainId: suaveRigil.id,
+      nonce: 13,
+      data: '0x0',
+      type: SuaveTxTypes.ConfidentialRequest,
+    }
+    const formattedRequest = transactionRequest.format(inputRequest)
+    expect(formattedRequest).toMatchInlineSnapshot(`
+      {
+        "chainId": "0x1008c45",
+        "confidentialInputs": "0x13131313",
+        "data": "0x0",
+        "from": "0x0000000000000000000000000000000000000000",
+        "gas": "0x1",
+        "gasPrice": "0x10000000",
+        "isConfidential": true,
+        "kettleAddress": "0x0000000000000000000000000000000000000000",
+        "maxFeePerGas": undefined,
+        "maxPriorityFeePerGas": undefined,
+        "nonce": "0xd",
+        "to": "0x0000000000000000000000000000000000000000",
+        "type": "0x43",
+        "value": "0x0",
+      }
+    `)
+  })
 
-// describe('transactionRequest', () => {
-//   test('formatter', () => {
-//     const { transactionRequest } = suaveRigil.formatters!
-
-//     const inputRequest = {
-//       ExecutionNode: 'sampleExecutionNode',
-//       ConfidentialComputeRequest: 'sampleRequest',
-//       // ... other fields if present
-//     }
-
-//     const formattedRequest = transactionRequest.format(inputRequest)
-
-//     expect(formattedRequest).toMatchInlineSnapshot(`
-//       {
-//         "ExecutionNode": "sampleExecutionNode",
-//         "ConfidentialComputeRequest": "sampleRequest",
-//         // ... Other expected fields here
-//       }
-//     `)
-//   })
-// })
+  test('formatter (standard)', () => {
+    const inputRequest: TransactionRequestSuave = {
+      chainId: suaveRigil.id,
+      from: zeroAddress,
+      to: zeroAddress,
+      gas: 1n,
+      gasPrice: 0n,
+      value: 0n,
+      nonce: 13,
+      data: '0x0',
+      type: '0x0',
+    }
+    const formattedRequest = transactionRequest.format(inputRequest)
+    expect(formattedRequest).toMatchInlineSnapshot(`
+      {
+        "chainId": 16813125,
+        "data": "0x0",
+        "from": "0x0000000000000000000000000000000000000000",
+        "gas": "0x1",
+        "gasPrice": "0x0",
+        "maxFeePerGas": undefined,
+        "maxPriorityFeePerGas": undefined,
+        "nonce": "0xd",
+        "to": "0x0000000000000000000000000000000000000000",
+        "type": undefined,
+        "value": "0x0",
+      }
+    `)
+  })
+})
