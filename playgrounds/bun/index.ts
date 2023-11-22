@@ -5,43 +5,55 @@ import {
   Hex,
   createPublicClient,
   encodeFunctionData,
+  getContract,
+  formatEther,
 } from 'viem'
-import { mainnet, polygon, suaveRigil } from 'viem/chains'
+import { goerli, mainnet, polygon, suaveRigil } from 'viem/chains'
 import { SuaveTxTypes, TransactionRequestSuave } from 'viem/chains/suave/types'
 import { getSuaveWallet } from 'viem/chains/suave/wallet'
 import ConfidentialWithLogs from './contracts/out/ConfidentialWithLogs.sol/ConfidentialWithLogs.json'
+import MevShareBidContract from './contracts/out/bids.sol/MevShareBidContract.json'
+import { MevShareBid } from 'bids'
 
 const failEnv = (name: string) => {
   throw new Error(`missing env var ${name}`)
 }
 if (!process.env.PRIVATE_KEY) {failEnv('PRIVATE_KEY')}
 if (!process.env.KETTLE_ADDRESS) {failEnv('KETTLE_ADDRESS')}
-if (!process.env.RPC_URL_HTTP) {console.warn('RPC_URL_HTTP not set. Defaulting to localhost:8545')}
-const KETTLE_ADDRESS = process.env.KETTLE_ADDRESS as Address
-const PRIVATE_KEY = process.env.PRIVATE_KEY as Hex
-const RPC_URL_HTTP = process.env.RPC_URL_HTTP || 'http://localhost:8545'
+if (!process.env.SUAVE_RPC_URL_HTTP) {console.warn('SUAVE_RPC_URL_HTTP not set. Defaulting to localhost:8545')}
+if (!process.env.GOERLI_RPC_URL_HTTP) {console.warn('GOERLI_RPC_URL_HTTP not set. Defaulting to localhost:8545')}
+const KETTLE_ADDRESS: Address = process.env.KETTLE_ADDRESS as Address
+const PRIVATE_KEY: Hex = process.env.PRIVATE_KEY as Hex
+const SUAVE_RPC_URL_HTTP: string = process.env.SUAVE_RPC_URL_HTTP || 'http://localhost:8545'
+const GOERLI_RPC_URL_HTTP: string = process.env.GOERLI_RPC_URL_HTTP || 'http://localhost:8545'
 
-export const publicClients = {
-  mainnet: createPublicClient({
-    chain: mainnet,
-    transport: http(),
-  }),
-  polygon: createPublicClient({
-    chain: polygon,
-    transport: http(),
-  }),
-  suaveRigil: createPublicClient({
+const suaveProvider = createPublicClient({
+  chain: suaveRigil,
+  transport: http(SUAVE_RPC_URL_HTTP),
+})
+const goerliProvider = createPublicClient({
+  chain: goerli,
+  transport: http(GOERLI_RPC_URL_HTTP),
+})
+const adminWallet = getSuaveWallet(
+  {
     chain: suaveRigil,
-    transport: http(),
-  }),
-  suaveLocal: createPublicClient({
+    transport: http(SUAVE_RPC_URL_HTTP),
+  },
+  PRIVATE_KEY,
+)
+const wallet = getSuaveWallet(
+  {
     chain: suaveRigil,
-    transport: http(RPC_URL_HTTP),
-  }),
-}
+    transport: http(SUAVE_RPC_URL_HTTP),
+  },
+  '0x01000070530220062104600650003002001814120800043ff33603df10300012',
+)
+console.log('admin', adminWallet.account.address)
+console.log('wallet', wallet.account.address)
 
 // uncomment to watch pending txs as they come in:
-// publicClients.suaveLocal.watchPendingTransactions({
+// suaveProvider.watchPendingTransactions({
 //   async onTransactions(transactions) {
 //     console.log('pending', transactions)
 //     for (const hash of transactions) {
@@ -71,24 +83,22 @@ export const publicClients = {
 //   },
 // })
 
-const adminWallet = getSuaveWallet(
-  {
-    chain: suaveRigil,
-    transport: http(RPC_URL_HTTP),
-  },
-  PRIVATE_KEY,
-)
-
-const wallet = getSuaveWallet(
-  {
-    chain: suaveRigil,
-    transport: http(RPC_URL_HTTP),
-  },
-  '0x01000070530220062104600650003002001814120800043ff33603df10300012',
-)
-
-console.log('admin', adminWallet.account.address)
-console.log('wallet', wallet.account.address)
+const retryExceptionsWithTimeout = async (timeout_ms: number, fn: () => Promise<any>) => {
+  const startTime = new Date().getTime()
+  while (true) {
+    if (new Date().getTime() - startTime > timeout_ms) {
+      console.warn("timed out")
+      break
+    }
+    try {
+      const res = await fn()
+      return res
+    } catch (e) {
+      console.warn((e as Error).message)
+      await sleep(4000)
+    }
+  }
+}
 
 async function testSendCCRequest() {
   const gasPrice = await publicClients.suaveLocal.getGasPrice()
@@ -171,25 +181,7 @@ async function testGettingStuff() {
   }
 }
 
-const retryExceptionsWithTimeout = async (timeout_ms: number, fn: () => Promise<any>) => {
-  const startTime = new Date().getTime()
-  while (true) {
-    if (new Date().getTime() - startTime > timeout_ms) {
-      console.warn("timed out")
-      break
-    }
-    try {
-      const res = await fn()
-      return res
-    } catch (e) {
-      console.warn((e as Error).message)
-      await sleep(4000)
-    }
-  }
-}
-
 async function testDeployContract() {
-
   // deploy contract
   const contractHash = await adminWallet.deployContract({
     abi: ConfidentialWithLogs.abi,
@@ -198,7 +190,7 @@ async function testDeployContract() {
 
   // wait for tx to land
   const contractAddress: Hex = await retryExceptionsWithTimeout(10 * 1000, async () => {
-    const receipt = await publicClients.suaveLocal.getTransactionReceipt({
+    const receipt = await suaveProvider.getTransactionReceipt({
       hash: contractHash,
     })
     return receipt.contractAddress
@@ -227,11 +219,29 @@ async function testDeployContract() {
   const ccrResult = await adminWallet.sendTransaction(ccrReq)
   console.log('ccrResult', ccrResult)
   retryExceptionsWithTimeout(10 * 1000, async () => {
-    const ccrReceipt = await publicClients.suaveLocal.getTransactionReceipt({
+    const ccrReceipt = await suaveProvider.getTransactionReceipt({
       hash: ccrResult,
     })
     console.log('ccrReceipt', ccrReceipt)
   })
+}
+
+/** Send `amount` to `wallet` from admin wallet. */
+const fundAccount = async (wallet: Address, amount: bigint) => {
+  const balance = await suaveProvider.getBalance({ address: wallet })
+  if (balance < amount) {
+    const tx: TransactionRequestSuave = {
+      value: amount,
+      type: '0x0',
+      gasPrice: 10000000000n,
+      gas: 21000n,
+      chainId: suaveRigil.id,
+      to: wallet,
+    }
+    return await adminWallet.sendTransaction(tx)
+  } else {
+    console.log(`wallet balance: ${formatEther(balance)} ETH`)
+  }
 }
 
 /** MEV-Share implementation on SUAVE.
@@ -239,14 +249,50 @@ async function testDeployContract() {
  * To run this, you'll need to deploy the contract first.
  * See the [README](./README.md) for instructions.
 */
-async function testSuaveBids() {}
+async function testSuaveBids() {
+  const BID_CONTRACT_ADDRESS = process.env.BID_CONTRACT_ADDRESS as Hex
+  if (!BID_CONTRACT_ADDRESS) {
+    console.error("Need to run the DeployContracts script first. See ./README.md for instructions.")
+    failEnv('BID_CONTRACT_ADDRESS')
+  }
+
+  // fund our test wallet w/ 1 ETH
+  const fundRes = await fundAccount(wallet.account.address, 1000000000000000000n)
+  fundRes && console.log('fundRes', fundRes)
+
+  // a tx that should be landed on goerli
+  const testTx = {
+    to: '0x0000000000000000000000000000000000000000' as Address,
+    data: '0x686f776479' as Hex,
+    gas: 26000n,
+    gasPrice: 10000000000n,
+    chainId: 5,
+    type: "0x0" as "0x0"
+  }
+  const signedTx = await wallet.signTransaction(testTx)
+
+  // create bid & send ccr
+  const block = await goerliProvider.getBlockNumber()
+  const bid = new MevShareBid(block + 1n, signedTx, KETTLE_ADDRESS, BID_CONTRACT_ADDRESS, suaveRigil.id)
+  const ccr = bid.toConfidentialRequest()
+  const ccrRes = await wallet.sendTransaction(ccr)
+  console.log('ccrRes', ccrRes)
+
+  // wait for ccr to land and get tx receipt
+  const ccrReceipt = await retryExceptionsWithTimeout(10 * 1000, async () => {
+    const receipt = await suaveProvider.getTransactionReceipt({
+      hash: ccrRes,
+    })
+    return receipt
+  })
+  console.log('ccrReceipt', ccrReceipt)
+}
 
 async function main() {
   // await testSendCCRequest()
   // await testGettingStuff()
   // await testDeployContract()
-
-
+  await testSuaveBids()
 }
 
 main().then(() => {

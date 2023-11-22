@@ -41,3 +41,10 @@ source ../.env
 # send real deployment transactions with the --broadcast flag
 forge script --broadcast --rpc-url $RPC_URL_HTTP --private-key $PRIVATE_KEY DeployContracts
 ```
+
+Then populate your .env file with the new bid contract address.
+
+```sh
+# from playgrounds/bun/contracts/
+echo "BID_CONTRACT_ADDRESS=$(cat broadcast/Deploy.s.sol/16813125/run-latest.json | jq -r '.receipts[0].contractAddress')" >> ../.env
+```
