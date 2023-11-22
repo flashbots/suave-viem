@@ -26,10 +26,7 @@ const SUAVE_RPC_URL_HTTP: string =
 const GOERLI_RPC_URL_HTTP: string =
   process.env.GOERLI_RPC_URL_HTTP || 'http://localhost:8545'
 
-const suaveProvider = createPublicClient({
-  chain: suaveRigil,
-  transport: http(SUAVE_RPC_URL_HTTP),
-})
+const suaveProvider = suaveRigil.newPublicClient(http(SUAVE_RPC_URL_HTTP))
 const goerliProvider = createPublicClient({
   chain: goerli,
   transport: http(GOERLI_RPC_URL_HTTP),

@@ -1,3 +1,4 @@
+import { createPublicClient } from '../../clients/createPublicClient.js'
 import { type Hex } from '../../types/misc.js'
 import { defineChain } from '../../utils/chain.js'
 import { formattersSuave } from '../suave/formatters.js'
@@ -33,6 +34,8 @@ export const suaveRigil = /*#__PURE__*/ defineChain(
     testnet: true,
     newWallet: (transport: any, privateKey: Hex) =>
       getSuaveWallet({ transport, chain: suaveRigil }, privateKey),
+    newPublicClient: (transport: any) =>
+      createPublicClient({ transport, chain: suaveRigil }),
   },
   {
     formatters: formattersSuave,
