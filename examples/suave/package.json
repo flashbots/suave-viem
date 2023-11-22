@@ -9,8 +9,5 @@
   },
   "devDependencies": {
     "bun-types": "^0.5.0"
-  },
-  "scripts": {
-    "test:e2e": "bun run index.ts"
   }
 }

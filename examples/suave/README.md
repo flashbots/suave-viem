@@ -1,25 +1,11 @@
-# bun
-
-To install dependencies:
-
-```bash
-bun install
-```
-
-To run:
-
-```bash
-bun run index.ts
-```
-
-This project was created using `bun init` in bun v0.5.6. [Bun](https://bun.sh) is a fast all-in-one JavaScript runtime.
+# suave example
 
 ## build contracts
 
-Forge will install the required solidity dependencies into `playgrounds/bun/contracts/lib/`.
+Forge will install the required solidity dependencies into `examples/suave/contracts/lib/`.
 
 ```sh
-# from playgrounds/bun/contracts/
+# from examples/suave/contracts/
 
 forge install
 forge build
@@ -30,7 +16,7 @@ forge build
 We use a forge script to deploy our contracts. Normally we'd use `forge create` for this but because we rely on (deeply-nested) suave-geth contracts, this is a bit cleaner.
 
 ```sh
-# from playgrounds/bun/contracts/
+# from examples/suave/contracts/
 
 # do a dry run to see that your dependencies are set up correctly:
 forge script DeployContracts
@@ -45,6 +31,12 @@ forge script --broadcast --rpc-url $RPC_URL_HTTP --private-key $PRIVATE_KEY Depl
 Then populate your .env file with the new bid contract address.
 
 ```sh
-# from playgrounds/bun/contracts/
+# from examples/suave/contracts/
 echo "BID_CONTRACT_ADDRESS=$(cat broadcast/Deploy.s.sol/16813125/run-latest.json | jq -r '.receipts[0].contractAddress')" >> ../.env
+```
+
+## run example
+
+```bash
+bun run index.ts
 ```
