@@ -9,6 +9,7 @@ import {
   keccak256,
 } from '../../index.js'
 import { type Hex } from '../../types/misc.js'
+import { suaveRigil } from '../index.js'
 import {
   serializeConfidentialComputeRecord,
   serializeConfidentialComputeRequest,
@@ -65,6 +66,8 @@ export function getSuaveWallet<
         ...txRequest,
         from: preparedTx.from,
         nonce: preparedTx.nonce,
+        gas: txRequest.gas ?? preparedTx.gas,
+        gasPrice: txRequest.gasPrice ?? preparedTx.gasPrice,
       }
 
       const signedTx = await this.signTransaction(payload)
@@ -80,6 +83,7 @@ export function getSuaveWallet<
           ...txRequest,
           type: SuaveTxTypes.ConfidentialRecord,
           confidentialInputsHash: keccak256(confidentialInputs),
+          chainId: txRequest.chainId ?? suaveRigil.id,
         }
         const { r, s, v } = await signConfidentialComputeRecord(
           presignTx,

@@ -21,6 +21,7 @@ import {
   defineTransactionRequest,
   formatTransactionRequest,
 } from '../../utils/formatters/transactionRequest.js'
+import { suaveRigil } from '../index.js'
 import {
   type ConfidentialComputeRecord,
   type RpcTransactionReceiptSuave,
@@ -138,7 +139,7 @@ export const formattersSuave = {
           confidentialInputs,
           type: args.type,
           gasPrice: toHex(args.gasPrice),
-          chainId: toHex(args.chainId),
+          chainId: toHex(args.chainId || suaveRigil.id),
         } as RpcTransactionRequestSuave
       } else {
         // handle as regular ethereum transaction

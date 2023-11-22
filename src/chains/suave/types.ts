@@ -63,7 +63,7 @@ type TransactionRequestBase<TQuantity, TIndex, TType> = Omit<
 > &
   FeeValues<TQuantity> & {
     accessList?: AccessList
-    chainId: TIndex
+    chainId?: TIndex
     type: TType
   }
 

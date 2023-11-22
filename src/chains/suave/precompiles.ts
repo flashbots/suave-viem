@@ -1,5 +1,6 @@
 import type { Address } from 'abitype'
 
+// TODO: is it possible to generate this file from the contracts?
 export default {
   ANYALLOWED: '0xc8df3686b4afb2bb53e60eae97ef043fe03fb829' as Address,
   IS_CONFIDENTIAL_ADDR: '0x0000000000000000000000000000000042010000' as Address,

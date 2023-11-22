@@ -235,7 +235,6 @@ const fundAccount = async (wallet: Address, amount: bigint) => {
       type: '0x0',
       gasPrice: 10000000000n,
       gas: 21000n,
-      chainId: suaveRigil.id,
       to: wallet,
     }
     return await adminWallet.sendTransaction(tx)
