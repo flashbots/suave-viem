@@ -4,15 +4,10 @@ import {
   Address,
   Hex,
   createPublicClient,
-  encodeFunctionData,
-  getContract,
   formatEther,
 } from 'viem'
-import { goerli, mainnet, polygon, suaveRigil } from 'viem/chains'
-import { SuaveTxTypes, TransactionRequestSuave } from 'viem/chains/suave/types'
-import { getSuaveWallet } from 'viem/chains/suave/wallet'
-import ConfidentialWithLogs from './contracts/out/ConfidentialWithLogs.sol/ConfidentialWithLogs.json'
-import MevShareBidContract from './contracts/out/bids.sol/MevShareBidContract.json'
+import { goerli, suaveRigil } from 'viem/chains'
+import { TransactionRequestSuave } from 'viem/chains/suave/types'
 import { MevShareBid } from 'bids'
 
 const failEnv = (name: string) => {
@@ -35,18 +30,12 @@ const goerliProvider = createPublicClient({
   chain: goerli,
   transport: http(GOERLI_RPC_URL_HTTP),
 })
-const adminWallet = getSuaveWallet(
-  {
-    chain: suaveRigil,
-    transport: http(SUAVE_RPC_URL_HTTP),
-  },
+const adminWallet = suaveRigil.newWallet(
+  http(SUAVE_RPC_URL_HTTP),
   PRIVATE_KEY,
 )
-const wallet = getSuaveWallet(
-  {
-    chain: suaveRigil,
-    transport: http(SUAVE_RPC_URL_HTTP),
-  },
+const wallet = suaveRigil.newWallet(
+  http(SUAVE_RPC_URL_HTTP),
   '0x01000070530220062104600650003002001814120800043ff33603df10300012',
 )
 console.log('admin', adminWallet.account.address)
