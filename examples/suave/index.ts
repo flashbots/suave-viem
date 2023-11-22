@@ -1,11 +1,5 @@
 import { sleep } from 'bun'
-import {
-  http,
-  Address,
-  Hex,
-  createPublicClient,
-  formatEther,
-} from 'viem'
+import { http, Address, Hex, createPublicClient, formatEther } from 'viem'
 import { goerli, suaveRigil } from 'viem/chains'
 import { TransactionRequestSuave } from 'viem/chains/suave/types'
 import { MevShareBid } from 'bids'
@@ -13,14 +7,24 @@ import { MevShareBid } from 'bids'
 const failEnv = (name: string) => {
   throw new Error(`missing env var ${name}`)
 }
-if (!process.env.PRIVATE_KEY) {failEnv('PRIVATE_KEY')}
-if (!process.env.KETTLE_ADDRESS) {failEnv('KETTLE_ADDRESS')}
-if (!process.env.SUAVE_RPC_URL_HTTP) {console.warn('SUAVE_RPC_URL_HTTP not set. Defaulting to localhost:8545')}
-if (!process.env.GOERLI_RPC_URL_HTTP) {console.warn('GOERLI_RPC_URL_HTTP not set. Defaulting to localhost:8545')}
+if (!process.env.PRIVATE_KEY) {
+  failEnv('PRIVATE_KEY')
+}
+if (!process.env.KETTLE_ADDRESS) {
+  failEnv('KETTLE_ADDRESS')
+}
+if (!process.env.SUAVE_RPC_URL_HTTP) {
+  console.warn('SUAVE_RPC_URL_HTTP not set. Defaulting to localhost:8545')
+}
+if (!process.env.GOERLI_RPC_URL_HTTP) {
+  console.warn('GOERLI_RPC_URL_HTTP not set. Defaulting to localhost:8545')
+}
 const KETTLE_ADDRESS: Address = process.env.KETTLE_ADDRESS as Address
 const PRIVATE_KEY: Hex = process.env.PRIVATE_KEY as Hex
-const SUAVE_RPC_URL_HTTP: string = process.env.SUAVE_RPC_URL_HTTP || 'http://localhost:8545'
-const GOERLI_RPC_URL_HTTP: string = process.env.GOERLI_RPC_URL_HTTP || 'http://localhost:8545'
+const SUAVE_RPC_URL_HTTP: string =
+  process.env.SUAVE_RPC_URL_HTTP || 'http://localhost:8545'
+const GOERLI_RPC_URL_HTTP: string =
+  process.env.GOERLI_RPC_URL_HTTP || 'http://localhost:8545'
 
 const suaveProvider = createPublicClient({
   chain: suaveRigil,
@@ -30,10 +34,7 @@ const goerliProvider = createPublicClient({
   chain: goerli,
   transport: http(GOERLI_RPC_URL_HTTP),
 })
-const adminWallet = suaveRigil.newWallet(
-  http(SUAVE_RPC_URL_HTTP),
-  PRIVATE_KEY,
-)
+const adminWallet = suaveRigil.newWallet(http(SUAVE_RPC_URL_HTTP), PRIVATE_KEY)
 const wallet = suaveRigil.newWallet(
   http(SUAVE_RPC_URL_HTTP),
   '0x01000070530220062104600650003002001814120800043ff33603df10300012',
@@ -72,11 +73,14 @@ console.log('wallet', wallet.account.address)
 //   },
 // })
 
-const retryExceptionsWithTimeout = async (timeout_ms: number, fn: () => Promise<any>) => {
+const retryExceptionsWithTimeout = async (
+  timeout_ms: number,
+  fn: () => Promise<any>,
+) => {
   const startTime = new Date().getTime()
   while (true) {
     if (new Date().getTime() - startTime > timeout_ms) {
-      console.warn("timed out")
+      console.warn('timed out')
       break
     }
     try {
@@ -236,16 +240,21 @@ const fundAccount = async (wallet: Address, amount: bigint) => {
  *
  * To run this, you'll need to deploy the contract first.
  * See the [README](./README.md) for instructions.
-*/
+ */
 async function testSuaveBids() {
   const BID_CONTRACT_ADDRESS = process.env.BID_CONTRACT_ADDRESS as Hex
   if (!BID_CONTRACT_ADDRESS) {
-    console.error("Need to run the DeployContracts script first. See ./README.md for instructions.")
+    console.error(
+      'Need to run the DeployContracts script first. See ./README.md for instructions.',
+    )
     failEnv('BID_CONTRACT_ADDRESS')
   }
 
   // fund our test wallet w/ 1 ETH
-  const fundRes = await fundAccount(wallet.account.address, 1000000000000000000n)
+  const fundRes = await fundAccount(
+    wallet.account.address,
+    1000000000000000000n,
+  )
   fundRes && console.log('fundRes', fundRes)
 
   // a tx that should be landed on goerli
@@ -255,13 +264,19 @@ async function testSuaveBids() {
     gas: 26000n,
     gasPrice: 10000000000n,
     chainId: 5,
-    type: "0x0" as "0x0"
+    type: '0x0' as '0x0',
   }
   const signedTx = await wallet.signTransaction(testTx)
 
   // create bid & send ccr
   const block = await goerliProvider.getBlockNumber()
-  const bid = new MevShareBid(block + 1n, signedTx, KETTLE_ADDRESS, BID_CONTRACT_ADDRESS, suaveRigil.id)
+  const bid = new MevShareBid(
+    block + 1n,
+    signedTx,
+    KETTLE_ADDRESS,
+    BID_CONTRACT_ADDRESS,
+    suaveRigil.id,
+  )
   const ccr = bid.toConfidentialRequest()
   const ccrRes = await wallet.sendTransaction(ccr)
   console.log('ccrRes', ccrRes)
