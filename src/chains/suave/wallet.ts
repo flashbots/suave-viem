@@ -68,6 +68,7 @@ export function getSuaveWallet<
         nonce: preparedTx.nonce,
         gas: txRequest.gas ?? preparedTx.gas,
         gasPrice: txRequest.gasPrice ?? preparedTx.gasPrice,
+        chainId: txRequest.chainId ?? suaveRigil.id,
       }
 
       const signedTx = await this.signTransaction(payload)
