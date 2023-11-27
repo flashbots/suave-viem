@@ -1,8 +1,16 @@
 import { createPublicClient } from '../../clients/createPublicClient.js'
+import { type Transport } from '../../clients/transports/createTransport.js'
+import { http } from '../../clients/transports/http.js'
 import { type Hex } from '../../types/misc.js'
 import { defineChain } from '../../utils/chain.js'
 import { formattersSuave } from '../suave/formatters.js'
 import { getSuaveWallet } from '../suave/wallet.js'
+
+const testnetUrlHttp = 'https://testnet.rpc.flashbots.net'
+const testnetUrlWs = 'wss://testnet.rpc.flashbots.net'
+const testnetExplorerUrl = 'https://testnet.explorer.flashbots.net'
+
+const defaultTransport = http(testnetUrlHttp)
 
 export const suaveRigil = /*#__PURE__*/ defineChain(
   {
@@ -16,26 +24,35 @@ export const suaveRigil = /*#__PURE__*/ defineChain(
     },
     rpcUrls: {
       default: {
-        http: ['https://testnet.rpc.flashbots.net'],
-        webSocket: ['wss://testnet.rpc.flashbots.net'],
+        http: [testnetUrlHttp],
+        webSocket: [testnetUrlWs],
       },
       public: {
-        http: ['https://testnet.rpc.flashbots.net'],
-        webSocket: ['wss://testnet.rpc.flashbots.net'],
+        http: [testnetUrlHttp],
+        webSocket: [testnetUrlWs],
       },
     },
     blockExplorers: {
       default: {
-        name: 'Explorer',
-        url: 'https://testnet.explorer.flashbots.net',
+        name: 'SUAVE Rigil Explorer',
+        url: testnetExplorerUrl,
       },
     },
     contracts: {},
     testnet: true,
-    newWallet: (transport: any, privateKey: Hex) =>
-      getSuaveWallet({ transport, chain: suaveRigil }, privateKey),
-    newPublicClient: (transport: any) =>
-      createPublicClient({ transport, chain: suaveRigil }),
+    newWallet: (privateKey: Hex, transport?: Transport) =>
+      getSuaveWallet(
+        {
+          transport: transport ?? defaultTransport,
+          chain: suaveRigil,
+        },
+        privateKey,
+      ),
+    newPublicClient: (transport?: any) =>
+      createPublicClient({
+        transport: transport ?? defaultTransport,
+        chain: suaveRigil,
+      }),
   },
   {
     formatters: formattersSuave,
