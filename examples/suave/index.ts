@@ -1,8 +1,10 @@
-import { sleep } from 'bun'
-import { http, Address, Hex, createPublicClient, formatEther } from 'viem'
+import { http, Address, Hex, createPublicClient, formatEther, encodeFunctionData, encodeAbiParameters, parseAbi } from 'viem'
 import { goerli, suaveRigil } from 'viem/chains'
-import { TransactionRequestSuave } from 'viem/chains/suave/types'
-import { MevShareBid } from 'bids'
+import { SuaveTxTypes, TransactionReceiptSuave, TransactionRequestSuave } from 'viem/chains/suave/types'
+import { MevShareBid } from 'lib/bid'
+import Intents from './contracts/out/Intents.sol/Intents.json'
+import { deployContract } from 'viem/actions/wallet/deployContract'
+import { LimitOrder } from 'lib/limitOrder'
 
 const failEnv = (name: string) => {
   throw new Error(`missing env var ${name}`)
@@ -38,26 +40,6 @@ const wallet = suaveRigil.newWallet(
 )
 console.log('admin', adminWallet.account.address)
 console.log('wallet', wallet.account.address)
-
-const retryExceptionsWithTimeout = async (
-  timeout_ms: number,
-  fn: () => Promise<any>,
-) => {
-  const startTime = new Date().getTime()
-  while (true) {
-    if (new Date().getTime() - startTime > timeout_ms) {
-      console.warn('timed out')
-      break
-    }
-    try {
-      const res = await fn()
-      return res
-    } catch (e) {
-      console.warn((e as Error).message)
-      await sleep(4000)
-    }
-  }
-}
 
 /** Send `amount` to `wallet` from admin wallet. */
 const fundAccount = async (wallet: Address, amount: bigint) => {
@@ -122,17 +104,50 @@ async function testSuaveBids() {
   console.log('ccrRes', ccrRes)
 
   // wait for ccr to land and get tx receipt
-  const ccrReceipt = await retryExceptionsWithTimeout(10 * 1000, async () => {
-    const receipt = await suaveProvider.getTransactionReceipt({
-      hash: ccrRes,
-    })
-    return receipt
+  const ccrReceipt = await suaveProvider.waitForTransactionReceipt({
+    hash: ccrRes,
   })
   console.log('ccrReceipt', ccrReceipt)
 }
 
+async function testOtherContract() {
+  const deployContractTxHash = await deployContract(adminWallet, {abi: Intents.abi, bytecode: Intents.bytecode.object as Hex})
+  const receipt: TransactionReceiptSuave = await suaveProvider.waitForTransactionReceipt({hash: deployContractTxHash})
+  console.log(`contract deployed at tx ${deployContractTxHash}\ncontract_address: ${receipt.contractAddress}`)
+  if (!receipt.contractAddress) {
+    throw new Error('no contract address')
+  }
+
+  // TODO: use another account
+  const senderKey = '0x91ab9a7e53c220e6210460b65a7a3bb2ca181412a8a7b43ff336b3df1737ce12'
+  const limitOrder = new LimitOrder({
+    amountInMax: 13n,
+    amountOutMin: 14n,
+    expiryTimestamp: 1701205129n,
+    senderKey: senderKey as Hex,
+    tokenIn: '0xea7ea7ea7ea7ea7ea7ea7ea7ea7ea7ea7ea7eea7' as Hex,
+    tokenOut: '0xf00d0f00d0f00d0f00d0f00d0f00d0f00d0f000d' as Hex,
+  }, suaveProvider, receipt.contractAddress, KETTLE_ADDRESS)
+
+  const tx = await limitOrder.toTransactionRequest()
+  const limitOrderTxHash = await adminWallet.sendTransaction(tx)
+  const ccrReceipt = await suaveProvider.waitForTransactionReceipt({hash: limitOrderTxHash})
+  console.log("ccrReceipt", ccrReceipt)
+  const txRes = await suaveProvider.getTransaction({hash: limitOrderTxHash})
+  console.log("txRes", txRes)
+
+  if (txRes.type !== SuaveTxTypes.Suave) {
+    throw new Error('expected SuaveTransaction type (0x50)')
+  }
+  const expectedRawResult = "0xec18f56a000000000000000000000000ea7ea7ea7ea7ea7ea7ea7ea7ea7ea7ea7ea7eea7000000000000000000000000f00d0f00d0f00d0f00d0f00d0f00d0f00d0f000d0000000000000000000000000000000000000000000000000000000065665489"
+  if (txRes.confidentialComputeResult != expectedRawResult) {
+    throw new Error('expected confidential compute result to be a LimitOrderReceived event')
+  }
+}
+
 async function main() {
-  await testSuaveBids()
+  // await testSuaveBids()
+  await testOtherContract()
 }
 
 main().then(() => {
