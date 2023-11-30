@@ -6,9 +6,9 @@ import { defineChain } from '../../utils/chain.js'
 import { formattersSuave } from '../suave/formatters.js'
 import { getSuaveWallet } from '../suave/wallet.js'
 
-const testnetUrlHttp = 'https://testnet.rpc.flashbots.net'
-const testnetUrlWs = 'wss://testnet.rpc.flashbots.net'
-const testnetExplorerUrl = 'https://testnet.explorer.flashbots.net'
+const testnetUrlHttp = 'https://rpc.rigil.suave.flashbots.net'
+const testnetUrlWs = 'wss://rpc.rigil.suave.flashbots.net'
+const testnetExplorerUrl = 'https://rpc.rigil.suave.flashbots.net'
 
 const defaultTransport = http(testnetUrlHttp)
 
