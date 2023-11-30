@@ -1,10 +1,11 @@
-import { http, Address, Hex, createPublicClient, formatEther, encodeFunctionData, encodeAbiParameters, parseAbi } from 'viem'
+import { http, Address, Hex, createPublicClient, formatEther, encodeFunctionData, encodeAbiParameters, parseAbi, concatHex, keccak256, getFunctionSelector, decodeAbiParameters, decodeEventLog, decodeErrorResult, padHex, toHex } from 'viem'
 import { goerli, suaveRigil } from 'viem/chains'
 import { SuaveTxTypes, TransactionReceiptSuave, TransactionRequestSuave } from 'viem/chains/suave/types'
 import { MevShareBid } from 'lib/bid'
-import Intents from './contracts/out/Intents.sol/Intents.json'
+import IntentsContract from './contracts/out/Intents.sol/Intents.json'
 import { deployContract } from 'viem/actions/wallet/deployContract'
 import { LimitOrder } from 'lib/limitOrder'
+import { SuaveRevert } from 'lib/suave'
 
 const failEnv = (name: string) => {
   throw new Error(`missing env var ${name}`)
@@ -110,8 +111,8 @@ async function testSuaveBids() {
   console.log('ccrReceipt', ccrReceipt)
 }
 
-async function testOtherContract() {
-  const deployContractTxHash = await deployContract(adminWallet, {abi: Intents.abi, bytecode: Intents.bytecode.object as Hex})
+async function testIntents() {
+  const deployContractTxHash = await deployContract(adminWallet, {abi: IntentsContract.abi, bytecode: IntentsContract.bytecode.object as Hex})
   const receipt: TransactionReceiptSuave = await suaveProvider.waitForTransactionReceipt({hash: deployContractTxHash})
   console.log(`contract deployed at tx ${deployContractTxHash}\ncontract_address: ${receipt.contractAddress}`)
   if (!receipt.contractAddress) {
@@ -119,18 +120,25 @@ async function testOtherContract() {
   }
 
   // TODO: use another account
-  const senderKey = '0x91ab9a7e53c220e6210460b65a7a3bb2ca181412a8a7b43ff336b3df1737ce12'
+  const senderKey = '0x91ab9a7e53c220e6210460b65a7a3bb2ca181412a8a7b43ff336b3df1737ce12' // adminWallet
   const limitOrder = new LimitOrder({
     amountInMax: 13n,
     amountOutMin: 14n,
-    expiryTimestamp: 1701205129n,
+    expiryTimestamp: 0x65665489n,
     senderKey: senderKey as Hex,
     tokenIn: '0xea7ea7ea7ea7ea7ea7ea7ea7ea7ea7ea7ea7eea7' as Hex,
     tokenOut: '0xf00d0f00d0f00d0f00d0f00d0f00d0f00d0f000d' as Hex,
   }, suaveProvider, receipt.contractAddress, KETTLE_ADDRESS)
 
   const tx = await limitOrder.toTransactionRequest()
-  const limitOrderTxHash = await adminWallet.sendTransaction(tx)
+  let limitOrderTxHash: Hex = '0x'
+  try {
+    limitOrderTxHash = await adminWallet.sendTransaction(tx)
+  } catch (e) {
+    // TODO: would be nice to have this as the default response in the client
+    throw new SuaveRevert(e as Error)
+  }
+
   const ccrReceipt = await suaveProvider.waitForTransactionReceipt({hash: limitOrderTxHash})
   console.log("ccrReceipt", ccrReceipt)
   const txRes = await suaveProvider.getTransaction({hash: limitOrderTxHash})
@@ -139,15 +147,45 @@ async function testOtherContract() {
   if (txRes.type !== SuaveTxTypes.Suave) {
     throw new Error('expected SuaveTransaction type (0x50)')
   }
-  const expectedRawResult = "0xec18f56a000000000000000000000000ea7ea7ea7ea7ea7ea7ea7ea7ea7ea7ea7ea7eea7000000000000000000000000f00d0f00d0f00d0f00d0f00d0f00d0f00d0f000d0000000000000000000000000000000000000000000000000000000065665489"
-  if (txRes.confidentialComputeResult != expectedRawResult) {
-    throw new Error('expected confidential compute result to be a LimitOrderReceived event')
+
+  // check `confidentialComputeResult`; should be calldata for `onReceivedIntent`
+  const fnSelector: Hex = `0x${IntentsContract.methodIdentifiers['onReceivedIntent((address,address,uint256,uint256,uint256),bytes32)']}`
+  const expectedData = [
+    limitOrder.tokenIn,
+    limitOrder.tokenOut,
+    toHex(limitOrder.amountInMax),
+    toHex(limitOrder.amountOutMin),
+    toHex(limitOrder.expiryTimestamp),
+    limitOrder.hashkey(),
+  ].map(
+    param => padHex(param, {size: 32})
+  ).reduce(
+    (acc, cur) => concatHex([acc, cur])
+  )
+  const expectedRawResult = concatHex([fnSelector, expectedData])
+  if (txRes.confidentialComputeResult !== expectedRawResult) {
+    throw new Error('expected confidential compute result to be calldata for `onReceivedIntent`')
   }
+
+  // TODO: check onchain for intent
+  const intentResult = await suaveProvider.call({
+    account: adminWallet.account.address,
+    to: receipt.contractAddress,
+    data: encodeFunctionData({
+      abi: IntentsContract.abi,
+      args: [limitOrder.hashkey()],
+      functionName: 'intents_pending'
+    }),
+    gasPrice: 10000000000n,
+    gas: 42000n,
+    type: '0x0'
+  })
+  console.log('intentResult', intentResult)
 }
 
 async function main() {
   // await testSuaveBids()
-  await testOtherContract()
+  await testIntents()
 }
 
 main().then(() => {

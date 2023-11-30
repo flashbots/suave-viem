@@ -1,4 +1,4 @@
-import { Address, Chain, Hex, PublicClient, Transport, encodeAbiParameters, encodeFunctionData, parseAbi } from 'viem'
+import { Address, Hex, PublicClient, Transport, encodeAbiParameters, encodeFunctionData, keccak256, parseAbi } from 'viem'
 import { suaveRigil } from 'viem/chains'
 import { SuaveTxTypes, TransactionRequestSuave } from 'viem/chains/suave/types'
 
@@ -14,13 +14,15 @@ export interface ILimitOrder {
 type SuaveClient<T extends Transport> = PublicClient<T, typeof suaveRigil>;
 
 export class LimitOrder<T extends Transport> implements ILimitOrder {
+    // ILimitOrder fields
     tokenIn: Address
     tokenOut: Address
     amountInMax: bigint
     amountOutMin: bigint
     expiryTimestamp: bigint
     senderKey: Hex
-    client: PublicClient
+    // client configs
+    client: SuaveClient<T>
     contractAddress: Address
     kettleAddress: Address
 
@@ -31,7 +33,7 @@ export class LimitOrder<T extends Transport> implements ILimitOrder {
         this.amountOutMin = params.amountOutMin
         this.expiryTimestamp = params.expiryTimestamp
         this.senderKey = params.senderKey
-        this.client = client as any
+        this.client = client
         this.contractAddress = contractAddress
         this.kettleAddress = kettleAddress
     }
@@ -45,6 +47,10 @@ export class LimitOrder<T extends Transport> implements ILimitOrder {
             expiryTimestamp: this.expiryTimestamp,
             senderKey: this.senderKey,
         }
+    }
+
+    hashkey(): Hex {
+        return keccak256(this.publicBytes())
     }
 
     // TODO: ideally we'd extend PublicClient to create LimitOrders, then we could
@@ -63,7 +69,6 @@ export class LimitOrder<T extends Transport> implements ILimitOrder {
     }
 
     private confidentialInputsBytes(): Hex {
-        // const {token_in, token_out, amount_in_max, amount_out_min, expiry_timestamp, sender_key} = limitOrder
         return encodeAbiParameters([
             {type: 'address', name: 'token_in'},
             {type: 'address', name: 'token_out'},
@@ -78,6 +83,23 @@ export class LimitOrder<T extends Transport> implements ILimitOrder {
             this.amountOutMin,
             this.expiryTimestamp,
             this.senderKey,
+        ])
+    }
+
+
+    private publicBytes(): Hex {
+        return encodeAbiParameters([
+            {type: 'address', name: 'token_in'},
+            {type: 'address', name: 'token_out'},
+            {type: 'uint256', name: 'amount_in_max'},
+            {type: 'uint256', name: 'amount_out_min'},
+            {type: 'uint256', name: 'expiry_timestamp'},
+        ], [
+            this.tokenIn,
+            this.tokenOut,
+            this.amountInMax,
+            this.amountOutMin,
+            this.expiryTimestamp,
         ])
     }
 

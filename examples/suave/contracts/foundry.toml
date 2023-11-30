@@ -5,5 +5,6 @@ libs = ["lib"]
 
 # See more config options https://github.com/foundry-rs/foundry/blob/master/crates/config/README.md#all-options
 remappings = [
-    "suave/=lib/suave-geth/suave/sol/"
+    "suave/=lib/suave-geth/suave/sol/",
+    "forge/=lib/forge-std/src/"
 ]
