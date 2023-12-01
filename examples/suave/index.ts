@@ -1,4 +1,4 @@
-import { http, Address, Hex, createPublicClient, formatEther, encodeFunctionData, encodeAbiParameters, parseAbi, concatHex, keccak256, getFunctionSelector, decodeAbiParameters, decodeEventLog, decodeErrorResult, padHex, toHex } from 'viem'
+import { http, Address, Hex, createPublicClient, formatEther, encodeFunctionData, encodeAbiParameters, parseAbi, concatHex, keccak256, getFunctionSelector, decodeAbiParameters, decodeEventLog, decodeErrorResult, padHex, toHex, getContract } from 'viem'
 import { goerli, suaveRigil } from 'viem/chains'
 import { SuaveTxTypes, TransactionReceiptSuave, TransactionRequestSuave } from 'viem/chains/suave/types'
 import { MevShareBid } from 'lib/bid'
@@ -112,7 +112,10 @@ async function testSuaveBids() {
 }
 
 async function testIntents() {
-  const deployContractTxHash = await deployContract(adminWallet, {abi: IntentsContract.abi, bytecode: IntentsContract.bytecode.object as Hex})
+  const deployContractTxHash = await deployContract(adminWallet, {
+    abi: IntentsContract.abi,
+    bytecode: IntentsContract.bytecode.object as Hex
+  })
   const receipt: TransactionReceiptSuave = await suaveProvider.waitForTransactionReceipt({hash: deployContractTxHash})
   console.log(`contract deployed at tx ${deployContractTxHash}\ncontract_address: ${receipt.contractAddress}`)
   if (!receipt.contractAddress) {

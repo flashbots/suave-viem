@@ -48,7 +48,7 @@ export const suaveRigil = /*#__PURE__*/ defineChain(
         },
         privateKey,
       ),
-    newPublicClient: (transport?: any) =>
+    newPublicClient: (transport?: Transport) =>
       createPublicClient({
         transport: transport ?? defaultTransport,
         chain: suaveRigil,
