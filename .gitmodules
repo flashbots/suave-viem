@@ -4,3 +4,6 @@
 [submodule "examples/suave/contracts/lib/forge-std"]
 	path = examples/suave/contracts/lib/forge-std
 	url = https://github.com/foundry-rs/forge-std
+[submodule "examples/suave/contracts/lib/openzeppelin-contracts"]
+	path = examples/suave/contracts/lib/openzeppelin-contracts
+	url = https://github.com/OpenZeppelin/openzeppelin-contracts
