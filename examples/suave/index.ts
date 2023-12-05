@@ -1,4 +1,4 @@
-import { http, Address, Hex, createPublicClient, formatEther, encodeFunctionData, encodeAbiParameters, parseAbi, concatHex, keccak256, getFunctionSelector, decodeAbiParameters, decodeEventLog, decodeErrorResult, padHex, toHex, getContract } from 'viem'
+import { http, Address, Hex, createPublicClient, formatEther, encodeFunctionData, concatHex, padHex, toHex } from 'viem'
 import { goerli, suaveRigil } from 'viem/chains'
 import { SuaveTxTypes, TransactionReceiptSuave, TransactionRequestSuave } from 'viem/chains/suave/types'
 import { MevShareBid } from 'lib/bid'
@@ -152,7 +152,7 @@ async function testIntents() {
   }
 
   // check `confidentialComputeResult`; should be calldata for `onReceivedIntent`
-  const fnSelector: Hex = `0x${IntentsContract.methodIdentifiers['onReceivedIntent((address,address,uint256,uint256,uint256),bytes32)']}`
+  const fnSelector: Hex = `0x${IntentsContract.methodIdentifiers['onReceivedIntent((address,address,uint256,uint256,uint256),bytes32,uint256)']}`
   const expectedData = [
     limitOrder.tokenIn,
     limitOrder.tokenOut,
@@ -166,7 +166,7 @@ async function testIntents() {
     (acc, cur) => concatHex([acc, cur])
   )
   const expectedRawResult = concatHex([fnSelector, expectedData])
-  if (txRes.confidentialComputeResult !== expectedRawResult) {
+  if (!txRes.confidentialComputeResult.startsWith(expectedRawResult)) {
     throw new Error('expected confidential compute result to be calldata for `onReceivedIntent`')
   }
 

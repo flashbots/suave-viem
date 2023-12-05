@@ -4,11 +4,13 @@ import SuaveContract from '../contracts/out/Suave.sol/Suave.json'
 function decodeRawError<E extends Error>(error: E): {abiItem: any, args: any, name: string, details: string} {
     const details = error.message.match(/Details: (.*)/)?.[1]
     if (!details) {
-      throw new Error('could not find revert details')
+      console.error('could not find revert details')
+      throw error
     }
     const reason = error.message.match(/execution reverted: (.*)/)?.[1]
     if (!reason) {
-      throw new Error('could not find revert reason')
+      console.error('could not find revert reason')
+      throw error
     }
     // check if it's a suave error
     const suaveErrorSelector = getFunctionSelector('PeekerReverted(address, bytes)')
