@@ -88,10 +88,10 @@ export function getSuaveWallet<
   PrivateKeyAccount // TODO: generalize account types (required to make metamask transport work)
 > {
   if (!params.jsonRpcAccount && !params.privateKey) {
-    throw new Error("Must provide either 'account' or 'privateKey'")
+    throw new Error("Must provide either 'jsonRpcAccount' or 'privateKey'")
   }
   if (params.jsonRpcAccount && params.privateKey) {
-    throw new Error("Cannot provide both 'account' and 'privateKey'")
+    throw new Error("Cannot provide both 'jsonRpcAccount' and 'privateKey'")
   }
   return createWalletClient({
     account: params.jsonRpcAccount ?? privateKeyToAccount(params.privateKey!),
