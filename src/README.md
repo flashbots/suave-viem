@@ -1,4 +1,4 @@
-> :warning: **ALPHA SOFTWARE**: This code is in the alpha and the SUAVE protocol is subject to change thus so is this sdk. Please use it with caution. The [SUAVE spec](https://github.com/flashbots/suave-specs/tree/main) has not yet stabilizied so we are refraining from merging this work upstream but plan to do so when the time is right. Additionally [Confidential Compute Requests](https://github.com/flashbots/suave-specs/blob/main/specs/rigil/kettle.md#confidentialcomputerequest) in their current form are not able to be signed with eip-1993 wallets and require `eth_sign`.
+> :warning: **ALPHA SOFTWARE**: This code relies on the SUAVE protocol, and both are subject to change. Please use it with caution. The [SUAVE spec](https://github.com/flashbots/suave-specs/tree/main) has not yet stabilized, so we are refraining from merging this work upstream. We plan to do so when the time is right. Additionally, [Confidential Compute Requests](https://github.com/flashbots/suave-specs/blob/main/specs/rigil/kettle.md#confidentialcomputerequest) in their current form are not able to be signed with eip-1993 wallets and require `eth_sign`.
 
 <br/>
 
