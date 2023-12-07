@@ -25,3 +25,19 @@ export function setupConnectButton(element: HTMLButtonElement, onConnect: (accou
         console.error("no ethereum provider detected")
     }
 }
+
+export function setupSendBidButton(element: HTMLButtonElement, suaveWallet: any, onSendBid: (txHash: Hex, err?: any) => void) {
+    element.innerHTML = `send bid`
+    let txHash = null
+    let err = null
+    const sendBid = (suaveWallet: any) => {
+        // TODO: send real bid
+        console.log("got wallet", suaveWallet)
+        txHash = "0x2004" as Hex
+        err = null
+
+        // callback with result
+        onSendBid(txHash, err)
+    }
+    element.addEventListener('click', () => sendBid(suaveWallet))
+}

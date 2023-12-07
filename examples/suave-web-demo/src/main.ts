@@ -2,7 +2,7 @@ import './style.css'
 import viteLogo from '/vite.svg'
 import typescriptLogo from './typescript.svg'
 import flashbotsLogo from './flashbots_icon.svg'
-import { setupConnectButton } from './suave'
+import { setupConnectButton, setupSendBidButton } from './suave'
 import { Logo } from './components'
 import { custom } from 'viem'
 import { suaveRigil } from 'viem/chains'
@@ -16,6 +16,7 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
     <div class="card">
       <button id="connect" type="button"></button>
       <div id="status-content"></div>
+      <button id="sendBid" type="button" ></button>
     </div>
   </div>
 `
@@ -38,4 +39,10 @@ setupConnectButton(document.querySelector<HTMLButtonElement>('#connect')!,
       <p>suaveWallet: ${suaveWallet.account.address}</p>
     </div>
   `
+  setupSendBidButton(document.querySelector<HTMLButtonElement>('#sendBid')!, suaveWallet, (txHash, err) => {
+    if (err) {
+      console.error(err)
+    }
+    console.log("back in main", txHash)
+  })
 })
