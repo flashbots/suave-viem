@@ -2,8 +2,12 @@ import './style.css'
 import viteLogo from '/vite.svg'
 import typescriptLogo from './typescript.svg'
 import flashbotsLogo from './flashbots_icon.svg'
-import { connectToWallet } from './suave'
+import { setupConnectButton } from './suave'
 import { Logo } from './components'
+import { custom } from 'viem'
+import { suaveRigil } from 'viem/chains'
+
+let suaveWallet = null
 
 document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
   <div>
@@ -11,6 +15,7 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
     <h1><em>MEV-Share on SUAVE</em></h1>
     <div class="card">
       <button id="connect" type="button"></button>
+      <div id="status-content"></div>
     </div>
   </div>
 `
@@ -24,4 +29,13 @@ document.querySelector<HTMLDivElement>('#footer')!.innerHTML = `
   </div>
 `
 
-connectToWallet(document.querySelector<HTMLButtonElement>('#connect')!)
+setupConnectButton(document.querySelector<HTMLButtonElement>('#connect')!, 
+(account, ethereum) => {
+  suaveWallet = suaveRigil.newWallet({jsonRpcAccount: account, transport: custom(ethereum)})
+  console.log(suaveWallet)
+  document.querySelector<HTMLDivElement>('#status-content')!.innerHTML = `
+    <div>
+      <p>suaveWallet: ${suaveWallet.account.address}</p>
+    </div>
+  `
+})

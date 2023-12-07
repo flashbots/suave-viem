@@ -1,21 +1,24 @@
+import { Hex } from 'viem'
 import { suaveRigil } from "viem/chains"
 
-export function connectToWallet(element: HTMLButtonElement) {
+/** Sets up "connect to wallet" button and holds wallet instance. */
+export function setupConnectButton(element: HTMLButtonElement, onConnect: (account: Hex, ethereum: any) => void) {
     let connected = false
     let account = null
     element.innerHTML = `connect to wallet`
 
     console.log(suaveRigil.id)
-    const setConnected = (ethereum: any) => {
+    const setConnected = async (ethereum: any) => {
         if (connected) return
-        connected = true
         element.innerHTML = `connecting to ${connected}`
         console.log(ethereum)
-        ethereum.request({ method: 'eth_requestAccounts' }).then((accounts: any) => {
-            account = accounts[0]
-            element.innerHTML = `connected with ${account}`
-        })
+        const accounts = await ethereum.request({ method: 'eth_requestAccounts' })
+        account = accounts[0]
+        element.innerHTML = `connected with ${account}`
+        connected = true
+        onConnect(account, ethereum)
     }
+
     if ('ethereum' in window) {
         element.addEventListener('click', () => setConnected((window as any).ethereum))
     } else {
