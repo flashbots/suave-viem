@@ -39,6 +39,7 @@ setupConnectButton(document.querySelector<HTMLButtonElement>('#connect')!,
       <p>suaveWallet: ${suaveWallet.account.address}</p>
     </div>
   `
+  // setup "send bid" button once we've connected
   setupSendBidButton(document.querySelector<HTMLButtonElement>('#sendBid')!, suaveWallet, (txHash, err) => {
     if (err) {
       console.error("encountered error trying to send bid.", err)
