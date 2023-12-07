@@ -2,12 +2,10 @@ import './style.css'
 import viteLogo from '/vite.svg'
 import typescriptLogo from './typescript.svg'
 import flashbotsLogo from './flashbots_icon.svg'
-import { setupConnectButton, setupSendBidButton } from './suave'
+import { setupConnectButton, setupDripFaucetButton, setupSendBidButton } from './suave'
 import { Logo } from './components'
-import { custom } from 'viem'
+import { custom, formatEther } from 'viem'
 import { suaveRigil } from 'viem/chains'
-
-let suaveWallet = null
 
 document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
   <div>
@@ -16,6 +14,7 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
     <div class="card">
       <button id="connect" type="button"></button>
       <div id="status-content"></div>
+      <button id="dripFaucet" type="button"></button>
       <button id="sendBid" type="button" ></button>
     </div>
   </div>
@@ -31,19 +30,60 @@ document.querySelector<HTMLDivElement>('#footer')!.innerHTML = `
 `
 
 setupConnectButton(document.querySelector<HTMLButtonElement>('#connect')!, 
-(account, ethereum) => {
-  suaveWallet = suaveRigil.newWallet({jsonRpcAccount: account, transport: custom(ethereum)})
+(account, ethereum, err) => {
+  if (err) {
+    console.error(err)
+    alert(err.message)
+  }
+  const suaveWallet = suaveRigil.newWallet({jsonRpcAccount: account, transport: custom(ethereum)})
   console.log(suaveWallet)
-  document.querySelector<HTMLDivElement>('#status-content')!.innerHTML = `
-    <div>
-      <p>suaveWallet: ${suaveWallet.account.address}</p>
-    </div>
-  `
-  // setup "send bid" button once we've connected
+  const suaveProvider = suaveRigil.newPublicClient(custom(ethereum))
+  suaveProvider.getBalance({ address: account }).then((balance) => {
+    document.querySelector<HTMLDivElement>('#status-content')!.innerHTML = `
+      <div>
+        <p>SUAVE-ETH balance: ${formatEther(balance)}</p>
+      </div>
+    `
+  })
+
+  // setup other buttons once we've connected
   setupSendBidButton(document.querySelector<HTMLButtonElement>('#sendBid')!, suaveWallet, (txHash, err) => {
     if (err) {
-      console.error("encountered error trying to send bid.", err)
+      console.error("error in setupSendBidButton", err)
+      alert(err.message + (err as any).data)
     }
-    console.log("back in main", txHash)
+    const suaveProvider = suaveRigil.newPublicClient(custom(ethereum))
+    suaveProvider.getTransactionReceipt({hash: txHash}).then((receipt) => {
+      console.log("receipt", receipt)
+      document.querySelector<HTMLDivElement>('#status-content')!.innerHTML = `
+        <div>
+          <p>bid sent. tx hash: <code>${txHash}</code></p>
+          <label for="receipt">receipt</label>
+          <textarea id="receipt" wrap="hard">
+${JSON.stringify(receipt, (_, value) =>
+            (typeof value === 'bigint'
+              ? value.toString()
+              : value // return everything else unchanged
+            ), 2)}
+          </textarea>
+        </div>
+      `
+    })
+    console.log("sent bid.", txHash)
+    document.querySelector<HTMLDivElement>('#status-content')!.innerHTML = `
+      <div>
+        <p>bid sent. tx hash: <code>${txHash}</code></p>
+      </div>
+    `
+  })
+  setupDripFaucetButton(
+    document.querySelector<HTMLButtonElement>('#dripFaucet')!,
+    account,
+    (txHash, err) => {
+      if (err) {
+        console.error("error in setupDripFaucetButton", err)
+        alert(err.message + (err as any).data)
+      }
+      console.log("funded account", txHash)
   })
 })
