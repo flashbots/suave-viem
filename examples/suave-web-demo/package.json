@@ -8,6 +8,9 @@
     "build": "tsc && vite build",
     "preview": "vite preview"
   },
+  "dependencies": {
+    "viem": "workspace:*"
+  },
   "devDependencies": {
     "typescript": "^5.2.2",
     "vite": "^5.0.0"

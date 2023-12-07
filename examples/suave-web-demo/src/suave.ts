@@ -1,7 +1,11 @@
+import { suaveRigil } from "viem/chains"
+
 export function connectToWallet(element: HTMLButtonElement) {
     let connected = false
     let account = null
     element.innerHTML = `connect to wallet`
+
+    console.log(suaveRigil.id)
     const setConnected = (ethereum: any) => {
         if (connected) return
         connected = true
