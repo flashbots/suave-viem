@@ -41,7 +41,7 @@ setupConnectButton(document.querySelector<HTMLButtonElement>('#connect')!,
   `
   setupSendBidButton(document.querySelector<HTMLButtonElement>('#sendBid')!, suaveWallet, (txHash, err) => {
     if (err) {
-      console.error(err)
+      console.error("encountered error trying to send bid.", err)
     }
     console.log("back in main", txHash)
   })
