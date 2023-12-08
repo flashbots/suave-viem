@@ -14,14 +14,15 @@
       "tsconfig.*.json",
       "generated.ts",
       "vectors/*.json",
-      "examples"
+      "examples",
+      "*.test.ts"
     ]
   },
   "formatter": {
     "enabled": true,
     "formatWithErrors": false,
     "indentStyle": "space",
-    "indentSize": 2,
+    "indentWidth": 2,
     "lineWidth": 80
   },
   "linter": {
@@ -34,17 +35,24 @@
       "correctness": {
         "noUnusedVariables": "error"
       },
+      "complexity": {
+        "noForEach": "off",
+        "noBannedTypes": "off"
+      },
       "performance": {
         "noDelete": "off"
       },
       "style": {
         "noNonNullAssertion": "off",
-        "useShorthandArrayType": "error"
+        "useShorthandArrayType": "error",
+        "noUselessElse": "off"
       },
       "suspicious": {
         "noArrayIndexKey": "off",
         "noAssignInExpressions": "off",
-        "noExplicitAny": "off"
+        "noExplicitAny": "off",
+        "noRedeclare": "off",
+        "noConfusingVoidType": "off"
       }
     }
   },

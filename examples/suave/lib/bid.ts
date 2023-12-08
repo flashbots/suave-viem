@@ -5,8 +5,8 @@ import {
   encodeFunctionData,
   toHex,
 } from 'viem'
-import precompiles from 'viem/chains/suave/precompiles'
-import { SuaveTxTypes, TransactionRequestSuave } from 'viem/chains/suave/types'
+import { suaveRigil } from '../../../src/chains'
+import { SuaveTxTypes, TransactionRequestSuave } from '../../../src/chains/suave/types'
 import MevShareBidContract from '../contracts/out/bids.sol/MevShareBidContract.json'
 
 export interface MevShareBid {
@@ -35,7 +35,7 @@ export class MevShareBid {
     this.chainId = chainId
     this.allowedPeekers = [
       // no idea what I'm doing here
-      precompiles.ANYALLOWED,
+      suaveRigil.contracts.ANYALLOWED.address,
     ]
     this.allowedStores = []
   }
