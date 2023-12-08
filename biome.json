@@ -22,7 +22,7 @@
     "enabled": true,
     "formatWithErrors": false,
     "indentStyle": "space",
-    "indentSize": 2,
+    "indentWidth": 2,
     "lineWidth": 80
   },
   "linter": {
@@ -43,7 +43,8 @@
       },
       "style": {
         "noNonNullAssertion": "off",
-        "useShorthandArrayType": "error"
+        "useShorthandArrayType": "error",
+        "noUselessElse": "off"
       },
       "suspicious": {
         "noArrayIndexKey": "off",
