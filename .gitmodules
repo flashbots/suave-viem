@@ -7,4 +7,3 @@
 [submodule "examples/suave/contracts/lib/suave-geth"]
 	path = examples/suave/contracts/lib/suave-geth
 	url = https://github.com/flashbots/suave-geth
-
