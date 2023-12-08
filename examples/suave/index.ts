@@ -31,11 +31,14 @@ const goerliProvider = createPublicClient({
   chain: goerli,
   transport: http(GOERLI_RPC_URL_HTTP),
 })
-const adminWallet = suaveRigil.newWallet(PRIVATE_KEY, http(SUAVE_RPC_URL_HTTP))
-const wallet = suaveRigil.newWallet(
-  '0x01000070530220062104600650003002001814120800043ff33603df10300012',
-  http(SUAVE_RPC_URL_HTTP),
-)
+const adminWallet = suaveRigil.newWallet({
+  transport: http(SUAVE_RPC_URL_HTTP),
+  privateKey: PRIVATE_KEY, 
+})
+const wallet = suaveRigil.newWallet({
+  transport: http(SUAVE_RPC_URL_HTTP),
+  privateKey: '0x01000070530220062104600650003002001814120800043ff33603df10300012',
+})
 console.log('admin', adminWallet.account.address)
 console.log('wallet', wallet.account.address)
 
