@@ -1,5 +1,5 @@
-import { join } from 'node:path'
 import { describe, expect, test } from 'bun:test'
+import { join } from 'node:path'
 
 import { fromRlp } from '../../src/utils/encoding/fromRlp.js'
 import { toRlp } from '../../src/utils/encoding/toRlp.js'
