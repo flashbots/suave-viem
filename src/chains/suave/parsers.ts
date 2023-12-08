@@ -1,4 +1,3 @@
-// import { isAddress, isHex } from '~viem/index.js'
 import {
   InvalidSerializedTransactionError,
   InvalidSerializedTransactionTypeError,
@@ -10,8 +9,8 @@ import { hexToBigInt, hexToNumber } from '../../utils/encoding/fromHex.js'
 import { parseTransaction } from '../../utils/transaction/parseTransaction.js'
 import { toTransactionArray } from '../../utils/transaction/parseTransaction.js'
 import {
+  SuaveTxRequestTypes,
   type SuaveTxType,
-  SuaveTxTypes,
   type TransactionSerializableSuave,
   type TransactionSerializedSuave,
 } from './types.js'
@@ -28,7 +27,7 @@ const safeHexToNumber = (hex: Hex) => {
 
 export const parseSignedComputeRequest = (signedComputeRequest: Hex) => {
   const serializedType = signedComputeRequest.slice(0, 4)
-  if (serializedType !== SuaveTxTypes.ConfidentialRequest) {
+  if (serializedType !== SuaveTxRequestTypes.ConfidentialRequest) {
     throw new InvalidSerializedTransactionTypeError({
       serializedType: serializedType as Hex,
     })
@@ -105,7 +104,7 @@ export function parseTransactionSuave(
 ): ParseTransactionSuaveReturnType<SuaveTxType> {
   const serializedType = serializedTransaction.slice(0, 4)
   const parsedTx =
-    serializedType === SuaveTxTypes.ConfidentialRequest
+    serializedType === SuaveTxRequestTypes.ConfidentialRequest
       ? (parseSignedComputeRequest(
           serializedTransaction,
         ) as ParseTransactionSuaveReturnType<'0x43'>)

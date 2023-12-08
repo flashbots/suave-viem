@@ -13,13 +13,26 @@ import type {
 
 /// CUSTOM OVERRIDES ===========================================================
 
+export enum SuaveTxRequestTypes {
+  Legacy = '0x0',
+  ConfidentialRequest = '0x43',
+}
+
 export enum SuaveTxTypes {
   ConfidentialRecord = '0x42',
-  ConfidentialRequest = '0x43',
   Suave = '0x50',
 }
 
-export type SuaveTxType = '0x0' | `${SuaveTxTypes}`
+const AllSuaveTypes = {
+  ...SuaveTxRequestTypes,
+  ...SuaveTxTypes,
+}
+
+// syntactical sugar to allow inline string literals
+export type SuaveTxType =
+  `${(typeof AllSuaveTypes)[keyof typeof AllSuaveTypes]}`
+export type SuaveTxRequestType =
+  `${(typeof SuaveTxRequestTypes)[keyof typeof SuaveTxRequestTypes]}`
 
 type ConfidentialOverrides = {
   kettleAddress?: Address
@@ -144,7 +157,7 @@ export type ConfidentialComputeRecordRpc<TPending extends boolean = false> =
 export type TransactionRequestSuave<
   TQuantity = bigint,
   TIndex = number,
-  TType extends SuaveTxType = SuaveTxTypes.ConfidentialRequest | '0x0',
+  TType extends SuaveTxRequestType = SuaveTxRequestType,
 > = TransactionRequestBase<TQuantity, TIndex, TType> &
   ConfidentialComputeRequestOverrides & {
     accessList?: AccessList

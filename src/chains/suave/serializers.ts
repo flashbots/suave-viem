@@ -8,6 +8,7 @@ import {
   InvalidConfidentialRequestError,
 } from './errors/transaction.js'
 import {
+  SuaveTxRequestTypes,
   SuaveTxTypes,
   type TransactionSerializableSuave,
   type TransactionSerializedSuave,
@@ -88,8 +89,8 @@ export const serializeConfidentialComputeRecord = (
  */
 export const serializeConfidentialComputeRequest = (
   transaction: TransactionSerializableSuave,
-): TransactionSerializedSuave<SuaveTxTypes.ConfidentialRequest> => {
-  if (transaction.type !== SuaveTxTypes.ConfidentialRequest) {
+): TransactionSerializedSuave<SuaveTxRequestTypes.ConfidentialRequest> => {
+  if (transaction.type !== SuaveTxRequestTypes.ConfidentialRequest) {
     throw new InvalidSerializedTransactionTypeError({
       serializedType: transaction.type,
     })
@@ -167,9 +168,9 @@ export const serializeConfidentialComputeRequest = (
     safeHex(transaction.confidentialInputs),
   ]
   return concatHex([
-    SuaveTxTypes.ConfidentialRequest,
+    SuaveTxRequestTypes.ConfidentialRequest,
     toRlp(preSerializedTransaction),
-  ]) as TransactionSerializedSuave<SuaveTxTypes.ConfidentialRequest>
+  ]) as TransactionSerializedSuave<SuaveTxRequestTypes.ConfidentialRequest>
 }
 
 /* The following does not work. It's left here as a reminder of how it typically should be written,

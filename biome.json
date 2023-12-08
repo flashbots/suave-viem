@@ -36,7 +36,8 @@
         "noUnusedVariables": "error"
       },
       "complexity": {
-        "noForEach": "off"
+        "noForEach": "off",
+        "noBannedTypes": "off"
       },
       "performance": {
         "noDelete": "off"
@@ -50,7 +51,8 @@
         "noArrayIndexKey": "off",
         "noAssignInExpressions": "off",
         "noExplicitAny": "off",
-        "noRedeclare": "off"
+        "noRedeclare": "off",
+        "noConfusingVoidType": "off"
       }
     }
   },

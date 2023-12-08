@@ -17,6 +17,7 @@ import {
   serializeConfidentialComputeRequest,
 } from './serializers.js'
 import {
+  SuaveTxRequestTypes,
   SuaveTxTypes,
   type TransactionRequestSuave,
   type TransactionSerializableSuave,
@@ -118,7 +119,7 @@ export function getSuaveWallet<
       })
     },
     async signTransaction(txRequest: TransactionRequestSuave) {
-      if (txRequest.type === SuaveTxTypes.ConfidentialRequest) {
+      if (txRequest.type === SuaveTxRequestTypes.ConfidentialRequest) {
         const confidentialInputs = txRequest.confidentialInputs || '0x'
 
         // determine signing method based on transport type
@@ -138,7 +139,7 @@ export function getSuaveWallet<
         return serializeConfidentialComputeRequest({
           ...presignTx,
           confidentialInputs,
-          type: SuaveTxTypes.ConfidentialRequest,
+          type: SuaveTxRequestTypes.ConfidentialRequest,
           r,
           s,
           v,
