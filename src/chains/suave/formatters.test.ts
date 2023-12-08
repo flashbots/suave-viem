@@ -423,7 +423,7 @@ describe('transactionRequest', () => {
       chainId: suaveRigil.id,
       nonce: 13,
       data: '0x0',
-      type: SuaveTxTypes.ConfidentialRequest,
+      type: '0x43',
     }
     const formattedRequest = transactionRequest.format(inputRequest)
     expect(formattedRequest).toMatchInlineSnapshot(`
