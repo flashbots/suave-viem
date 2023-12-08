@@ -4,3 +4,7 @@
 [submodule "examples/suave/contracts/lib/openzeppelin-contracts"]
 	path = examples/suave/contracts/lib/openzeppelin-contracts
 	url = https://github.com/OpenZeppelin/openzeppelin-contracts
+[submodule "examples/suave/contracts/lib/suave-geth"]
+	path = examples/suave/contracts/lib/suave-geth
+	url = https://github.com/flashbots/suave-geth
+
