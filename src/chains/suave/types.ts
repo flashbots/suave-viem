@@ -11,6 +11,8 @@ import type {
   TransactionSerializableBase,
 } from '../../types/transaction.js'
 
+export type { SuaveWallet, SuaveProvider } from './wallet.js'
+
 /// CUSTOM OVERRIDES ===========================================================
 
 export enum SuaveTxRequestTypes {
