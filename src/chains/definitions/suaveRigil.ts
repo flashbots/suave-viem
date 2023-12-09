@@ -1,14 +1,15 @@
 import type { Address } from 'abitype'
-import {
-  type PublicClient,
-  createPublicClient,
-} from '../../clients/createPublicClient.js'
+import { createPublicClient } from '../../clients/createPublicClient.js'
 import type { Transport } from '../../clients/transports/createTransport.js'
 import { http } from '../../clients/transports/http.js'
 import { type Hex } from '../../types/misc.js'
 import { defineChain } from '../../utils/chain.js'
 import { formattersSuave } from '../suave/formatters.js'
-import { type SuaveWallet, getSuaveWallet } from '../suave/wallet.js'
+import {
+  type SuaveProvider,
+  type SuaveWallet,
+  getSuaveWallet,
+} from '../suave/wallet.js'
 
 const testnetUrlHttp = 'https://rpc.rigil.suave.flashbots.net'
 const testnetUrlWs = 'wss://rpc.rigil.suave.flashbots.net'
@@ -32,7 +33,7 @@ function getNewWallet<TTransport extends Transport>(params: {
 
 function getNewPublicClient<TTransport extends Transport>(
   transport?: TTransport,
-): PublicClient<TTransport, typeof suaveRigil> {
+): SuaveProvider<TTransport> {
   return createPublicClient({
     transport: transport ?? defaultTransport,
     chain: suaveRigil,
