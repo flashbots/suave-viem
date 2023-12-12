@@ -52,11 +52,13 @@ export type {
   RpcTransactionRequestSuave,
   RpcTransactionSuave,
   SuaveBlock,
+  SuaveProvider,
   SuaveBlockOverrides,
   SuaveRpcBlock,
   SuaveTransactionReceiptOverrides,
   SuaveTxRequestType,
   SuaveTxType,
+  SuaveWallet,
   TransactionReceiptSuave,
   TransactionRequestSuave,
   TransactionSerializableEIP2930,
@@ -68,3 +70,4 @@ export {
   SuaveTxTypes,
   SuaveTxRequestTypes,
 } from '../suave/types.js'
+export type {} from '../suave/wallet.js'
