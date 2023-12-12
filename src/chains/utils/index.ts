@@ -45,6 +45,7 @@ export type {
 } from '../optimism/types.js'
 
 export { formattersSuave } from '../suave/formatters.js'
+export { getSuaveProvider, getSuaveWallet } from '../suave/wallet.js'
 export type {
   ConfidentialComputeRecord,
   ConfidentialComputeRecordRpc,

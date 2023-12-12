@@ -1,8 +1,10 @@
 import { sleep } from 'bun'
-import { http, Address, Hex, createPublicClient, formatEther, HttpTransport } from 'viem'
+import { http, Address, Hex, createPublicClient, formatEther } from 'viem'
 import { goerli, suaveRigil } from 'viem/chains'
-import { SuaveProvider, SuaveWallet, TransactionRequestSuave } from 'viem/chains/suave/types'
+import { TransactionRequestSuave } from 'viem/chains/suave/types'
 import { MevShareBid } from 'bids'
+import { SuaveProvider, SuaveWallet, getSuaveProvider, getSuaveWallet } from 'viem/chains/utils'
+import { HttpTransport } from 'viem'
 
 const failEnv = (name: string) => {
   throw new Error(`missing env var ${name}`)
@@ -26,16 +28,16 @@ const SUAVE_RPC_URL_HTTP: string =
 const GOERLI_RPC_URL_HTTP: string =
   process.env.GOERLI_RPC_URL_HTTP || 'http://localhost:8545'
 
-const suaveProvider: SuaveProvider<HttpTransport> = suaveRigil.newPublicClient(http(SUAVE_RPC_URL_HTTP))
+const suaveProvider: SuaveProvider<HttpTransport> = getSuaveProvider(http(SUAVE_RPC_URL_HTTP))
 const goerliProvider = createPublicClient({
   chain: goerli,
   transport: http(GOERLI_RPC_URL_HTTP),
 })
-const adminWallet: SuaveWallet<HttpTransport> = suaveRigil.newWallet({
+const adminWallet: SuaveWallet<HttpTransport> = getSuaveWallet({
   transport: http(SUAVE_RPC_URL_HTTP),
   privateKey: PRIVATE_KEY, 
 })
-const wallet: SuaveWallet<HttpTransport> = suaveRigil.newWallet({
+const wallet = getSuaveWallet({
   transport: http(SUAVE_RPC_URL_HTTP),
   privateKey: '0x01000070530220062104600650003002001814120800043ff33603df10300012',
 })
