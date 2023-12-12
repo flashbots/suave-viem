@@ -1,10 +1,11 @@
 import { sleep } from 'bun'
-import { http, Address, Hex, createPublicClient, formatEther } from 'viem'
+import { http, Address, Hex, createPublicClient, formatEther, isHex } from 'viem'
 import { goerli, suaveRigil } from 'viem/chains'
 import { TransactionRequestSuave } from 'viem/chains/suave/types'
 import { MevShareBid } from 'bids'
 import { SuaveProvider, SuaveWallet, getSuaveProvider, getSuaveWallet } from 'viem/chains/utils'
 import { HttpTransport } from 'viem'
+import BidContractDeployment from './deployedAddress.json'
 
 const failEnv = (name: string) => {
   throw new Error(`missing env var ${name}`)
@@ -87,13 +88,17 @@ const fundAccount = async (wallet: Address, amount: bigint) => {
  * See the [README](./README.md) for instructions.
  */
 async function testSuaveBids() {
-  const BID_CONTRACT_ADDRESS = process.env.BID_CONTRACT_ADDRESS as Hex
-  if (!BID_CONTRACT_ADDRESS) {
+  if (!BidContractDeployment.address) {
     console.error(
       'Need to run the DeployContracts script first. See ./README.md for instructions.',
     )
     failEnv('BID_CONTRACT_ADDRESS')
   }
+  if (!isHex(BidContractDeployment.address)) {
+    console.error('BID_CONTRACT_ADDRESS is not a hex string')
+    failEnv('BID_CONTRACT_ADDRESS')
+  }
+  const BID_CONTRACT_ADDRESS = BidContractDeployment.address as Hex
 
   // fund our test wallet w/ 1 ETH
   const fundRes = await fundAccount(
