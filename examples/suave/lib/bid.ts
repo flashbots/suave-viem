@@ -65,7 +65,7 @@ export class MevShareBid {
     return {
       to: this.mevShareContract,
       data: this.newBidCalldata(),
-      type: SuaveTxTypes.ConfidentialRequest,
+      type: '0x43',
       gas: 500000n,
       gasPrice: 1000000000n,
       chainId: this.chainId,

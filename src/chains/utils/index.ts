@@ -43,3 +43,31 @@ export type {
   OptimismTransactionReceipt,
   OptimismTransactionReceiptOverrides,
 } from '../optimism/types.js'
+
+export { formattersSuave } from '../suave/formatters.js'
+export type {
+  ConfidentialComputeRecord,
+  ConfidentialComputeRecordRpc,
+  RpcTransactionReceiptSuave,
+  RpcTransactionRequestSuave,
+  RpcTransactionSuave,
+  SuaveBlock,
+  SuaveProvider,
+  SuaveBlockOverrides,
+  SuaveRpcBlock,
+  SuaveTransactionReceiptOverrides,
+  SuaveTxRequestType,
+  SuaveTxType,
+  SuaveWallet,
+  TransactionReceiptSuave,
+  TransactionRequestSuave,
+  TransactionSerializableEIP2930,
+  TransactionSerializableSuave,
+  TransactionSerializedSuave,
+  TransactionSuave,
+} from '../suave/types.js'
+export {
+  SuaveTxTypes,
+  SuaveTxRequestTypes,
+} from '../suave/types.js'
+export type {} from '../suave/wallet.js'

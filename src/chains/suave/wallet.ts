@@ -1,9 +1,9 @@
 import { privateKeyToAccount } from '../../accounts/privateKeyToAccount.js'
 import { sign } from '../../accounts/utils/sign.js'
 import {
-  type Chain,
   type JsonRpcAccount,
   type PrivateKeyAccount,
+  type PublicClient,
   type Transport,
   type WalletClient,
   createWalletClient,
@@ -17,11 +17,25 @@ import {
   serializeConfidentialComputeRequest,
 } from './serializers.js'
 import {
+  SuaveTxRequestTypes,
   SuaveTxTypes,
   type TransactionRequestSuave,
   type TransactionSerializableSuave,
 } from './types.js'
 
+/// client types
+export type SuaveWallet<TTransport extends Transport> = WalletClient<
+  TTransport,
+  typeof suaveRigil,
+  PrivateKeyAccount | JsonRpcAccount
+>
+
+export type SuaveProvider<TTransport extends Transport> = PublicClient<
+  TTransport,
+  typeof suaveRigil
+>
+
+/// helper functions
 function formatSignature(signature: {
   r: Hex
   s: Hex
@@ -74,29 +88,23 @@ function getSigningMethod(transport: any, privateKey?: Hex, address?: Hex) {
   }
 }
 
-export function getSuaveWallet<
-  TTransport extends Transport,
-  TChain extends Chain,
->(params: {
+/** Get a SUAVE-enabled viem wallet. */
+export function getSuaveWallet<TTransport extends Transport>(params: {
   transport: TTransport
-  chain: TChain
   jsonRpcAccount?: JsonRpcAccount
   privateKey?: Hex
-}): WalletClient<
-  TTransport,
-  TChain,
-  PrivateKeyAccount // TODO: generalize account types (required to make metamask transport work)
-> {
+}): SuaveWallet<TTransport> {
   if (!params.jsonRpcAccount && !params.privateKey) {
     throw new Error("Must provide either 'jsonRpcAccount' or 'privateKey'")
   }
   if (params.jsonRpcAccount && params.privateKey) {
     throw new Error("Cannot provide both 'jsonRpcAccount' and 'privateKey'")
   }
+  // Overrides viem wallet methods with SUAVE equivalents.
   return createWalletClient({
     account: params.jsonRpcAccount ?? privateKeyToAccount(params.privateKey!),
     transport: params.transport,
-    chain: params.chain,
+    chain: suaveRigil,
   }).extend((client) => ({
     async sendTransaction(txRequest: TransactionRequestSuave) {
       const preparedTx = await client.prepareTransactionRequest(
@@ -118,7 +126,7 @@ export function getSuaveWallet<
       })
     },
     async signTransaction(txRequest: TransactionRequestSuave) {
-      if (txRequest.type === SuaveTxTypes.ConfidentialRequest) {
+      if (txRequest.type === SuaveTxRequestTypes.ConfidentialRequest) {
         const confidentialInputs = txRequest.confidentialInputs || '0x'
 
         // determine signing method based on transport type
@@ -138,7 +146,7 @@ export function getSuaveWallet<
         return serializeConfidentialComputeRequest({
           ...presignTx,
           confidentialInputs,
-          type: SuaveTxTypes.ConfidentialRequest,
+          type: SuaveTxRequestTypes.ConfidentialRequest,
           r,
           s,
           v,
