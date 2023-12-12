@@ -31,9 +31,10 @@ const AllSuaveTypes = {
 }
 
 // syntactical sugar to allow inline string literals
-export type SuaveTxType = `${typeof AllSuaveTypes[keyof typeof AllSuaveTypes]}`
+export type SuaveTxType =
+  `${(typeof AllSuaveTypes)[keyof typeof AllSuaveTypes]}`
 export type SuaveTxRequestType =
-  `${typeof SuaveTxRequestTypes[keyof typeof SuaveTxRequestTypes]}`
+  `${(typeof SuaveTxRequestTypes)[keyof typeof SuaveTxRequestTypes]}`
 
 type ConfidentialOverrides = {
   kettleAddress?: Address

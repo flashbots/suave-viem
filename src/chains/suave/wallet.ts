@@ -89,7 +89,7 @@ function getSigningMethod(transport: any, privateKey?: Hex, address?: Hex) {
 }
 
 /** Get a SUAVE-enabled viem wallet. */
-export function getSuaveWallet<TTransport extends Transport,>(params: {
+export function getSuaveWallet<TTransport extends Transport>(params: {
   transport: TTransport
   jsonRpcAccount?: JsonRpcAccount
   privateKey?: Hex

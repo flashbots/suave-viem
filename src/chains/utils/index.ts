@@ -70,4 +70,3 @@ export {
   SuaveTxTypes,
   SuaveTxRequestTypes,
 } from '../suave/types.js'
-export type {} from '../suave/wallet.js'
