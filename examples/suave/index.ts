@@ -3,6 +3,8 @@ import { http, Address, Hex, createPublicClient, formatEther } from 'viem'
 import { goerli, suaveRigil } from 'viem/chains'
 import { TransactionRequestSuave } from 'viem/chains/suave/types'
 import { MevShareBid } from 'bids'
+import { SuaveProvider, SuaveWallet, getSuaveProvider, getSuaveWallet } from 'viem/chains/utils'
+import { HttpTransport } from 'viem'
 
 const failEnv = (name: string) => {
   throw new Error(`missing env var ${name}`)
@@ -26,16 +28,16 @@ const SUAVE_RPC_URL_HTTP: string =
 const GOERLI_RPC_URL_HTTP: string =
   process.env.GOERLI_RPC_URL_HTTP || 'http://localhost:8545'
 
-const suaveProvider = suaveRigil.newPublicClient(http(SUAVE_RPC_URL_HTTP))
+const suaveProvider: SuaveProvider<HttpTransport> = getSuaveProvider(http(SUAVE_RPC_URL_HTTP))
 const goerliProvider = createPublicClient({
   chain: goerli,
   transport: http(GOERLI_RPC_URL_HTTP),
 })
-const adminWallet = suaveRigil.newWallet({
+const adminWallet: SuaveWallet<HttpTransport> = getSuaveWallet({
   transport: http(SUAVE_RPC_URL_HTTP),
   privateKey: PRIVATE_KEY, 
 })
-const wallet = suaveRigil.newWallet({
+const wallet = getSuaveWallet({
   transport: http(SUAVE_RPC_URL_HTTP),
   privateKey: '0x01000070530220062104600650003002001814120800043ff33603df10300012',
 })
@@ -107,7 +109,7 @@ async function testSuaveBids() {
     gas: 26000n,
     gasPrice: 10000000000n,
     chainId: 5,
-    type: '0x0' as '0x0',
+    type: '0x0' as const,
   }
   const signedTx = await wallet.signTransaction(testTx)
 
@@ -132,6 +134,10 @@ async function testSuaveBids() {
     return receipt
   })
   console.log('ccrReceipt', ccrReceipt)
+
+  // get tx too
+  const ccrTx = await suaveProvider.getTransaction({ hash: ccrRes })
+  console.log('ccrTx', ccrTx)
 }
 
 async function main() {

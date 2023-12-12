@@ -1,11 +1,14 @@
 import { privateKeyToAccount } from '../../accounts/privateKeyToAccount.js'
 import { sign } from '../../accounts/utils/sign.js'
 import {
-  type Chain,
+  http,
   type JsonRpcAccount,
   type PrivateKeyAccount,
+  type PublicClient,
   type Transport,
+  type TransportConfig,
   type WalletClient,
+  createPublicClient,
   createWalletClient,
   hexToSignature,
   keccak256,
@@ -23,6 +26,19 @@ import {
   type TransactionSerializableSuave,
 } from './types.js'
 
+/// client types
+export type SuaveWallet<TTransport extends Transport> = WalletClient<
+  TTransport,
+  typeof suaveRigil,
+  PrivateKeyAccount | JsonRpcAccount
+>
+
+export type SuaveProvider<TTransport extends Transport> = PublicClient<
+  TTransport,
+  typeof suaveRigil
+>
+
+/// helper functions
 function formatSignature(signature: {
   r: Hex
   s: Hex
@@ -52,10 +68,17 @@ async function signConfidentialComputeRecord(
   }
 }
 
-function getSigningMethod(transport: any, privateKey?: Hex, address?: Hex) {
+function getSigningMethod<TTransport extends TransportConfig>(
+  transport: TTransport,
+  privateKey?: Hex,
+  address?: Hex,
+) {
   if (transport.type === 'custom') {
+    if (!address) {
+      throw new Error("param 'address' is required for custom transports")
+    }
     return async (txRequest: TransactionSerializableSuave) => {
-      const rawSignature = await transport.request({
+      const rawSignature: Hex = await transport.request({
         method: 'eth_sign',
         params: [
           address,
@@ -75,34 +98,69 @@ function getSigningMethod(transport: any, privateKey?: Hex, address?: Hex) {
   }
 }
 
-export function getSuaveWallet<
-  TTransport extends Transport,
-  TChain extends Chain,
->(params: {
+/** Get a SUAVE-enabled viem wallet.
+ *
+ * @example
+ * import { http } from 'viem'
+ * import { getSuaveWallet } from 'viem/chains/utils'
+ * const wallet = getSuaveWallet({
+ *  transport: http('http://localhost:8545'),
+ *  privateKey: '0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80',
+ * })
+ *
+ * @example
+ * // using window.ethereum
+ * import { custom } from 'viem'
+ * import { getSuaveWallet } from 'viem/chains/utils'
+ * async function main() {
+ *   const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' })
+ *   const account = accounts[0]
+ *   const wallet = getSuaveWallet({
+ *     transport: custom(window.ethereum),
+ *     jsonRpcAccount: account,
+ *   })
+ * }
+ * main()
+ */
+export function getSuaveWallet<TTransport extends Transport>(params: {
+  transport?: TTransport
+  jsonRpcAccount?: Hex
+  privateKey?: Hex
+}): SuaveWallet<TTransport> {
+  return newSuaveWallet({
+    transport: params.transport ?? http(suaveRigil.rpcUrls.public.http[0]),
+    privateKey: params.privateKey,
+    jsonRpcAccount: params.jsonRpcAccount && {
+      address: params.jsonRpcAccount,
+      type: 'json-rpc',
+    },
+  })
+}
+
+/** Get a SUAVE-enabled viem wallet. */
+function newSuaveWallet<TTransport extends Transport>(params: {
   transport: TTransport
-  chain: TChain
   jsonRpcAccount?: JsonRpcAccount
   privateKey?: Hex
-}): WalletClient<
-  TTransport,
-  TChain,
-  PrivateKeyAccount // TODO: generalize account types (required to make metamask transport work)
-> {
+}): SuaveWallet<TTransport> {
   if (!params.jsonRpcAccount && !params.privateKey) {
     throw new Error("Must provide either 'jsonRpcAccount' or 'privateKey'")
   }
   if (params.jsonRpcAccount && params.privateKey) {
     throw new Error("Cannot provide both 'jsonRpcAccount' and 'privateKey'")
   }
+  // Overrides viem wallet methods with SUAVE equivalents.
+  const privateKeyAccount = params.privateKey
+    ? privateKeyToAccount(params.privateKey)
+    : undefined
+  const account = params.jsonRpcAccount ?? privateKeyAccount
   return createWalletClient({
-    account: params.jsonRpcAccount ?? privateKeyToAccount(params.privateKey!),
+    account,
     transport: params.transport,
-    chain: params.chain,
+    chain: suaveRigil,
   }).extend((client) => ({
     async sendTransaction(txRequest: TransactionRequestSuave) {
-      const preparedTx = await client.prepareTransactionRequest(
-        txRequest as any,
-      )
+      const preparedTx = await client.prepareTransactionRequest(txRequest)
       const payload: TransactionRequestSuave = {
         ...txRequest,
         from: preparedTx.from,
@@ -145,8 +203,28 @@ export function getSuaveWallet<
           v,
         })
       } else {
-        return await client.account.signTransaction(txRequest as any)
+        return await client.account.signTransaction(txRequest)
       }
     },
   }))
+}
+
+/** Creates a new SUAVE Public Client instance.
+ * @example
+ * import { http } from 'viem'
+ * import { getSuaveProvider } from 'viem/chains/utils'
+ * const client = getSuaveProvider(http('http://localhost:8545'))
+ * @example
+ * // using window.ethereum
+ * import { custom } from 'viem'
+ * import { getSuaveProvider } from 'viem/chains/utils'
+ * const client = getSuaveProvider(custom(window.ethereum))
+ */
+export function getSuaveProvider<TTransport extends Transport>(
+  transport?: TTransport,
+): SuaveProvider<TTransport> {
+  return createPublicClient({
+    transport: transport ?? http(suaveRigil.rpcUrls.public.http[0]),
+    chain: suaveRigil,
+  })
 }

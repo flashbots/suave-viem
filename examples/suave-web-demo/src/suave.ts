@@ -2,6 +2,7 @@ import { Address, Hex, createPublicClient, createWalletClient, http } from 'viem
 import { privateKeyToAccount } from 'viem/accounts'
 import { suaveRigil, goerli } from "viem/chains"
 import { MevShareBid } from "../../suave/bids"
+import { getSuaveWallet } from 'viem/chains/utils'
 
 // TODO: get this from .env
 // TODO: make zero-config script to generate .env (deploy contracts)
@@ -19,7 +20,7 @@ const goerliProvider = createPublicClient({
     transport: http(GOERLI_RPC_URL_HTTP),
     chain: goerli
 })
-const suaveAdminWallet = suaveRigil.newWallet({
+const suaveAdminWallet = getSuaveWallet({
     privateKey: ADMIN_KEY,
     transport: http("http://localhost:8545"),
 })
