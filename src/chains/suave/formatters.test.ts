@@ -434,7 +434,6 @@ describe('transactionRequest', () => {
         "from": "0x0000000000000000000000000000000000000000",
         "gas": "0x1",
         "gasPrice": "0x10000000",
-        "isConfidential": true,
         "kettleAddress": "0x0000000000000000000000000000000000000000",
         "maxFeePerGas": undefined,
         "maxPriorityFeePerGas": undefined,
