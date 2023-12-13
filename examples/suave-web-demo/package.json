@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "compile": "cd ../suave/contracts && forge install && forge build"
   },
   "dependencies": {
     "viem": "workspace:*"
