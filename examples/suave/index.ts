@@ -1,8 +1,11 @@
 import { sleep } from 'bun'
-import { http, Address, Hex, createPublicClient, formatEther } from 'viem'
+import { http, Address, Hex, createPublicClient, formatEther, isHex } from 'viem'
 import { goerli, suaveRigil } from 'viem/chains'
 import { TransactionRequestSuave } from 'viem/chains/suave/types'
 import { MevShareBid } from 'bids'
+import { SuaveProvider, SuaveWallet, getSuaveProvider, getSuaveWallet } from 'viem/chains/utils'
+import { HttpTransport } from 'viem'
+import BidContractDeployment from './deployedAddress.json'
 
 const failEnv = (name: string) => {
   throw new Error(`missing env var ${name}`)
@@ -26,16 +29,16 @@ const SUAVE_RPC_URL_HTTP: string =
 const GOERLI_RPC_URL_HTTP: string =
   process.env.GOERLI_RPC_URL_HTTP || 'http://localhost:8545'
 
-const suaveProvider = suaveRigil.newPublicClient(http(SUAVE_RPC_URL_HTTP))
+const suaveProvider: SuaveProvider<HttpTransport> = getSuaveProvider(http(SUAVE_RPC_URL_HTTP))
 const goerliProvider = createPublicClient({
   chain: goerli,
   transport: http(GOERLI_RPC_URL_HTTP),
 })
-const adminWallet = suaveRigil.newWallet({
+const adminWallet: SuaveWallet<HttpTransport> = getSuaveWallet({
   transport: http(SUAVE_RPC_URL_HTTP),
   privateKey: PRIVATE_KEY, 
 })
-const wallet = suaveRigil.newWallet({
+const wallet = getSuaveWallet({
   transport: http(SUAVE_RPC_URL_HTTP),
   privateKey: '0x01000070530220062104600650003002001814120800043ff33603df10300012',
 })
@@ -85,13 +88,17 @@ const fundAccount = async (wallet: Address, amount: bigint) => {
  * See the [README](./README.md) for instructions.
  */
 async function testSuaveBids() {
-  const BID_CONTRACT_ADDRESS = process.env.BID_CONTRACT_ADDRESS as Hex
-  if (!BID_CONTRACT_ADDRESS) {
+  if (!BidContractDeployment.address) {
     console.error(
       'Need to run the DeployContracts script first. See ./README.md for instructions.',
     )
     failEnv('BID_CONTRACT_ADDRESS')
   }
+  if (!isHex(BidContractDeployment.address)) {
+    console.error('BID_CONTRACT_ADDRESS is not a hex string')
+    failEnv('BID_CONTRACT_ADDRESS')
+  }
+  const BID_CONTRACT_ADDRESS = BidContractDeployment.address as Hex
 
   // fund our test wallet w/ 1 ETH
   const fundRes = await fundAccount(
@@ -107,7 +114,7 @@ async function testSuaveBids() {
     gas: 26000n,
     gasPrice: 10000000000n,
     chainId: 5,
-    type: '0x0' as '0x0',
+    type: '0x0' as const,
   }
   const signedTx = await wallet.signTransaction(testTx)
 
@@ -132,6 +139,10 @@ async function testSuaveBids() {
     return receipt
   })
   console.log('ccrReceipt', ccrReceipt)
+
+  // get tx too
+  const ccrTx = await suaveProvider.getTransaction({ hash: ccrRes })
+  console.log('ccrTx', ccrTx)
 }
 
 async function main() {

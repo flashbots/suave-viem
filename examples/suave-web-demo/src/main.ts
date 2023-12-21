@@ -5,6 +5,7 @@ import flashbotsLogo from './flashbots_icon.svg'
 import { setupConnectButton, setupDripFaucetButton, setupSendBidButton } from './suave'
 import { Logo } from './components'
 import { custom, formatEther } from 'viem'
+import { getSuaveWallet, getSuaveProvider } from 'viem/chains/utils'
 import { suaveRigil } from 'viem/chains'
 
 document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
@@ -35,10 +36,15 @@ setupConnectButton(document.querySelector<HTMLButtonElement>('#connect')!,
     console.error(err)
     alert(err.message)
   }
-  const suaveWallet = suaveRigil.newWallet({jsonRpcAccount: account, transport: custom(ethereum)})
+  const suaveWallet = getSuaveWallet({jsonRpcAccount: account, transport: custom(ethereum)})
   console.log(suaveWallet)
-  const suaveProvider = suaveRigil.newPublicClient(custom(ethereum))
+  const suaveProvider = getSuaveProvider(custom(ethereum))
   suaveProvider.getBalance({ address: account }).then((balance) => {
+    suaveProvider.getChainId().then((chainId) => {
+      if (chainId !== suaveRigil.id) {
+        alert(`wrong chain id. expected ${suaveRigil.id}, got ${chainId}`)
+      }
+    })
     document.querySelector<HTMLDivElement>('#status-content')!.innerHTML = `
       <div>
         <p>SUAVE-ETH balance: ${formatEther(balance)}</p>
@@ -52,7 +58,7 @@ setupConnectButton(document.querySelector<HTMLButtonElement>('#connect')!,
       console.error("error in setupSendBidButton", err)
       alert(err.message + (err as any).data)
     }
-    const suaveProvider = suaveRigil.newPublicClient(custom(ethereum))
+    const suaveProvider = getSuaveProvider(custom(ethereum))
     suaveProvider.getTransactionReceipt({hash: txHash}).then((receipt) => {
       console.log("receipt", receipt)
       document.querySelector<HTMLDivElement>('#status-content')!.innerHTML = `
@@ -84,6 +90,6 @@ ${JSON.stringify(receipt, (_, value) =>
         console.error("error in setupDripFaucetButton", err)
         alert(err.message + (err as any).data)
       }
-      console.log("funded account", txHash)
+      console.log("funded account. txhash:", txHash)
   })
 })

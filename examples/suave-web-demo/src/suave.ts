@@ -2,13 +2,14 @@ import { Address, Hex, createPublicClient, createWalletClient, http } from 'viem
 import { privateKeyToAccount } from 'viem/accounts'
 import { suaveRigil, goerli } from "viem/chains"
 import { MevShareBid } from "../../suave/bids"
+import { getSuaveWallet } from 'viem/chains/utils'
+import BidContractDeployment from '../../suave/deployedAddress.json'
 
-// TODO: get this from .env
-// TODO: make zero-config script to generate .env (deploy contracts)
+// defaults for local suave-geth devnet:
 const KETTLE_ADDRESS: Address = "0xb5feafbdd752ad52afb7e1bd2e40432a485bbb7f"
-const BID_CONTRACT: Address = "0xcb632cC0F166712f09107a7587485f980e524fF6"
-const GOERLI_RPC_URL_HTTP: string = "https://ethereum-goerli.publicnode.com"
 const ADMIN_KEY: Hex = "0x91ab9a7e53c220e6210460b65a7a3bb2ca181412a8a7b43ff336b3df1737ce12"
+// public goerli node, may need to change if it goes down:
+const GOERLI_RPC_URL_HTTP: string = "https://ethereum-goerli.publicnode.com"
 
 const goerliWallet = createWalletClient({
     account: privateKeyToAccount("0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80"),
@@ -19,7 +20,7 @@ const goerliProvider = createPublicClient({
     transport: http(GOERLI_RPC_URL_HTTP),
     chain: goerli
 })
-const suaveAdminWallet = suaveRigil.newWallet({
+const suaveAdminWallet = getSuaveWallet({
     privateKey: ADMIN_KEY,
     transport: http("http://localhost:8545"),
 })
@@ -71,7 +72,7 @@ export function setupSendBidButton(element: HTMLButtonElement, suaveWallet: any,
                 1n + await goerliProvider.getBlockNumber(),
                 signedTx,
                 KETTLE_ADDRESS,
-                BID_CONTRACT,
+                BidContractDeployment.address as Address,
                 suaveRigil.id
             )
             console.log(bid)
