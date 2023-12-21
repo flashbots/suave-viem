@@ -5,7 +5,7 @@ import {
   encodeFunctionData,
   toHex,
 } from 'viem'
-import { suaveRigil } from 'viem/chains'
+import { suaveRigil } from '../../../src/chains'
 import { SuaveTxTypes, TransactionRequestSuave } from '../../../src/chains/suave/types'
 import MevShareContract from '../contracts/out/bids.sol/MevShareContract.json'
 
