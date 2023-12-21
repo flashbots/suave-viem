@@ -2,10 +2,10 @@ import { sleep } from 'bun'
 import { http, Address, Hex, createPublicClient, formatEther, isHex } from 'viem'
 import { goerli, suaveRigil } from 'viem/chains'
 import { TransactionRequestSuave } from 'viem/chains/suave/types'
-import { MevShareBid } from 'bids'
+import { MevShareRecord } from 'bundles'
 import { SuaveProvider, SuaveWallet, getSuaveProvider, getSuaveWallet } from 'viem/chains/utils'
 import { HttpTransport } from 'viem'
-import BidContractDeployment from './deployedAddress.json'
+import MevShareContract from './deployedAddress.json'
 
 const failEnv = (name: string) => {
   throw new Error(`missing env var ${name}`)
@@ -88,17 +88,17 @@ const fundAccount = async (wallet: Address, amount: bigint) => {
  * See the [README](./README.md) for instructions.
  */
 async function testSuaveBids() {
-  if (!BidContractDeployment.address) {
+  if (!MevShareContract.address) {
     console.error(
       'Need to run the DeployContracts script first. See ./README.md for instructions.',
     )
-    failEnv('BID_CONTRACT_ADDRESS')
+    failEnv('MEV_SHARE_CONTRACT_ADDRESS')
   }
-  if (!isHex(BidContractDeployment.address)) {
-    console.error('BID_CONTRACT_ADDRESS is not a hex string')
-    failEnv('BID_CONTRACT_ADDRESS')
+  if (!isHex(MevShareContract.address)) {
+    console.error('MEV_SHARE_CONTRACT_ADDRESS is not a hex string')
+    failEnv('MEV_SHARE_CONTRACT_ADDRESS')
   }
-  const BID_CONTRACT_ADDRESS = BidContractDeployment.address as Hex
+  const MEV_SHARE_CONTRACT_ADDRESS = MevShareContract.address as Hex
 
   // fund our test wallet w/ 1 ETH
   const fundRes = await fundAccount(
@@ -118,16 +118,16 @@ async function testSuaveBids() {
   }
   const signedTx = await wallet.signTransaction(testTx)
 
-  // create bid & send ccr
+  // create data record & send ccr
   const block = await goerliProvider.getBlockNumber()
-  const bid = new MevShareBid(
+  const dataRecord = new MevShareRecord(
     block + 1n,
     signedTx,
     KETTLE_ADDRESS,
-    BID_CONTRACT_ADDRESS,
+    MEV_SHARE_CONTRACT_ADDRESS,
     suaveRigil.id,
   )
-  const ccr = bid.toConfidentialRequest()
+  const ccr = dataRecord.toConfidentialRequest()
   const ccrRes = await wallet.sendTransaction(ccr)
   console.log('ccrRes', ccrRes)
 

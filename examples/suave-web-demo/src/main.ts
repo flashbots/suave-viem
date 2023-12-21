@@ -2,7 +2,7 @@ import './style.css'
 import viteLogo from '/vite.svg'
 import typescriptLogo from './typescript.svg'
 import flashbotsLogo from './flashbots_icon.svg'
-import { setupConnectButton, setupDripFaucetButton, setupSendBidButton } from './suave'
+import { setupConnectButton, setupDripFaucetButton, setupSendDataRecordButton } from './suave'
 import { Logo } from './components'
 import { custom, formatEther } from 'viem'
 import { getSuaveWallet, getSuaveProvider } from 'viem/chains/utils'
@@ -53,9 +53,9 @@ setupConnectButton(document.querySelector<HTMLButtonElement>('#connect')!,
   })
 
   // setup other buttons once we've connected
-  setupSendBidButton(document.querySelector<HTMLButtonElement>('#sendBid')!, suaveWallet, (txHash, err) => {
+  setupSendDataRecordButton(document.querySelector<HTMLButtonElement>('#sendBid')!, suaveWallet, (txHash, err) => {
     if (err) {
-      console.error("error in setupSendBidButton", err)
+      console.error("error in setupSendDataRecordButton", err)
       alert(err.message + (err as any).data)
     }
     const suaveProvider = getSuaveProvider(custom(ethereum))

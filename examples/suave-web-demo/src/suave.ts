@@ -1,9 +1,9 @@
 import { Address, Hex, createPublicClient, createWalletClient, http } from 'viem'
 import { privateKeyToAccount } from 'viem/accounts'
 import { suaveRigil, goerli } from "viem/chains"
-import { MevShareBid } from "../../suave/bids"
+import { MevShareRecord } from "../../suave/bundles"
 import { getSuaveWallet } from 'viem/chains/utils'
-import BidContractDeployment from '../../suave/deployedAddress.json'
+import MevShareContract from '../../suave/deployedAddress.json'
 
 // defaults for local suave-geth devnet:
 const KETTLE_ADDRESS: Address = "0xb5feafbdd752ad52afb7e1bd2e40432a485bbb7f"
@@ -49,9 +49,9 @@ export function setupConnectButton(element: HTMLButtonElement, onConnect: (accou
     }
 }
 
-export function setupSendBidButton(element: HTMLButtonElement, suaveWallet: any, onSendBid: (txHash: Hex, err?: any) => void) {
-    element.innerHTML = `send bid`
-    const sendBid = async (suaveWallet: any) => {
+export function setupSendDataRecordButton(element: HTMLButtonElement, suaveWallet: any, onSendDataRecord: (txHash: Hex, err?: any) => void) {
+    element.innerHTML = `send data`
+    const sendDataRecord = async (suaveWallet: any) => {
         // create sample transaction; won't land onchain, but will pass payload validation
         const sampleTx = {
             type: "eip1559" as 'eip1559',
@@ -66,26 +66,26 @@ export function setupSendBidButton(element: HTMLButtonElement, suaveWallet: any,
         const signedTx = await goerliWallet.signTransaction(sampleTx)
         console.log("signed goerli tx", signedTx)
 
-        // create bid & send ccr
+        // create data record & send ccr
         try {
-            const bid = new MevShareBid(
+            const dataRecord = new MevShareRecord(
                 1n + await goerliProvider.getBlockNumber(),
                 signedTx,
                 KETTLE_ADDRESS,
-                BidContractDeployment.address as Address,
+                MevShareContract.address as Address,
                 suaveRigil.id
             )
-            console.log(bid)
-            const ccr = bid.toConfidentialRequest()
+            console.log(dataRecord)
+            const ccr = dataRecord.toConfidentialRequest()
             const txHash = await suaveWallet.sendTransaction(ccr)
             console.log("sendResult", txHash)
             // callback with result
-            onSendBid(txHash)
+            onSendDataRecord(txHash)
         } catch (e) {
-            return onSendBid('0x', e)
+            return onSendDataRecord('0x', e)
         }
     }
-    element.addEventListener('click', () => sendBid(suaveWallet))
+    element.addEventListener('click', () => sendDataRecord(suaveWallet))
 }
 
 export function setupDripFaucetButton(element: HTMLButtonElement, account: Address, onFaucet: (txHash: Hex, err?: any) => void) {

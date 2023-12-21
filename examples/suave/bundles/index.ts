@@ -7,9 +7,9 @@ import {
 } from 'viem'
 import { suaveRigil } from '../../../src/chains'
 import { SuaveTxTypes, TransactionRequestSuave } from '../../../src/chains/suave/types'
-import MevShareBidContract from '../contracts/out/bids.sol/MevShareBidContract.json'
+import MevShareContract from '../contracts/out/bids.sol/MevShareContract.json'
 
-export interface MevShareBid {
+export interface MevShareRecord {
   allowedPeekers: Address[]
   allowedStores: Address[]
   blockNumber: bigint
@@ -19,8 +19,8 @@ export interface MevShareBid {
   chainId: number
 }
 
-/** Helper class to create MEV-Share bids on SUAVE. */
-export class MevShareBid {
+/** Helper class to create MEV-Share data records on SUAVE. */
+export class MevShareRecord {
   constructor(
     blockNumber: bigint,
     signedTx: Hex,
@@ -40,10 +40,10 @@ export class MevShareBid {
     this.allowedStores = []
   }
 
-  /** Encodes calldata to call the `newBid` function. */
-  private newBidCalldata() {
+  /** Encodes calldata to call the `newTransaction` function. */
+  private newCalldata() {
     return encodeFunctionData({
-      abi: MevShareBidContract.abi,
+      abi: MevShareContract.abi,
       functionName: 'newBid',
       args: [this.blockNumber, this.allowedPeekers, this.allowedStores],
     })
@@ -64,7 +64,7 @@ export class MevShareBid {
   toConfidentialRequest(): TransactionRequestSuave {
     return {
       to: this.mevShareContract,
-      data: this.newBidCalldata(),
+      data: this.newCalldata(),
       type: '0x43',
       gas: 500000n,
       gasPrice: 1000000000n,
