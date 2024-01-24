@@ -1,5 +1,5 @@
 {
-  "name": "suave-viem",
+  "name": "@flashbots/suave-viem",
   "description": "TypeScript Interface for Ethereum & SUAVE Chain",
   "version": "1.14.0",
   "type": "module",
