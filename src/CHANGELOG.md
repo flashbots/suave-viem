@@ -1,5 +1,11 @@
 # viem
 
+## 1.14.1
+
+### Patch Changes
+
+- [#24](https://github.com/flashbots/suave-viem/pull/24) [`0ca4cb3443468d9c1ee91a6f9a94c9427870be12`](https://github.com/flashbots/suave-viem/commit/0ca4cb3443468d9c1ee91a6f9a94c9427870be12) Thanks [@zeroXbrock](https://github.com/zeroXbrock)! - release via changeset
+
 ## 1.14.0
 
 ### Minor Changes
