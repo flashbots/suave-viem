@@ -5,47 +5,39 @@ import {
   encodeFunctionData,
   toHex,
 } from 'viem'
-import { suaveRigil } from '../../../src/chains'
-import { SuaveTxTypes, TransactionRequestSuave } from '../../../src/chains/suave/types'
-import MevShareBidContract from '../contracts/out/bids.sol/MevShareBidContract.json'
+import { TransactionRequestSuave } from '../../../src/chains/suave/types'
+import OFAContract from '../contracts/out/OFA.sol/OFAPrivate.json'
 
-export interface MevShareBid {
-  allowedPeekers: Address[]
-  allowedStores: Address[]
+export interface OFAOrder {
   blockNumber: bigint
   signedTx: Hex
-  mevShareContract: Address
+  OFAContract: Address
   kettle: Address
   chainId: number
 }
 
 /** Helper class to create MEV-Share bids on SUAVE. */
-export class MevShareBid {
+export class OFAOrder {
   constructor(
     blockNumber: bigint,
     signedTx: Hex,
     kettle: Address,
-    mevShareContract: Address,
+    OFAContract: Address,
     chainId: number,
   ) {
     this.blockNumber = blockNumber
     this.signedTx = signedTx
     this.kettle = kettle
-    this.mevShareContract = mevShareContract
+    this.OFAContract = OFAContract
     this.chainId = chainId
-    this.allowedPeekers = [
-      // no idea what I'm doing here
-      suaveRigil.contracts.ANYALLOWED.address,
-    ]
-    this.allowedStores = []
   }
 
-  /** Encodes calldata to call the `newBid` function. */
-  private newBidCalldata() {
+  /** Encodes calldata to call the `newOrder` function. */
+  private newOrderCalldata() {
     return encodeFunctionData({
-      abi: MevShareBidContract.abi,
-      functionName: 'newBid',
-      args: [this.blockNumber, this.allowedPeekers, this.allowedStores],
+      abi: OFAContract.abi,
+      functionName: 'newOrder',
+      args: [this.blockNumber],
     })
   }
 
@@ -63,8 +55,8 @@ export class MevShareBid {
   /** Encodes this bid as a ConfidentialComputeRequest, which can be sent to SUAVE. */
   toConfidentialRequest(): TransactionRequestSuave {
     return {
-      to: this.mevShareContract,
-      data: this.newBidCalldata(),
+      to: this.OFAContract,
+      data: this.newOrderCalldata(),
       type: '0x43',
       gas: 500000n,
       gasPrice: 1000000000n,
