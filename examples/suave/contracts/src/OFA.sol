@@ -2,6 +2,7 @@
 pragma solidity ^0.8.8;
 
 import "suave-std/suavelib/Suave.sol";
+import {Bundle} from "suave-std/protocols/Bundle.sol";
 
 contract OFAPrivate {
     // Struct to hold hint-related information for an order.
@@ -14,17 +15,19 @@ contract OFAPrivate {
 
     event BundleEmitted(string bundleRawResponse);
 
+    event Debug(string message, bytes data);
+
     // Internal function to save order details and generate a hint.
     function saveOrder(uint64 decryptionCondition) internal view returns (HintOrder memory) {
         // Retrieve the bundle data from the confidential inputs
         bytes memory bundleData = Suave.confidentialInputs();
-
+        Bundle.BundleObj memory bundle = abi.decode(bundleData, (Bundle.BundleObj));
         // Simulate the bundle and extract its score.
-        uint64 egp = Suave.simulateBundle(bundleData);
+        uint64 egp = Suave.simulateBundle(Bundle.encodeBundle(bundle).body);
 
         // Extract a hint about this bundle that is going to be leaked
         // to external applications.
-        bytes memory hint = Suave.extractHint(bundleData);
+        // bytes memory hint = Suave.extractHint(bundleData);
 
         address[] memory allowedList = new address[](2);
         allowedList[0] = address(this);
@@ -37,7 +40,8 @@ contract OFAPrivate {
 
         HintOrder memory hintOrder;
         hintOrder.id = dataRecord.id;
-        hintOrder.hint = hint;
+        // hintOrder.hint = bytes(hint);
+        hintOrder.hint = bytes("");
 
         return hintOrder;
     }
