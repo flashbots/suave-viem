@@ -4,6 +4,8 @@ Simple Vanilla JS web app that sends a mev-share bid to suave.
 
 ## setup
 
+> This project requires a local suave-geth devnet to be running. See [instructions here](https://github.com/flashbots/suave-geth/tree/main?tab=readme-ov-file#starting-a-local-devnet) to spin one up.
+
 Go to the [suave example](../suave/) and run `./deployContracts.sh`:
 
 ```sh
