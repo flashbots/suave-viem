@@ -3,6 +3,7 @@ pragma solidity ^0.8.8;
 
 import "suave-std/suavelib/Suave.sol";
 import {Bundle} from "suave-std/protocols/Bundle.sol";
+import "solady/src/utils/LibString.sol";
 
 contract OFAPrivate {
     // Struct to hold hint-related information for an order.
@@ -22,12 +23,32 @@ contract OFAPrivate {
         // Retrieve the bundle data from the confidential inputs
         bytes memory bundleData = Suave.confidentialInputs();
         Bundle.BundleObj memory bundle = abi.decode(bundleData, (Bundle.BundleObj));
+        bundleData = Bundle.encodeBundle(bundle).body;
+
         // Simulate the bundle and extract its score.
-        uint64 egp = Suave.simulateBundle(Bundle.encodeBundle(bundle).body);
+        uint64 egp = Suave.simulateBundle(bundleData);
 
         // Extract a hint about this bundle that is going to be leaked
         // to external applications.
-        // bytes memory hint = Suave.extractHint(bundleData);
+        bytes memory extractHintPayload = abi.encodePacked(
+            '{"revertingHashes": [], "txs": ['
+        );
+        for (uint256 i = 0; i < bundle.txns.length; i++) {
+            extractHintPayload = abi.encodePacked(
+                extractHintPayload,
+                '"',
+                LibString.toHexString(bundle.txns[i]),
+                '"'
+            );
+            if (i < bundle.txns.length - 1) {
+                extractHintPayload = abi.encodePacked(extractHintPayload, ",");
+            }
+        }
+        extractHintPayload = abi.encodePacked(
+            extractHintPayload,
+            ']}'
+        );
+        bytes memory hint = Suave.extractHint(extractHintPayload);
 
         address[] memory allowedList = new address[](2);
         allowedList[0] = address(this);
@@ -40,8 +61,7 @@ contract OFAPrivate {
 
         HintOrder memory hintOrder;
         hintOrder.id = dataRecord.id;
-        // hintOrder.hint = bytes(hint);
-        hintOrder.hint = bytes("");
+        hintOrder.hint = hint;
 
         return hintOrder;
     }
