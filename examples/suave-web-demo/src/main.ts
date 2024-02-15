@@ -55,8 +55,8 @@ setupConnectButton(document.querySelector<HTMLButtonElement>('#connect')!,
   // setup other buttons once we've connected
   setupSendBidButton(document.querySelector<HTMLButtonElement>('#sendBid')!, suaveWallet, (txHash, err) => {
     if (err) {
-      console.error("error in setupSendBidButton", err)
-      alert(err.message + (err as any).data)
+      alert(err)
+      return
     }
     const suaveProvider = getSuaveProvider(custom(ethereum))
     suaveProvider.getTransactionReceipt({hash: txHash}).then((receipt) => {

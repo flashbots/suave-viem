@@ -1,8 +1,8 @@
 import { sleep } from 'bun'
 import { http, Address, Hex, createPublicClient, formatEther, isHex } from 'viem'
-import { goerli, suaveRigil } from 'viem/chains'
+import { goerli } from 'viem/chains'
 import { TransactionRequestSuave } from 'viem/chains/suave/types'
-import { MevShareBid } from 'bids'
+import { OFAOrder } from './bids'
 import { SuaveProvider, SuaveWallet, getSuaveProvider, getSuaveWallet } from 'viem/chains/utils'
 import { HttpTransport } from 'viem'
 import BidContractDeployment from './deployedAddress.json'
@@ -120,12 +120,11 @@ async function testSuaveBids() {
 
   // create bid & send ccr
   const block = await goerliProvider.getBlockNumber()
-  const bid = new MevShareBid(
+  const bid = new OFAOrder(
     block + 1n,
     signedTx,
     KETTLE_ADDRESS,
     BID_CONTRACT_ADDRESS,
-    suaveRigil.id,
   )
   const ccr = bid.toConfidentialRequest()
   const ccrRes = await wallet.sendTransaction(ccr)

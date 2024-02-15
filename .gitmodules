@@ -1,3 +1,3 @@
-[submodule "examples/suave/contracts/lib/forge-std"]
-	path = examples/suave/contracts/lib/forge-std
-	url = https://github.com/foundry-rs/forge-std
+[submodule "examples/suave/contracts/lib/suave-std"]
+	path = examples/suave/contracts/lib/suave-std
+	url = https://github.com/flashbots/suave-std
