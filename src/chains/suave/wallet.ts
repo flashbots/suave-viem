@@ -203,7 +203,11 @@ function newSuaveWallet<TTransport extends Transport>(params: {
           v,
         })
       } else {
-        return await client.account.signTransaction(txRequest)
+        const txType = txRequest.type || txRequest.maxFeePerGas ? '0x2' : '0x0'
+        return await client.account.signTransaction({
+          ...txRequest,
+          type: txType,
+        })
       }
     },
   }))

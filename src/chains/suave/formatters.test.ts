@@ -445,6 +445,38 @@ describe('transactionRequest', () => {
     `)
   })
 
+  test('formatter (confidential, implicit params)', () => {
+    const inputRequest: TransactionRequestSuave = {
+      from: zeroAddress,
+      to: zeroAddress,
+      gas: 1n,
+      gasPrice: 0x10000000n,
+      value: 0n,
+      kettleAddress: zeroAddress,
+      confidentialInputs: '0x13131313',
+      nonce: 13,
+      data: '0x0',
+    }
+    const formattedRequest = transactionRequest.format(inputRequest)
+    expect(formattedRequest).toMatchInlineSnapshot(`
+      {
+        "chainId": "0x1008c45",
+        "confidentialInputs": "0x13131313",
+        "data": "0x0",
+        "from": "0x0000000000000000000000000000000000000000",
+        "gas": "0x1",
+        "gasPrice": "0x10000000",
+        "kettleAddress": "0x0000000000000000000000000000000000000000",
+        "maxFeePerGas": undefined,
+        "maxPriorityFeePerGas": undefined,
+        "nonce": "0xd",
+        "to": "0x0000000000000000000000000000000000000000",
+        "type": "0x43",
+        "value": "0x0",
+      }
+    `)
+  })
+
   test('formatter (standard)', () => {
     const inputRequest: TransactionRequestSuave = {
       chainId: suaveRigil.id,

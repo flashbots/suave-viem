@@ -140,6 +140,12 @@ export const serializeConfidentialComputeRequest = (
       found: transaction.gas,
     })
   }
+  if (!transaction.gasPrice) {
+    throw new InvalidConfidentialRequestError({
+      missingField: 'gasPrice',
+      found: transaction.gasPrice,
+    })
+  }
   if (!transaction.to) {
     throw new InvalidConfidentialRequestError({
       missingField: 'to',
