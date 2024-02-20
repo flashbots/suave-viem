@@ -37,13 +37,6 @@ export class OFAOrder {
 
   /** Wraps `signedTx` in a bundle, then ABI-encodes it as bytes for `confidentialInputs`. */
   private confidentialInputsBytes(): Hex {
-    // const bundleBytes = toHex(
-    //   JSON.stringify({
-    //     txs: [this.signedTx],
-    //     revertingHashes: [],
-    //   }),
-    // )
-    // console.log("bundleBytes", bundleBytes)
     return encodeAbiParameters([
       {
         components: [

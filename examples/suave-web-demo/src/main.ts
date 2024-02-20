@@ -39,8 +39,8 @@ setupConnectButton(document.querySelector<HTMLButtonElement>('#connect')!,
   const suaveWallet = getSuaveWallet({jsonRpcAccount: account, transport: custom(ethereum)})
   console.log(suaveWallet)
   const suaveProvider = getSuaveProvider(custom(ethereum))
-  suaveProvider.getBalance({ address: account }).then((balance) => {
-    suaveProvider.getChainId().then((chainId) => {
+  suaveProvider.getBalance({ address: account }).then((balance: any) => {
+    suaveProvider.getChainId().then((chainId: any) => {
       if (chainId !== suaveRigil.id) {
         alert(`wrong chain id. expected ${suaveRigil.id}, got ${chainId}`)
       }
@@ -59,7 +59,7 @@ setupConnectButton(document.querySelector<HTMLButtonElement>('#connect')!,
       return
     }
     const suaveProvider = getSuaveProvider(custom(ethereum))
-    suaveProvider.getTransactionReceipt({hash: txHash}).then((receipt) => {
+    suaveProvider.getTransactionReceipt({hash: txHash}).then((receipt: any) => {
       console.log("receipt", receipt)
       document.querySelector<HTMLDivElement>('#status-content')!.innerHTML = `
         <div>

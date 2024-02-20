@@ -6,6 +6,7 @@ import { OFAOrder } from './bids'
 import { SuaveProvider, SuaveWallet, getSuaveProvider, getSuaveWallet } from 'viem/chains/utils'
 import { HttpTransport } from 'viem'
 import BidContractDeployment from './deployedAddress.json'
+import { parseSignedComputeRequest } from 'viem/chains/suave/parsers'
 
 const failEnv = (name: string) => {
   throw new Error(`missing env var ${name}`)
@@ -28,6 +29,18 @@ const SUAVE_RPC_URL_HTTP: string =
   process.env.SUAVE_RPC_URL_HTTP || 'http://localhost:8545'
 const GOERLI_RPC_URL_HTTP: string =
   process.env.GOERLI_RPC_URL_HTTP || 'http://localhost:8545'
+
+if (!BidContractDeployment.address) {
+  console.error(
+    'Need to run the DeployContracts script first. See ./README.md for instructions.',
+  )
+  failEnv('BID_CONTRACT_ADDRESS')
+}
+if (!isHex(BidContractDeployment.address)) {
+  console.error('BID_CONTRACT_ADDRESS is not a hex string')
+  failEnv('BID_CONTRACT_ADDRESS')
+}
+const BID_CONTRACT_ADDRESS = BidContractDeployment.address as Hex
 
 const suaveProvider: SuaveProvider<HttpTransport> = getSuaveProvider(http(SUAVE_RPC_URL_HTTP))
 const goerliProvider = createPublicClient({
@@ -88,18 +101,6 @@ const fundAccount = async (wallet: Address, amount: bigint) => {
  * See the [README](./README.md) for instructions.
  */
 async function testSuaveBids() {
-  if (!BidContractDeployment.address) {
-    console.error(
-      'Need to run the DeployContracts script first. See ./README.md for instructions.',
-    )
-    failEnv('BID_CONTRACT_ADDRESS')
-  }
-  if (!isHex(BidContractDeployment.address)) {
-    console.error('BID_CONTRACT_ADDRESS is not a hex string')
-    failEnv('BID_CONTRACT_ADDRESS')
-  }
-  const BID_CONTRACT_ADDRESS = BidContractDeployment.address as Hex
-
   // fund our test wallet w/ 1 ETH
   const fundRes = await fundAccount(
     wallet.account.address,
@@ -114,7 +115,6 @@ async function testSuaveBids() {
     gas: 26000n,
     gasPrice: 10000000000n,
     chainId: 5,
-    type: '0x0' as const,
   }
   const signedTx = await wallet.signTransaction(testTx)
 
@@ -127,6 +127,15 @@ async function testSuaveBids() {
     BID_CONTRACT_ADDRESS,
   )
   const ccr = bid.toConfidentialRequest()
+  console.log('ccr', ccr)
+
+  const signedCcr = await wallet.signTransaction(ccr)
+  const deserCcr = await parseSignedComputeRequest(signedCcr)
+  console.log("signedCcr", signedCcr)
+  console.log("deserialized signed ccr", deserCcr)
+
+  // deserCcr should be the same as ccr, but with any missing fields filled in, such as gasPrice & nonce
+
   const ccrRes = await wallet.sendTransaction(ccr)
   console.log('ccrRes', ccrRes)
 
