@@ -137,6 +137,19 @@ export function getSuaveWallet<TTransport extends Transport>(params: {
   })
 }
 
+async function prepareTx(client: any, txRequest: TransactionRequestSuave) {
+  const preparedTx = await client.prepareTransactionRequest(txRequest)
+  const payload: TransactionRequestSuave = {
+    ...txRequest,
+    from: txRequest.from ?? preparedTx.from,
+    nonce: txRequest.nonce ?? preparedTx.nonce,
+    gas: txRequest.gas ?? preparedTx.gas,
+    gasPrice: txRequest.gasPrice ?? preparedTx.gasPrice,
+    chainId: txRequest.chainId ?? suaveRigil.id,
+  }
+  return payload
+}
+
 /** Get a SUAVE-enabled viem wallet. */
 function newSuaveWallet<TTransport extends Transport>(params: {
   transport: TTransport
@@ -160,16 +173,7 @@ function newSuaveWallet<TTransport extends Transport>(params: {
     chain: suaveRigil,
   }).extend((client) => ({
     async sendTransaction(txRequest: TransactionRequestSuave) {
-      const preparedTx = await client.prepareTransactionRequest(txRequest)
-      const payload: TransactionRequestSuave = {
-        ...txRequest,
-        from: preparedTx.from,
-        nonce: preparedTx.nonce,
-        gas: txRequest.gas ?? preparedTx.gas,
-        gasPrice: txRequest.gasPrice ?? preparedTx.gasPrice,
-        chainId: txRequest.chainId ?? suaveRigil.id,
-      }
-
+      const payload = await prepareTx(client, txRequest)
       const signedTx = await this.signTransaction(payload)
       return client.request({
         method: 'eth_sendRawTransaction',
@@ -178,16 +182,19 @@ function newSuaveWallet<TTransport extends Transport>(params: {
     },
     async signTransaction(txRequest: TransactionRequestSuave) {
       if (txRequest.type === SuaveTxRequestTypes.ConfidentialRequest) {
-        const confidentialInputs = txRequest.confidentialInputs || '0x'
-
+        const confidentialInputs = txRequest.confidentialInputs ?? '0x'
         // determine signing method based on transport type
         const signCcr = getSigningMethod(
           client.transport,
           params.privateKey,
           client.account.address,
         )
+        // get nonce, gas price, etc
+        const ctxParams = prepareTx(client, txRequest)
+        // prepare and sign confidential compute request
         const presignTx = {
           ...txRequest,
+          nonce: txRequest.nonce ?? (await ctxParams).nonce,
           type: SuaveTxTypes.ConfidentialRecord,
           confidentialInputsHash: keccak256(confidentialInputs),
           chainId: txRequest.chainId ?? suaveRigil.id,
@@ -203,7 +210,10 @@ function newSuaveWallet<TTransport extends Transport>(params: {
           v,
         })
       } else {
-        return await client.account.signTransaction(txRequest)
+        return await client.account.signTransaction({
+          ...txRequest,
+          type: txRequest.type ?? txRequest.maxFeePerGas ? '0x2' : '0x0',
+        })
       }
     },
   }))

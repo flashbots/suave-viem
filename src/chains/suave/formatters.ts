@@ -126,6 +126,9 @@ export const formattersSuave = {
         args.confidentialInputs &&
         !['0x', '0x0'].includes(args.confidentialInputs)
       ) {
+        if (!args.gasPrice) {
+          throw new Error('gasPrice is required for confidential transactions')
+        }
         const { kettleAddress, confidentialInputs } = args
         return {
           ...formatTransactionRequest({
@@ -133,9 +136,8 @@ export const formattersSuave = {
             from: zeroAddress,
           } as TransactionRequestBase),
           kettleAddress,
-          // isConfidential: true, // TODO: where does this come from? where does it go? where does it come from, cotton-eyed joe?
           confidentialInputs,
-          type: args.type,
+          type: args.type || '0x43',
           gasPrice: toHex(args.gasPrice),
           chainId: toHex(args.chainId || suaveRigil.id),
         } as RpcTransactionRequestSuave

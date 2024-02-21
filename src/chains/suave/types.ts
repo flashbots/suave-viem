@@ -58,7 +58,9 @@ export type SuaveTransactionReceiptOverrides =
 
 /// BASE ETHEREUM TYPE EXTENSIONS ==============================================
 
-type FeeValues<TQuantity> = FeeValuesLegacy<TQuantity>
+type FeeValues<TQuantity> = Omit<FeeValuesLegacy<TQuantity>, 'gasPrice'> & {
+  gasPrice?: TQuantity
+}
 
 type TransactionBase<
   TQuantity,
@@ -79,7 +81,7 @@ type TransactionRequestBase<TQuantity, TIndex, TType> = Omit<
   FeeValues<TQuantity> & {
     accessList?: AccessList
     chainId?: TIndex
-    type: TType
+    type?: TType
   }
 
 export type SuaveBlock<
@@ -162,12 +164,13 @@ export type TransactionRequestSuave<
   TType extends SuaveTxRequestType = SuaveTxRequestType,
 > = TransactionRequestBase<TQuantity, TIndex, TType> &
   ConfidentialComputeRequestOverrides & {
-    accessList?: AccessList
-    type: TType
     from?: Address
   }
 
-export type RpcTransactionRequestSuave = TransactionRequestSuave<Hex, Hex>
+export type RpcTransactionRequestSuave<TType = SuaveTxType> =
+  TransactionRequestSuave<Hex, Hex> & {
+    type: TType
+  }
 
 export type TransactionReceiptSuave = TransactionReceipt &
   SuaveTransactionReceiptOverrides
