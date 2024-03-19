@@ -46,6 +46,7 @@ jobs:
     permissions:
       contents: write
       id-token: write
+
     steps:
       - name: Clone repository
         uses: actions/checkout@v4
@@ -57,7 +58,7 @@ jobs:
         uses: changesets/action@v1
         with:
           createGithubReleases: ${{ github.ref == 'refs/heads/main' }}
-          publish: bun run changeset:publish
+          publish: bun run changeset:release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
