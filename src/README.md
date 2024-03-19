@@ -67,19 +67,60 @@
 ## Overview
 
 ```ts
-// 1. Import modules.
-import { createPublicClient, http } from 'viem';
-import { mainnet } from 'viem/chains';
+import {http, Hex} from '@flashbots/suave-viem';
+import {
+  getSuaveProvider,
+  getSuaveWallet,
+  TransactionRequestSuave,
+  SuaveTxRequestTypes
+} from '@flashbots/suave-viem/chains/utils';
 
-// 2. Set up your client with desired chain & transport.
-const client = createPublicClient({
-  chain: mainnet,
-  transport: http(),
+// connect to a local SUAVE devnet
+const SUAVE_RPC_URL = 'http://localhost:8545';
+const suaveProvider = getSuaveProvider(http(SUAVE_RPC_URL));
+
+// instantiate a wallet
+const DEFAULT_PRIVATE_KEY: Hex =
+  '0x91ab9a7e53c220e6210460b65a7a3bb2ca181412a8a7b43ff336b3df1737ce12';
+const wallet = getSuaveWallet({
+  transport: http(SUAVE_RPC_URL),
+  privateKey: DEFAULT_PRIVATE_KEY,
 });
 
-// 3. Consume an action!
-const blockNumber = await client.getBlockNumber();
+// Watch for pending transactions
+suaveProvider.watchPendingTransactions({
+  async onTransactions(transactions) {
+    for (const hash of transactions) {
+      try {
+        console.log(
+          'Transaction Receipt:',
+          await suaveProvider.getTransactionReceipt({hash})
+        );
+      } catch (error) {
+        console.error('Error fetching receipt:', error);
+      }
+    }
+  },
+});
+
+// send a confidential compute request
+const ccr: TransactionRequestSuave = {
+  confidentialInputs:
+    '0x000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000fd7b22626c6f636b4e756d626572223a22307830222c22747873223a5b2230786638363538303064383235323038393461646263653931303332643333396338336463653834316336346566643261393232383165653664383230336538383038343032303131386164613038376337386234353663653762343234386237313565353164326465656236343031363032343832333735663130663037396663666637373934383830653731613035373366336364343133396437323037643165316235623263323365353438623061316361636533373034343739656334653939316362356130623661323930225d2c2270657263656e74223a31307d000000',
+  kettleAddress: '0xB5fEAfbDD752ad52Afb7e1bD2E40432A485bBB7F', // Address of your local Kettle. Use 0x03493869959C866713C33669cA118E774A30A0E5 if on Rigil.
+  to: '0x8f21Fdd6B4f4CacD33151777A46c122797c8BF17',
+  gasPrice: 10000000000n, // Gas price for the transaction
+  gas: 420000n, // Gas limit for the transaction
+  type: SuaveTxRequestTypes.ConfidentialRequest, // (0x43)
+  chainId: suaveRigil.id,
+  data: '0x236eb5a70000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000006000000000000000000000000000000000000000000000000000000000000000a000000000000000000000000000000000000000000000000000000000000000010000000000000000000000008f21fdd6b4f4cacd33151777a46c122797c8bf170000000000000000000000000000000000000000000000000000000000000000',
+};
+
+const res = await wallet.sendTransaction(ccr);
+console.log(`sent ccr! tx hash: ${res}`);
 ```
+
+See [the docs](https://suave-alpha.flashbots.net/tools/typescript-sdk) for more detailed examples.
 
 ## Community
 
