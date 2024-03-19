@@ -10,7 +10,10 @@ test('exports', () => {
       "serializersCelo",
       "parseTransactionCelo",
       "formattersOptimism",
-      "formattersSuave"
+      "getSuaveProvider",
+      "getSuaveWallet",
+      "SuaveTxTypes",
+      "SuaveTxRequestTypes",
     ]
   `)
 })
