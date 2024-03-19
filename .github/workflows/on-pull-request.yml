@@ -39,6 +39,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+  # disabled temporarily until suave-viem rebases to latest viem
   # size:
   #   name: Size
   #   runs-on: ubuntu-latest
