@@ -1,5 +1,11 @@
 # viem
 
+## 1.14.2
+
+### Patch Changes
+
+- [#38](https://github.com/flashbots/suave-viem/pull/38) [`aed5e25`](https://github.com/flashbots/suave-viem/commit/aed5e25ef77793fae016894093bad3f8d0277049) Thanks [@zeroXbrock](https://github.com/zeroXbrock)! - CI build
+
 ## 1.14.1
 
 ### Patch Changes
