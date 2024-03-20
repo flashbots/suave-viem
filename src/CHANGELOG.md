@@ -1,5 +1,11 @@
 # viem
 
+## 1.14.3
+
+### Patch Changes
+
+- [#40](https://github.com/flashbots/suave-viem/pull/40) [`755bf6c`](https://github.com/flashbots/suave-viem/commit/755bf6cb7ffbeca4d29648e4854e37ebe546853d) Thanks [@zeroXbrock](https://github.com/zeroXbrock)! - update readme for NPM
+
 ## 1.14.2
 
 ### Patch Changes
