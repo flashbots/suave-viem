@@ -66,12 +66,15 @@
 
 ## Overview
 
+First, see these instructions for spinning up a local devnet. Then install **[@flashbots/suave-viem](https://www.npmjs.com/package/@flashbots/suave-viem)** into your project and run this code:
+
 ```ts
-import {http, Hex} from '@flashbots/suave-viem';
+import { http, type Hex } from '@flashbots/suave-viem';
+import { suaveRigil } from '@flashbots/suave-viem/chains';
 import {
   getSuaveProvider,
   getSuaveWallet,
-  TransactionRequestSuave,
+  type TransactionRequestSuave,
   SuaveTxRequestTypes
 } from '@flashbots/suave-viem/chains/utils';
 
