@@ -241,7 +241,7 @@ function newSuaveWallet<TTransport extends Transport>(params: {
           types: {
             Eip712Domain: [
               { name: 'name', type: 'string' },
-              // { name: 'chainId', type: 'uint256' },
+              { name: 'verifyingContract', type: 'address' },
             ],
             ConfidentialRecord: [
               { name: 'nonce', type: 'uint64' },
@@ -256,7 +256,7 @@ function newSuaveWallet<TTransport extends Transport>(params: {
           },
           domain: {
             name: 'ConfidentialRecord',
-            // chainId: chainId,
+            verifyingContract: presignTx.kettleAddress,
           },
         })
         const sig = hexToSignature(rawSig)
