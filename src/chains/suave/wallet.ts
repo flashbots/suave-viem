@@ -1,29 +1,31 @@
+// import { signTypedData } from '~viem/accounts/index.js'
 import { privateKeyToAccount } from '../../accounts/privateKeyToAccount.js'
-import { sign } from '../../accounts/utils/sign.js'
+// import { sign } from '../../accounts/utils/sign.js'
 import {
   http,
   type JsonRpcAccount,
   type PrivateKeyAccount,
   type PublicClient,
   type Transport,
-  type TransportConfig,
+  // type TransportConfig,
   type WalletClient,
   createPublicClient,
   createWalletClient,
   hexToSignature,
   keccak256,
+  // zeroAddress,
 } from '../../index.js'
 import { type Hex } from '../../types/misc.js'
 import { suaveRigil } from '../index.js'
 import {
-  serializeConfidentialComputeRecord,
+  // serializeConfidentialComputeRecord,
   serializeConfidentialComputeRequest,
 } from './serializers.js'
 import {
   SuaveTxRequestTypes,
   SuaveTxTypes,
   type TransactionRequestSuave,
-  type TransactionSerializableSuave,
+  // type TransactionSerializableSuave,
 } from './types.js'
 
 /// client types
@@ -51,52 +53,52 @@ function formatSignature(signature: {
   }
 }
 
-async function signConfidentialComputeRecord(
-  transaction: TransactionSerializableSuave,
-  privateKey: Hex,
-): Promise<TransactionSerializableSuave> {
-  if (transaction.type !== SuaveTxTypes.ConfidentialRecord) {
-    throw new Error(
-      `transaction.type must be ConfidentialRecord (${SuaveTxTypes.ConfidentialRecord})`,
-    )
-  }
-  const serialized = serializeConfidentialComputeRecord(transaction)
-  const signature = await sign({ hash: keccak256(serialized), privateKey })
-  return {
-    ...transaction,
-    ...formatSignature(signature),
-  }
-}
+// async function signConfidentialComputeRecord(
+//   transaction: TransactionSerializableSuave,
+//   privateKey: Hex,
+// ): Promise<TransactionSerializableSuave> {
+//   if (transaction.type !== SuaveTxTypes.ConfidentialRecord) {
+//     throw new Error(
+//       `transaction.type must be ConfidentialRecord (${SuaveTxTypes.ConfidentialRecord})`,
+//     )
+//   }
+//   const serialized = serializeConfidentialComputeRecord(transaction)
+//   const signature = await sign({ hash: keccak256(serialized), privateKey })
+//   return {
+//     ...transaction,
+//     ...formatSignature(signature),
+//   }
+// }
 
-function getSigningMethod<TTransport extends TransportConfig>(
-  transport: TTransport,
-  privateKey?: Hex,
-  address?: Hex,
-) {
-  if (transport.type === 'custom') {
-    if (!address) {
-      throw new Error("param 'address' is required for custom transports")
-    }
-    return async (txRequest: TransactionSerializableSuave) => {
-      const rawSignature: Hex = await transport.request({
-        method: 'eth_sign',
-        params: [
-          address,
-          keccak256(serializeConfidentialComputeRecord(txRequest)),
-        ],
-      })
-      const parsedSignature = hexToSignature(rawSignature)
-      return formatSignature(parsedSignature)
-    }
-  } else {
-    if (!privateKey) {
-      throw new Error('privateKey is required for non-custom transports')
-    }
-    return async (txRequest: TransactionSerializableSuave) => {
-      return await signConfidentialComputeRecord(txRequest, privateKey)
-    }
-  }
-}
+// function getSigningMethod<TTransport extends TransportConfig>(
+//   transport: TTransport,
+//   privateKey?: Hex,
+//   address?: Hex,
+// ) {
+//   if (transport.type === 'custom') {
+//     if (!address) {
+//       throw new Error("param 'address' is required for custom transports")
+//     }
+//     return async (txRequest: TransactionSerializableSuave) => {
+//       const rawSignature: Hex = await transport.request({
+//         method: 'eth_sign',
+//         params: [
+//           address,
+//           keccak256(serializeConfidentialComputeRecord(txRequest)),
+//         ],
+//       })
+//       const parsedSignature = hexToSignature(rawSignature)
+//       return formatSignature(parsedSignature)
+//     }
+//   } else {
+//     if (!privateKey) {
+//       throw new Error('privateKey is required for non-custom transports')
+//     }
+//     return async (txRequest: TransactionSerializableSuave) => {
+//       return await signConfidentialComputeRecord(txRequest, privateKey)
+//     }
+//   }
+// }
 
 /** Get a SUAVE-enabled viem wallet.
  *
@@ -137,7 +139,10 @@ export function getSuaveWallet<TTransport extends Transport>(params: {
   })
 }
 
-async function prepareTx(client: any, txRequest: TransactionRequestSuave) {
+async function prepareTx(
+  client: ReturnType<typeof newSuaveWallet>,
+  txRequest: TransactionRequestSuave,
+) {
   const preparedTx = await client.prepareTransactionRequest(txRequest)
   const payload: TransactionRequestSuave = {
     ...txRequest,
@@ -183,24 +188,79 @@ function newSuaveWallet<TTransport extends Transport>(params: {
     async signTransaction(txRequest: TransactionRequestSuave) {
       if (txRequest.type === SuaveTxRequestTypes.ConfidentialRequest) {
         const confidentialInputs = txRequest.confidentialInputs ?? '0x'
-        // determine signing method based on transport type
-        const signCcr = getSigningMethod(
-          client.transport,
-          params.privateKey,
-          client.account.address,
-        )
+
         // get nonce, gas price, etc
         const ctxParams = prepareTx(client, txRequest)
+        // dev note: calling (await ...) inline lets us skip the RPC request if teh data is not needed
+        const nonce = txRequest.nonce ?? (await ctxParams).nonce
+        const value = txRequest.value ?? 0n
+        const gas = txRequest.gas ?? (await ctxParams).gas
+        const gasPrice = txRequest.gasPrice ?? (await ctxParams).gasPrice
+        const chainId = txRequest.chainId ?? suaveRigil.id
+
         // prepare and sign confidential compute request
-        const presignTx = {
-          ...txRequest,
-          nonce: txRequest.nonce ?? (await ctxParams).nonce,
-          type: SuaveTxTypes.ConfidentialRecord,
-          confidentialInputsHash: keccak256(confidentialInputs),
-          chainId: txRequest.chainId ?? suaveRigil.id,
+        if (!txRequest.to) {
+          throw new Error('missing `to`')
         }
-        const sig = await signCcr(presignTx)
-        const { r, s, v } = sig
+        if (nonce === undefined) {
+          throw new Error('missing `nonce`')
+        }
+        if (gas === undefined) {
+          throw new Error('missing `gas`')
+        }
+        if (gasPrice === undefined) {
+          throw new Error('missing `gasPrice`')
+        }
+        if (!txRequest.kettleAddress) {
+          throw new Error('missing `kettleAddress`')
+        }
+        const eip712Tx = {
+          ...txRequest,
+          nonce: BigInt(nonce),
+          type: SuaveTxTypes.ConfidentialRecord,
+          chainId: BigInt(chainId),
+          to: txRequest.to,
+          value,
+          gas,
+          gasPrice,
+          data: txRequest.data ?? '0x',
+          kettleAddress: txRequest.kettleAddress,
+          confidentialInputsHash: keccak256(confidentialInputs),
+        }
+
+        const presignTx = {
+          ...eip712Tx,
+          nonce,
+          chainId,
+          envelope: true,
+        }
+
+        const rawSig = await client.signTypedData({
+          primaryType: 'ConfidentialRecord',
+          message: eip712Tx,
+          types: {
+            Eip712Domain: [
+              { name: 'name', type: 'string' },
+              // { name: 'chainId', type: 'uint256' },
+            ],
+            ConfidentialRecord: [
+              { name: 'nonce', type: 'uint64' },
+              { name: 'gasPrice', type: 'uint256' },
+              { name: 'gas', type: 'uint64' },
+              { name: 'to', type: 'address' },
+              { name: 'value', type: 'uint256' },
+              { name: 'data', type: 'bytes' },
+              { name: 'kettleAddress', type: 'address' },
+              { name: 'confidentialInputsHash', type: 'bytes32' },
+            ],
+          },
+          domain: {
+            name: 'ConfidentialRecord',
+            // chainId: chainId,
+          },
+        })
+        const sig = hexToSignature(rawSig)
+        const { r, s, v } = formatSignature(sig)
         return serializeConfidentialComputeRequest({
           ...presignTx,
           confidentialInputs,
