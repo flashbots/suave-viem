@@ -1,6 +1,6 @@
 import { sleep } from 'bun'
 import { http, Address, Hex, createPublicClient, formatEther, isHex } from 'viem'
-import { goerli } from 'viem/chains'
+import { holesky } from 'viem/chains'
 import { TransactionRequestSuave } from 'viem/chains/suave/types'
 import { OFAOrder } from './bids'
 import { SuaveProvider, SuaveWallet, getSuaveProvider, getSuaveWallet } from 'viem/chains/utils'
@@ -20,15 +20,15 @@ if (!process.env.KETTLE_ADDRESS) {
 if (!process.env.SUAVE_RPC_URL_HTTP) {
   console.warn('SUAVE_RPC_URL_HTTP not set. Defaulting to localhost:8545')
 }
-if (!process.env.GOERLI_RPC_URL_HTTP) {
-  console.warn('GOERLI_RPC_URL_HTTP not set. Defaulting to localhost:8545')
+if (!process.env.L1_RPC_URL_HTTP) {
+  console.warn('L1_RPC_URL_HTTP not set. Defaulting to localhost:8545')
 }
 const KETTLE_ADDRESS: Address = process.env.KETTLE_ADDRESS as Address
 const PRIVATE_KEY: Hex = process.env.PRIVATE_KEY as Hex
 const SUAVE_RPC_URL_HTTP: string =
   process.env.SUAVE_RPC_URL_HTTP || 'http://localhost:8545'
-const GOERLI_RPC_URL_HTTP: string =
-  process.env.GOERLI_RPC_URL_HTTP || 'http://localhost:8545'
+const L1_RPC_URL_HTTP: string =
+  process.env.L1_RPC_URL_HTTP || 'http://localhost:8545'
 
 if (!BidContractDeployment.address) {
   console.error(
@@ -43,9 +43,9 @@ if (!isHex(BidContractDeployment.address)) {
 const BID_CONTRACT_ADDRESS = BidContractDeployment.address as Hex
 
 const suaveProvider: SuaveProvider<HttpTransport> = getSuaveProvider(http(SUAVE_RPC_URL_HTTP))
-const goerliProvider = createPublicClient({
-  chain: goerli,
-  transport: http(GOERLI_RPC_URL_HTTP),
+const l1Provider = createPublicClient({
+  chain: holesky,
+  transport: http(L1_RPC_URL_HTTP),
 })
 const adminWallet: SuaveWallet<HttpTransport> = getSuaveWallet({
   transport: http(SUAVE_RPC_URL_HTTP),
@@ -108,7 +108,7 @@ async function testSuaveBids() {
   )
   fundRes && console.log('fundRes', fundRes)
 
-  // a tx that should be landed on goerli
+  // a tx that should be landed on L1
   const testTx = {
     to: '0x0000000000000000000000000000000000000000' as Address,
     data: '0x686f776479' as Hex,
@@ -119,7 +119,7 @@ async function testSuaveBids() {
   const signedTx = await wallet.signTransaction(testTx)
 
   // create bid & send ccr
-  const block = await goerliProvider.getBlockNumber()
+  const block = await l1Provider.getBlockNumber()
   const bid = new OFAOrder(
     block + 1n,
     signedTx,
