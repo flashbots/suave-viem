@@ -114,9 +114,11 @@ async function testSuaveBids() {
     data: '0x686f776479' as Hex,
     gas: 26000n,
     gasPrice: 10000000000n,
-    chainId: 5,
+    chainId: 17000,
   }
   const signedTx = await wallet.signTransaction(testTx)
+
+  console.log("signed tx", signedTx)
 
   // create bid & send ccr
   const block = await l1Provider.getBlockNumber()

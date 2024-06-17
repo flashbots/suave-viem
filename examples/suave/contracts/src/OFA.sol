@@ -2,10 +2,11 @@
 pragma solidity ^0.8.8;
 
 import "suave-std/suavelib/Suave.sol";
+import "suave-std/Suapp.sol";
 import {Bundle} from "suave-std/protocols/Bundle.sol";
 import "solady/src/utils/LibString.sol";
 
-contract OFAPrivate {
+contract OFAPrivate is Suapp {
     // Struct to hold hint-related information for an order.
     struct HintOrder {
         Suave.DataId id;

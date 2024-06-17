@@ -16,7 +16,7 @@ const KETTLE_ADDRESS: Address = '0xb5feafbdd752ad52afb7e1bd2e40432a485bbb7f'
 const ADMIN_KEY: Hex =
   '0x91ab9a7e53c220e6210460b65a7a3bb2ca181412a8a7b43ff336b3df1737ce12'
 // public L1 node, may need to change if it goes down:
-const L1_RPC_URL_HTTP: string = 'https://holesky.rigil.suave.flashbots.net'
+const L1_RPC_URL_HTTP: string = 'http://localhost:8555'
 
 const l1Wallet = createWalletClient({
   account: privateKeyToAccount(
@@ -73,7 +73,7 @@ export function setupSendBidButton(
     // create sample transaction; won't land onchain, but will pass payload validation
     const sampleTx = {
       type: 'eip1559' as const,
-      chainId: 5,
+      chainId: 17000,
       nonce: 0,
       maxBaseFeePerGas: 0x3b9aca00n,
       maxPriorityFeePerGas: 0x5208n,
