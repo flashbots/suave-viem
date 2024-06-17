@@ -82,7 +82,7 @@ export function setupSendBidButton(
       data: '0xf00ba7' as Hex,
     }
     const signedTx = await l1Wallet.signTransaction(sampleTx)
-    console.log('signed goerli tx', signedTx)
+    console.log('signed L1 tx', signedTx)
 
     // create bid & send ccr
     const decryptionCondition = 1n + (await l1Provider.getBlockNumber())
