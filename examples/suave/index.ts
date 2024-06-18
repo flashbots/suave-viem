@@ -28,7 +28,7 @@ const PRIVATE_KEY: Hex = process.env.PRIVATE_KEY as Hex
 const SUAVE_RPC_URL_HTTP: string =
   process.env.SUAVE_RPC_URL_HTTP || 'http://localhost:8545'
 const L1_RPC_URL_HTTP: string =
-  process.env.L1_RPC_URL_HTTP || 'http://localhost:8545'
+  process.env.L1_RPC_URL_HTTP || 'http://localhost:8555'
 
 if (!BidContractDeployment.address) {
   console.error(
@@ -53,7 +53,7 @@ const adminWallet: SuaveWallet<HttpTransport> = getSuaveWallet({
 })
 const wallet = getSuaveWallet({
   transport: http(SUAVE_RPC_URL_HTTP),
-  privateKey: '0x01000070530220062104600650003002001814120800043ff33603df10300012',
+  privateKey: "0x6c45335a22461ccdb978b78ab61b238bad2fae4544fb55c14eb096c875ccfc52",
 })
 console.log('admin', adminWallet.account.address)
 console.log('wallet', wallet.account.address)
@@ -91,8 +91,17 @@ const fundAccount = async (wallet: Address, amount: bigint) => {
     }
     return await adminWallet.sendTransaction(tx)
   } else {
-    console.log(`wallet balance: ${formatEther(balance)} ETH`)
+    console.log(`SUAVE wallet balance: ${formatEther(balance)} ETH`)
   }
+}
+
+async function checkL1Balance(minBalance?: bigint) {
+  const balance = await l1Provider.getBalance({ address: wallet.account.address })
+  const absoluteMin = minBalance || 1n
+  if (balance < absoluteMin) {
+    throw new Error(`L1 balance too low: ${formatEther(balance)} ETH (needed ${formatEther(absoluteMin)}).\nPlease fund this account: ${wallet.account.address}`)
+  }
+  console.log(`L1 balance: ${formatEther(balance)} ETH`)
 }
 
 /** MEV-Share implementation on SUAVE.
@@ -116,6 +125,7 @@ async function testSuaveBids() {
     gasPrice: 10000000000n,
     chainId: 17000,
   }
+  checkL1Balance(testTx.gas * testTx.gasPrice)
   const signedTx = await wallet.signTransaction(testTx)
 
   console.log("signed tx", signedTx)
