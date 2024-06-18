@@ -17,14 +17,14 @@ bun run build
 Next, go to the [suave example](../suave/) and run `./deployContracts.sh`:
 
 ```sh
-cd ../suave
+cd examples/suave
 ./deployContracts.sh
-cd -
 ```
 
 Next, install the project's dependencies.
 
 ```sh
+cd ../suave-web-demo
 bun install
 ```
 
