@@ -15,7 +15,7 @@ import BidContractDeployment from '../../suave/deployedAddress.json'
 const KETTLE_ADDRESS: Address = '0xb5feafbdd752ad52afb7e1bd2e40432a485bbb7f'
 const ADMIN_KEY: Hex =
   '0x91ab9a7e53c220e6210460b65a7a3bb2ca181412a8a7b43ff336b3df1737ce12'
-// public L1 node, may need to change if it goes down:
+// local L1 (suave-execution-geth or suavex-anvil)
 const L1_RPC_URL_HTTP: string = 'http://localhost:8555'
 
 const l1Wallet = createWalletClient({
