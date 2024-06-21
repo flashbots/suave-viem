@@ -13,7 +13,7 @@ import {
   hexToSignature,
   keccak256,
 } from '../../index.js'
-import { type Hex } from '../../types/misc.js'
+import type { Hex } from '../../types/misc.js'
 import { suaveRigil } from '../index.js'
 import {
   serializeConfidentialComputeRecord,
@@ -68,7 +68,14 @@ async function signConfidentialComputeRecord(
   }
 }
 
-function getSigningMethod<TTransport extends TransportConfig>(
+/**
+ * Generates an anonymous function that signs a confidential compute request based on the signing method available to the given `transport` type.
+ * @param transport The transport to use for signing.
+ * @param privateKey The private key to use for signing. *Required for **non-custom** transports.*
+ * @param address The address to use for signing. *Required for **custom** transports.*
+ * @returns
+ */
+function getSigningFunction<TTransport extends TransportConfig>(
   transport: TTransport,
   privateKey?: Hex,
   address?: Hex,
@@ -181,10 +188,23 @@ function newSuaveWallet<TTransport extends Transport>(params: {
       })
     },
     async signTransaction(txRequest: TransactionRequestSuave) {
-      if (txRequest.type === SuaveTxRequestTypes.ConfidentialRequest) {
+      if (
+        txRequest.type === SuaveTxRequestTypes.ConfidentialRequest ||
+        txRequest.kettleAddress ||
+        txRequest.confidentialInputs
+      ) {
+        if (!txRequest.confidentialInputs) {
+          throw new Error(
+            'confidentialInputs is required for confidential requests',
+          )
+        }
+        if (!txRequest.kettleAddress) {
+          throw new Error('kettleAddress is required for confidential requests')
+        }
+
         const confidentialInputs = txRequest.confidentialInputs ?? '0x'
         // determine signing method based on transport type
-        const signCcr = getSigningMethod(
+        const signCcr = getSigningFunction(
           client.transport,
           params.privateKey,
           client.account.address,

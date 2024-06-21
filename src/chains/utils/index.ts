@@ -45,6 +45,12 @@ export type {
 } from '../optimism/types.js'
 
 export { getSuaveProvider, getSuaveWallet } from '../suave/wallet.js'
+export { parseTransactionSuave } from '../suave/parsers.js'
+export {
+  serializeConfidentialComputeRecord,
+  serializeConfidentialComputeRequest,
+} from '../suave/serializers.js'
+export { formattersSuave } from '../suave/formatters.js'
 export type {
   ConfidentialComputeRecord,
   ConfidentialComputeRecordRpc,

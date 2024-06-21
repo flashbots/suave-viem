@@ -3,7 +3,7 @@ import { join } from 'node:path'
 import { generatePrivateKey } from '../../src/accounts/generatePrivateKey.js'
 import { signTransaction } from '../../src/accounts/utils/signTransaction.js'
 import { parseTransaction } from '../../src/index.js'
-import {
+import type {
   TransactionSerializableEIP1559,
   TransactionSerializableEIP2930,
   TransactionSerializableLegacy,
