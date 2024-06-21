@@ -31,7 +31,7 @@
     "test:ui": "vitest dev -c ./test/vitest.config.ts --ui",
     "vectors": "bun test vectors/**/*.test.ts",
     "vectors:generate": "bun vectors/generate.ts",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --project ./tsconfig.typecheck.json --module esnext --noEmit"
   },
   "devDependencies": {
     "@actions/core": "1.10.0",
