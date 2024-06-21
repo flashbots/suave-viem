@@ -2,20 +2,23 @@ import { fetchLogs } from '@viem/anvil'
 
 import { afterAll, afterEach, beforeAll, beforeEach, vi } from 'vitest'
 
-import { setIntervalMining } from '~viem/test/index.js'
+// import { setIntervalMining } from '~viem/test/index.js'
 import { cleanupCache, listenersCache } from '~viem/utils/observe.js'
 import { promiseCache, responseCache } from '~viem/utils/promise/withCache.js'
 import { socketsCache } from '~viem/utils/rpc.js'
 
-import { forkBlockNumber, poolId } from './src/constants.js'
-import { setBlockNumber, testClient } from './src/utils.js'
+import {
+  // forkBlockNumber,
+  poolId,
+} from './src/constants.js'
+// import { setBlockNumber, testClient } from './src/utils.js'
 
 beforeAll(() => {
   vi.mock('../src/errors/utils.ts', () => ({
     getContractAddress: vi
       .fn()
       .mockReturnValue('0x0000000000000000000000000000000000000000'),
-    getUrl: vi.fn().mockReturnValue('http://localhost'),
+    getUrl: vi.fn().mockReturnValue('http://localhost:8545'),
     getVersion: vi.fn().mockReturnValue('viem@1.0.2'),
   }))
 })
@@ -27,14 +30,16 @@ beforeEach(async () => {
   cleanupCache.clear()
   socketsCache.clear()
 
-  await setIntervalMining(testClient, { interval: 0 })
+  // disabled until suavex-anvil replaces anvil to support suave tx types:
+  // await setIntervalMining(testClient, { interval: 0 })
 })
 
 afterAll(async () => {
   vi.restoreAllMocks()
 
   // Reset the anvil instance to the same state it was in before the tests started.
-  await setBlockNumber(forkBlockNumber)
+  // disabled until suavex-anvil replaces anvil to support suave tx types:
+  /* await setBlockNumber(forkBlockNumber) */
 })
 
 afterEach((context) => {

@@ -1,5 +1,5 @@
 import { zeroAddress } from '../../constants/address.js'
-import { type ChainFormatters } from '../../types/chain.js'
+import type { ChainFormatters } from '../../types/chain.js'
 import type { Hash, Hex } from '../../types/misc.js'
 import type { RpcTransaction } from '../../types/rpc.js'
 import type {
@@ -22,16 +22,16 @@ import {
   formatTransactionRequest,
 } from '../../utils/formatters/transactionRequest.js'
 import { suaveRigil } from '../index.js'
-import {
-  type ConfidentialComputeRecord,
-  type RpcTransactionReceiptSuave,
-  type RpcTransactionRequestSuave,
-  type RpcTransactionSuave,
-  type SuaveBlockOverrides,
-  type SuaveTxType,
-  type TransactionReceiptSuave,
-  type TransactionRequestSuave,
-  type TransactionSuave,
+import type {
+  ConfidentialComputeRecord,
+  RpcTransactionReceiptSuave,
+  RpcTransactionRequestSuave,
+  RpcTransactionSuave,
+  SuaveBlockOverrides,
+  SuaveTxType,
+  TransactionReceiptSuave,
+  TransactionRequestSuave,
+  TransactionSuave,
 } from './types.js'
 
 export const formattersSuave = {
@@ -75,7 +75,7 @@ export const formattersSuave = {
         return {
           // format original eth params as legacy tx
           ...formatTransaction({ ...args, type: '0x0' } as RpcTransaction),
-          chainId: parseInt(args.chainId, 16),
+          chainId: Number.parseInt(args.chainId, 16),
           accessList: args.accessList,
           // ... then replace and add fields as needed
           gasPrice: hexToBigInt(args.gasPrice as Hex),
@@ -99,7 +99,7 @@ export const formattersSuave = {
             confidentialInputsHash: args.requestRecord.confidentialInputsHash,
             chainId:
               args.requestRecord.chainId &&
-              parseInt(args.requestRecord.chainId, 16),
+              Number.parseInt(args.requestRecord.chainId, 16),
             type: args.requestRecord.type,
             typeHex: args.requestRecord.typeHex,
           } as ConfidentialComputeRecord,

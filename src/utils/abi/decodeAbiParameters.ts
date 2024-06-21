@@ -277,7 +277,7 @@ function decodeBytes<const TParam extends AbiParameter>(
     return { consumed: 32, value }
   }
 
-  const value = slice(data, position, position + parseInt(size), {
+  const value = slice(data, position, position + Number.parseInt(size), {
     strict: true,
   })
   return { consumed: 32, value }
@@ -293,7 +293,7 @@ function decodeNumber<const TParam extends AbiParameter>(
   { param }: { param: TParam },
 ) {
   const signed = param.type.startsWith('int')
-  const size = parseInt(param.type.split('int')[1] || '256')
+  const size = Number.parseInt(param.type.split('int')[1] || '256')
   return {
     consumed: 32,
     value:
