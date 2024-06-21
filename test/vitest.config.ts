@@ -24,6 +24,7 @@ export default defineConfig({
     },
     environment: 'node',
     include: ['src/chains/suave/*.test.ts'],
+    exclude: ['**/generated.ts'],
     setupFiles: [join(__dirname, './setup.ts')],
     globalSetup: [join(__dirname, './globalSetup.ts')],
     testTimeout: 10_000,
