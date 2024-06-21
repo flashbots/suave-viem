@@ -13,7 +13,7 @@ import {
   hexToSignature,
   keccak256,
 } from '../../index.js'
-import { type Hex } from '../../types/misc.js'
+import type { Hex } from '../../types/misc.js'
 import { suaveRigil } from '../index.js'
 import {
   serializeConfidentialComputeRecord,

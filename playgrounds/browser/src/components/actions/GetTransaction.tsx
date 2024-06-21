@@ -65,7 +65,10 @@ function GetTransactionByHashAndIndex({ client }: { client: PublicClient }) {
   const handleGetTransaction = async () => {
     if (blockHash && index) {
       setTransaction(
-        await client.getTransaction({ blockHash, index: parseInt(index) }),
+        await client.getTransaction({
+          blockHash,
+          index: Number.parseInt(index),
+        }),
       )
     }
   }
@@ -111,7 +114,7 @@ function GetTransactionByNumberAndIndex({ client }: { client: PublicClient }) {
       setTransaction(
         await client.getTransaction({
           blockNumber: BigInt(blockNumber),
-          index: parseInt(index),
+          index: Number.parseInt(index),
         }),
       )
     }
@@ -159,7 +162,7 @@ function GetTransactionByTagAndIndex({ client }: { client: PublicClient }) {
       setTransaction(
         await client.getTransaction({
           blockTag,
-          index: parseInt(index),
+          index: Number.parseInt(index),
         }),
       )
     }
