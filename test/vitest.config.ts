@@ -1,6 +1,8 @@
 import { join } from 'node:path'
 import { defineConfig } from 'vitest/config'
+import { JsonReporter } from 'vitest/reporters'
 
+const jr = new JsonReporter({ outputFile: './bench/report.json' })
 export default defineConfig({
   test: {
     alias: {
@@ -8,8 +10,8 @@ export default defineConfig({
       '~test': join(__dirname, '.'),
     },
     benchmark: {
-      outputFile: './bench/report.json',
-      reporters: process.env.CI ? ['json'] : ['verbose'],
+      // outputFile: './bench/report.json',
+      reporters: process.env.CI ? [jr] : ['verbose'],
     },
     coverage: {
       reporter: process.env.CI ? ['lcov'] : ['text', 'json', 'html'],
