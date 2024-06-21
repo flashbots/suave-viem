@@ -1,1 +1,1 @@
-import '../types/window.js'
+import '../types/global.js'
