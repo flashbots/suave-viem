@@ -2,7 +2,7 @@
   // This configuration is used for local development and type checking.
   "extends": "./tsconfig.base.json",
   "include": ["src", "test"],
-  "exclude": [],
+  "exclude": ["test/contracts/generated.ts"],
   "references": [{ "path": "./scripts/tsconfig.json" }],
   "compilerOptions": {
     "baseUrl": ".",
