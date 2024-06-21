@@ -1,4 +1,4 @@
-import { WalletClient, parseEther } from 'viem'
+import { type WalletClient, parseEther } from 'viem'
 import { goerli } from 'viem/chains'
 
 export function SendTransaction({ client }: { client: WalletClient }) {

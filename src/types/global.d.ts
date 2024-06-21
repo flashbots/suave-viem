@@ -1,4 +1,4 @@
-import type { EIP1193Provider } from './eip1193.js'
+import { type EIP1193Provider } from './eip1193.ts'
 
 declare global {
   interface Window {
