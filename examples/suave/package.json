@@ -1,11 +1,11 @@
 {
-  "name": "suave-example",
+  "name": "example-suapp",
   "version": "0.0.0",
   "private": true,
   "module": "index.ts",
   "type": "module",
   "dependencies": {
-    "viem": "workspace:*"
+    "@flashbots/suave-viem": "workspace:*"
   },
   "devDependencies": {
     "bun-types": "^0.5.0"

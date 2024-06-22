@@ -5,7 +5,7 @@
   "module": "index.ts",
   "type": "module",
   "dependencies": {
-    "viem": "workspace:*"
+    "@flashbots/suave-viem": "workspace:*"
   },
   "devDependencies": {
     "bun-types": "^0.5.0"
