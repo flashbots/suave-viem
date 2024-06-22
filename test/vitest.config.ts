@@ -9,7 +9,7 @@ export default defineConfig({
       '~test': join(__dirname, '.'),
     },
     benchmark: {
-      // outputFile: './bench/report.json',
+      outputFile: './bench/report.json',
       reporters: process.env.CI
         ? [new JsonReporter({ outputFile: './bench/report.json' })]
         : ['verbose'],
