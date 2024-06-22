@@ -15,8 +15,10 @@ await Promise.all(
   paths.map(async (path) => {
     const fileName = path.split('/').pop()?.replace('.json', '')
     const json = await Bun.file(path, { type: 'application/json' }).json()
+    // If the filename starts with a number, prefix it with an underscore; makes compiler happy
+    const maybePrefix = /^[0-9]$/.test(fileName.charAt(0)) ? '_' : ''
     writer.write(
-      `export const ${fileName} = ${JSON.stringify(
+      `export const ${maybePrefix}${fileName} = ${JSON.stringify(
         json,
         null,
         2,
