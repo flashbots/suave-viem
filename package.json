@@ -27,11 +27,11 @@
     "test:parser": "vitest -c ./test/vitest.config.ts ./src/chains/suave/parsers.test.ts",
     "test:cov": "vitest dev -c ./test/vitest.config.ts --coverage",
     "test:ci": "CI=true vitest -c ./test/vitest.config.ts --coverage --retry=3 --bail=1",
-    "test:typecheck": "SKIP_GLOBAL_SETUP=true vitest --typecheck.ignoreSourceErrors -c ./test/vitest.config.ts",
+    "test:typecheck": "SKIP_GLOBAL_SETUP=true vitest --typecheck -c ./test/vitest.config.ts",
     "test:ui": "vitest dev -c ./test/vitest.config.ts --ui",
     "vectors": "bun test vectors/**/*.test.ts",
     "vectors:generate": "bun vectors/generate.ts",
-    "typecheck": "tsc --project ./tsconfig.typecheck.json --module esnext --noEmit"
+    "typecheck": "tsc --project ./tsconfig.typecheck.json --noEmit"
   },
   "devDependencies": {
     "@actions/core": "1.10.0",
@@ -55,7 +55,7 @@
     "size-limit": "^8.2.4",
     "typescript": "5.0.4",
     "vite": "^5.3.1",
-    "vitest": "^1.6.0",
+    "vitest": "1.6.0",
     "which-pm-runs": "^1.1.0"
   },
   "simple-git-hooks": {
