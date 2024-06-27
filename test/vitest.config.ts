@@ -1,5 +1,6 @@
 import { join } from 'node:path'
 import { defineConfig } from 'vitest/config'
+import { JsonReporter } from 'vitest/reporters'
 
 export default defineConfig({
   test: {
@@ -9,7 +10,9 @@ export default defineConfig({
     },
     benchmark: {
       outputFile: './bench/report.json',
-      reporters: process.env.CI ? ['json'] : ['verbose'],
+      reporters: process.env.CI
+        ? [new JsonReporter({ outputFile: './bench/report.json' })]
+        : ['verbose'],
     },
     coverage: {
       reporter: process.env.CI ? ['lcov'] : ['text', 'json', 'html'],
@@ -24,6 +27,7 @@ export default defineConfig({
     },
     environment: 'node',
     include: ['src/chains/suave/*.test.ts'],
+    exclude: [],
     setupFiles: [join(__dirname, './setup.ts')],
     globalSetup: [join(__dirname, './globalSetup.ts')],
     testTimeout: 10_000,

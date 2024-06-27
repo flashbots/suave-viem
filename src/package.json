@@ -1,7 +1,7 @@
 {
   "name": "@flashbots/suave-viem",
   "description": "TypeScript Interface for Ethereum & SUAVE Chain",
-  "version": "1.14.3",
+  "version": "1.14.4",
   "type": "module",
   "main": "./_cjs/index.js",
   "module": "./_esm/index.js",

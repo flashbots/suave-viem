@@ -15,7 +15,7 @@ import {
   keccak256,
   // zeroAddress,
 } from '../../index.js'
-import { type Hex } from '../../types/misc.js'
+import type { Hex } from '../../types/misc.js'
 import { suaveRigil } from '../index.js'
 import {
   // serializeConfidentialComputeRecord,
@@ -70,7 +70,7 @@ function formatSignature(signature: {
 //   }
 // }
 
-// function getSigningMethod<TTransport extends TransportConfig>(
+// function getSigningFunction<TTransport extends TransportConfig>(
 //   transport: TTransport,
 //   privateKey?: Hex,
 //   address?: Hex,
@@ -186,9 +186,21 @@ function newSuaveWallet<TTransport extends Transport>(params: {
       })
     },
     async signTransaction(txRequest: TransactionRequestSuave) {
-      if (txRequest.type === SuaveTxRequestTypes.ConfidentialRequest) {
-        const confidentialInputs = txRequest.confidentialInputs ?? '0x'
+      if (
+        txRequest.type === SuaveTxRequestTypes.ConfidentialRequest ||
+        txRequest.kettleAddress ||
+        txRequest.confidentialInputs
+      ) {
+        if (!txRequest.confidentialInputs) {
+          throw new Error(
+            'confidentialInputs is required for confidential requests',
+          )
+        }
+        if (!txRequest.kettleAddress) {
+          throw new Error('kettleAddress is required for confidential requests')
+        }
 
+        const confidentialInputs = txRequest.confidentialInputs ?? '0x'
         // get nonce, gas price, etc
         const ctxParams = prepareTx(client, txRequest)
         // dev note: calling (await ...) inline lets us skip the RPC request if teh data is not needed

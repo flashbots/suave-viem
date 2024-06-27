@@ -1,5 +1,11 @@
 # viem
 
+## 1.14.4
+
+### Patch Changes
+
+- add missing exports, fix build errors
+
 ## 1.14.3
 
 ### Patch Changes

@@ -1,5 +1,5 @@
 {
-  "name": "vite-project",
+  "name": "example-vite-project",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -10,7 +10,7 @@
     "compile": "cd ../suave/contracts && forge install && forge build"
   },
   "dependencies": {
-    "viem": "workspace:*"
+    "@flashbots/suave-viem": "workspace:*"
   },
   "devDependencies": {
     "typescript": "^5.2.2",
