@@ -167,7 +167,7 @@ export const serializeConfidentialComputeRequest = (
       transaction.confidentialInputsHash,
 
       // envelope
-      boolToHex(true), // TODO: add to params
+      boolToHex(transaction.isEIP712 ?? true),
 
       numberToHex(transaction.chainId),
       toHex(transaction.v),

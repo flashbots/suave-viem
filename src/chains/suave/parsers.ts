@@ -25,7 +25,7 @@ const safeHexToNumber = (hex: Hex) => {
   return hexToNumber(hex)
 }
 
-export const parseSignedComputeRequest = (signedComputeRequest: Hex) => {
+export const parseSignedComputeRequest = (signedComputeRequest: Hex): Partial<TransactionSerializableSuave> => {
   const serializedType = signedComputeRequest.slice(0, 4)
   if (serializedType !== SuaveTxRequestTypes.ConfidentialRequest) {
     throw new InvalidSerializedTransactionTypeError({
@@ -43,6 +43,7 @@ export const parseSignedComputeRequest = (signedComputeRequest: Hex) => {
       data,
       kettleAddress,
       confidentialInputsHash,
+      isEIP712,
       chainId,
       v,
       r,
@@ -50,7 +51,7 @@ export const parseSignedComputeRequest = (signedComputeRequest: Hex) => {
     ],
     confidentialInputs,
   ] = txArray
-  if (txArray.length !== 2 || txArray[0].length !== 12) {
+  if (txArray.length !== 2 || txArray[0].length !== 13) {
     throw new InvalidSerializedTransactionError({
       attributes: {
         nonce,
@@ -59,6 +60,7 @@ export const parseSignedComputeRequest = (signedComputeRequest: Hex) => {
         gas,
         kettleAddress,
         confidentialInputsHash,
+        isEIP712,
         value,
         gasPrice,
         chainId,
@@ -78,6 +80,7 @@ export const parseSignedComputeRequest = (signedComputeRequest: Hex) => {
     gas: hexToBigInt(gas as Hex),
     kettleAddress: kettleAddress as Hex,
     confidentialInputs: confidentialInputs as Hex,
+    isEIP712: isEIP712 === '0x01',
     value: safeHexToBigInt(value as Hex),
     gasPrice: safeHexToBigInt(gasPrice as Hex),
     chainId: hexToNumber(chainId as Hex),
@@ -100,7 +103,7 @@ export type ParseTransactionSuaveReturnType<TType extends SuaveTxType> =
 
 /** Parse a serialized transaction into a SUAVE Transaction object. */
 export function parseTransactionSuave(
-  serializedTransaction: TransactionSerializedSuave,
+  serializedTransaction: TransactionSerializedSuave | Hex,
 ): ParseTransactionSuaveReturnType<SuaveTxType> {
   const serializedType = serializedTransaction.slice(0, 4)
   const parsedTx =
@@ -130,12 +133,14 @@ export function assertTransactionSuave(
     maxFeePerGas,
     confidentialInputs,
     confidentialInputsHash,
+    isEIP712,
     kettleAddress,
     to,
     r,
     s,
     v,
   } = transaction
+  if (isEIP712 === undefined) throw new Error('isEIP712 is required')
   if (chainId && chainId <= 0) throw new Error('invalid chain ID')
   if (to && !isAddress(to)) throw new Error('invalid to address')
   if (!gasPrice) throw new Error('gasPrice is required')
