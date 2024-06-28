@@ -238,7 +238,7 @@ function newSuaveWallet<TTransport extends Transport>(params: {
     },
     async signTransaction(
       txRequest: TransactionRequestSuave,
-    ): Promise<`${SuaveTxType|TransactionType}${string}`> {
+    ): Promise<`${SuaveTxType | TransactionType}${string}`> {
       if (
         txRequest.type === SuaveTxRequestTypes.ConfidentialRequest ||
         txRequest.kettleAddress ||

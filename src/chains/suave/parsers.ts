@@ -143,7 +143,11 @@ export function assertTransactionSuave(
     s,
     v,
   } = transaction
-  if (type === SuaveTxRequestTypes.ConfidentialRequest && isEIP712 === undefined) throw new Error("must encode 'isEIP712' for confidential requests")
+  if (
+    type === SuaveTxRequestTypes.ConfidentialRequest &&
+    isEIP712 === undefined
+  )
+    throw new Error("must encode 'isEIP712' for confidential requests")
   if (chainId && chainId <= 0) throw new Error('invalid chain ID')
   if (to && !isAddress(to)) throw new Error('invalid to address')
   if (!gasPrice) throw new Error('gasPrice is required')
