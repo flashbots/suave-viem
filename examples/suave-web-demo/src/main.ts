@@ -4,7 +4,7 @@ import typescriptLogo from './typescript.svg'
 import flashbotsLogo from './flashbots_icon.svg'
 import { setupConnectButton, setupDripFaucetButton, setupSendBidButton } from './suave'
 import { Logo } from './components'
-import { custom, formatEther } from 'viem'
+import { custom, formatEther, http } from 'viem'
 import { getSuaveWallet, getSuaveProvider } from 'viem/chains/utils'
 import { suaveRigil } from 'viem/chains'
 
@@ -38,7 +38,7 @@ setupConnectButton(document.querySelector<HTMLButtonElement>('#connect')!,
   }
   const suaveWallet = getSuaveWallet({jsonRpcAccount: account, transport: custom(ethereum)})
   console.log(suaveWallet)
-  const suaveProvider = getSuaveProvider(custom(ethereum))
+  const suaveProvider = getSuaveProvider(http("http://localhost:8545"))
   suaveProvider.getBalance({ address: account }).then((balance: any) => {
     suaveProvider.getChainId().then((chainId: any) => {
       if (chainId !== suaveRigil.id) {

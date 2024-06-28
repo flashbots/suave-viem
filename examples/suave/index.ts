@@ -6,7 +6,6 @@ import { OFAOrder } from './bids'
 import { SuaveProvider, SuaveWallet, getSuaveProvider, getSuaveWallet, parseTransactionSuave } from 'viem/chains/utils'
 import { HttpTransport } from 'viem'
 import BidContractDeployment from './deployedAddress.json'
-import { parseSignedComputeRequest } from 'viem/chains/suave/parsers'
 
 const failEnv = (name: string) => {
   throw new Error(`missing env var ${name}`)
