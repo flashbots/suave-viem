@@ -25,7 +25,9 @@ const safeHexToNumber = (hex: Hex) => {
   return hexToNumber(hex)
 }
 
-export const parseSignedComputeRequest = (signedComputeRequest: Hex): Partial<TransactionSerializableSuave> => {
+export const parseSignedComputeRequest = (
+  signedComputeRequest: Hex,
+): Partial<TransactionSerializableSuave> => {
   const serializedType = signedComputeRequest.slice(0, 4)
   if (serializedType !== SuaveTxRequestTypes.ConfidentialRequest) {
     throw new InvalidSerializedTransactionTypeError({

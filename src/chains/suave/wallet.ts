@@ -5,14 +5,14 @@ import {
   type JsonRpcAccount,
   type PrivateKeyAccount,
   type PublicClient,
+  TransactionType,
   type Transport,
+  TransportConfig,
   type WalletClient,
   createPublicClient,
   createWalletClient,
   hexToSignature,
   keccak256,
-  TransportConfig,
-  TransactionType,
 } from '../../index.js'
 import type { Hex } from '../../types/misc.js'
 import { suaveRigil } from '../index.js'
@@ -21,12 +21,12 @@ import {
   serializeConfidentialComputeRequest,
 } from './serializers.js'
 import {
+  PreparedConfidentialRecord,
   SuaveTxRequestTypes,
+  SuaveTxType,
   SuaveTxTypes,
   type TransactionRequestSuave,
   TransactionSerializableSuave,
-  PreparedConfidentialRecord,
-  SuaveTxType,
 } from './types.js'
 
 /// client types
@@ -80,7 +80,9 @@ function getSigningFunction<TTransport extends TransportConfig>(
   transport: TTransport,
   privateKey?: Hex,
   address?: Hex,
-): (txRequest: TransactionSerializableSuave) => Promise<ReturnType<typeof formatSignature>> {
+): (
+  txRequest: TransactionSerializableSuave,
+) => Promise<ReturnType<typeof formatSignature>> {
   if (transport.type === 'custom') {
     if (!address) {
       throw new Error("'address' is required for custom transports")
@@ -101,9 +103,12 @@ function getSigningFunction<TTransport extends TransportConfig>(
       throw new Error("'privateKey' is required for non-custom transports")
     }
     return async (txRequest: TransactionSerializableSuave) => {
-      const {r,s,v} = await signConfidentialComputeRecord(txRequest, privateKey)
+      const { r, s, v } = await signConfidentialComputeRecord(
+        txRequest,
+        privateKey,
+      )
       if (!r || !s || !v) throw new Error('failed to sign')
-      return {r,s,v}
+      return { r, s, v }
     }
   }
 }
@@ -187,8 +192,11 @@ function newSuaveWallet<TTransport extends Transport>(params: {
     chain: suaveRigil,
   }).extend((client) => ({
     /** Sign a prepared Confidential Compute Record; like a request, but with `confidentialInputsHash` and `type=0x42` */
-    async signEIP712ConfidentialRequest(request: PreparedConfidentialRecord): Promise<ReturnType<typeof formatSignature>> {
-      if (request.isEIP712 === false) throw new Error('cannot sign an EIP712 CCR with isEIP712=false')
+    async signEIP712ConfidentialRequest(
+      request: PreparedConfidentialRecord,
+    ): Promise<ReturnType<typeof formatSignature>> {
+      if (request.isEIP712 === false)
+        throw new Error('cannot sign an EIP712 CCR with isEIP712=false')
 
       const eip712Tx = {
         ...request,
@@ -228,7 +236,9 @@ function newSuaveWallet<TTransport extends Transport>(params: {
         params: [signedTx],
       })
     },
-    async signTransaction(txRequest: TransactionRequestSuave): Promise<SuaveTxType | TransactionType> {
+    async signTransaction(
+      txRequest: TransactionRequestSuave,
+    ): Promise<SuaveTxType | TransactionType> {
       if (
         txRequest.type === SuaveTxRequestTypes.ConfidentialRequest ||
         txRequest.kettleAddress ||
@@ -291,10 +301,16 @@ function newSuaveWallet<TTransport extends Transport>(params: {
           isEIP712,
         }
 
-        const sig = isEIP712 ? await this.signEIP712ConfidentialRequest(ccRecord) : await (async () => {
-          const signCcr = getSigningFunction(client.transport, params.privateKey, params.jsonRpcAccount?.address)
-          return await signCcr(ccRecord)
-        })()
+        const sig = isEIP712
+          ? await this.signEIP712ConfidentialRequest(ccRecord)
+          : await (async () => {
+              const signCcr = getSigningFunction(
+                client.transport,
+                params.privateKey,
+                params.jsonRpcAccount?.address,
+              )
+              return await signCcr(ccRecord)
+            })()
 
         const { r, s, v } = formatSignature(sig)
         return serializeConfidentialComputeRequest({

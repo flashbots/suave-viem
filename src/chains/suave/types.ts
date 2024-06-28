@@ -37,8 +37,8 @@ export type SuaveTxRequestType =
   `${(typeof SuaveTxRequestTypes)[keyof typeof SuaveTxRequestTypes]}`
 
 type ConfidentialOverrides = {
-  kettleAddress?: Address,
-  isEIP712?: boolean,
+  kettleAddress?: Address
+  isEIP712?: boolean
 }
 
 type ConfidentialComputeRequestOverrides = ConfidentialOverrides & {
@@ -46,7 +46,7 @@ type ConfidentialComputeRequestOverrides = ConfidentialOverrides & {
 }
 
 type ConfidentialComputeRecordOverrides = ConfidentialOverrides & {
-  confidentialInputsHash?: Hash,
+  confidentialInputsHash?: Hash
 }
 
 export type SuaveBlockOverrides = {} // Add any specific block overrides if necessary for Suave
@@ -137,14 +137,10 @@ export type ConfidentialComputeRecord<
   TQuantity = bigint,
   TIndex = number,
 > = Omit<
-  TransactionBase<
-    TQuantity,
-    TIndex,
-    SuaveTxTypes.ConfidentialRecord,
-    TPending
-  >,
+  TransactionBase<TQuantity, TIndex, SuaveTxTypes.ConfidentialRecord, TPending>,
   'blockHash' | 'transactionIndex' | 'blockNumber' | 'from'
-> & ConfidentialComputeRecordOverrides
+> &
+  ConfidentialComputeRecordOverrides
 
 export type ConfidentialComputeRecordRpc<TPending extends boolean = false> =
   ConfidentialComputeRecord<TPending, Hex, Hex>
@@ -155,15 +151,18 @@ export type TransactionRequestSuave<
   TType extends SuaveTxRequestType = SuaveTxRequestType,
 > = TransactionRequestBase<TQuantity, TIndex, TType> &
   ConfidentialComputeRequestOverrides & {
-    from?: Address,
+    from?: Address
   }
 
-export type PreparedConfidentialRecord = Omit<ConfidentialComputeRecord, 'input' | 'typeHex' | 'hash' | 'r' | 's' | 'v'> & {
-  data: Hex,
-  to: Address,
-  gasPrice: bigint,
-  kettleAddress: Address,
-  confidentialInputsHash: Hash,
+export type PreparedConfidentialRecord = Omit<
+  ConfidentialComputeRecord,
+  'input' | 'typeHex' | 'hash' | 'r' | 's' | 'v'
+> & {
+  data: Hex
+  to: Address
+  gasPrice: bigint
+  kettleAddress: Address
+  confidentialInputsHash: Hash
 }
 
 export type RpcTransactionRequestSuave<TType = SuaveTxType> =
