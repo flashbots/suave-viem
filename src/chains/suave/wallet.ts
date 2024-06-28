@@ -107,7 +107,7 @@ function getSigningFunction<TTransport extends TransportConfig>(
         txRequest,
         privateKey,
       )
-      if (!r || !s || !v) throw new Error('failed to sign')
+      if (!r || !s || v === undefined) throw new Error('failed to sign')
       return { r, s, v }
     }
   }
