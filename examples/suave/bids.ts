@@ -62,7 +62,7 @@ export class OFAOrder {
       data: this.newOrderCalldata(),
       type: '0x43',
       gas: 500000n,
-      gasPrice: 1000000000n,
+      gasPrice: 10000000000n,
       isEIP712,
       kettleAddress: this.kettle,
       confidentialInputs: this.confidentialInputsBytes(),

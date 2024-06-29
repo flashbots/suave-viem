@@ -15,23 +15,23 @@ import BidContractDeployment from '../../suave/deployedAddress.json'
 const KETTLE_ADDRESS: Address = '0xb5feafbdd752ad52afb7e1bd2e40432a485bbb7f'
 const ADMIN_KEY: Hex =
   '0x91ab9a7e53c220e6210460b65a7a3bb2ca181412a8a7b43ff336b3df1737ce12'
-// public goerli node, may need to change if it goes down:
-const L1_RPC_URL_HTTP: string = 'https://holesky.rigil.suave.flashbots.net'
+export const L1_RPC_URL_HTTP: string = 'https://holesky.rigil.suave.flashbots.net'
+export const SUAVE_RPC_URL_HTTP: string = 'http://localhost:8545'
 
-const goerliWallet = createWalletClient({
+const l1Wallet = createWalletClient({
   account: privateKeyToAccount(
     '0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80',
   ),
   chain: holesky,
   transport: http(L1_RPC_URL_HTTP),
 })
-const goerliProvider = createPublicClient({
-  transport: http(L1_RPC_URL_HTTP),
+const l1Provider = createPublicClient({
   chain: holesky,
+  transport: http(L1_RPC_URL_HTTP),
 })
 const suaveAdminWallet = getSuaveWallet({
   privateKey: ADMIN_KEY,
-  transport: http('http://localhost:8545'),
+  transport: http(SUAVE_RPC_URL_HTTP),
 })
 
 /** Sets up "connect to wallet" button and holds wallet instance. */
@@ -73,7 +73,7 @@ export function setupSendBidButton(
     // create sample transaction; won't land onchain, but will pass payload validation
     const sampleTx = {
       type: 'eip1559' as const,
-      chainId: 5,
+      chainId: 17000,
       nonce: 0,
       maxBaseFeePerGas: 0x3b9aca00n,
       maxPriorityFeePerGas: 0x5208n,
@@ -81,11 +81,11 @@ export function setupSendBidButton(
       value: 0n,
       data: '0xf00ba7' as Hex,
     }
-    const signedTx = await goerliWallet.signTransaction(sampleTx)
+    const signedTx = await l1Wallet.signTransaction(sampleTx)
     console.log('signed goerli tx', signedTx)
 
     // create bid & send ccr
-    const decryptionCondition = 1n + (await goerliProvider.getBlockNumber())
+    const decryptionCondition = 1n + (await l1Provider.getBlockNumber())
     console.log("decryptionCondition", decryptionCondition)
     const bid = new OFAOrder(
       decryptionCondition,
@@ -93,7 +93,6 @@ export function setupSendBidButton(
       KETTLE_ADDRESS,
       BidContractDeployment.address as Address,
     )
-    console.log("bid", bid)
     const ccr = bid.toConfidentialRequest()
     console.log("ccr", ccr)
     let txHash: Hex
