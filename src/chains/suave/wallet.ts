@@ -189,16 +189,9 @@ function newSuaveWallet<TTransport extends Transport>(params: {
     transport: params.transport,
     chain: suaveRigil,
   }).extend((client) => ({
-    /** If `customRpc` is provider, this is used instead of provided (custom) transport.
-     *  Used for hitting the correct RPC when users switch RPCs in their wallets,
-     *  when querying gasPrice, nonce, sending txs, etc. */
-    customWallet: params.customRpc
-      ? createWalletClient({
-          account: client.account,
-          transport: http(params.customRpc),
-          chain: suaveRigil,
-        })
-      : client,
+    /** If `customRpc` is provided, this is used for some RPC requests instead of provided (custom) `transport`.
+     *  `transport` is still used for things that require the wallet's account (signing, etc).
+     */
     customProvider: getSuaveProvider(
       params.customRpc ? http(params.customRpc) : params.transport,
     ),
@@ -214,7 +207,8 @@ function newSuaveWallet<TTransport extends Transport>(params: {
           console.warn('no gas provided, using default 30000000')
           return 30000000n
         })()
-      const preparedTx = await this.customWallet.prepareTransactionRequest({
+      const preparedTx = await this.customProvider.prepareTransactionRequest({
+        account: client.account,
         ...txRequest,
         gas,
       })
@@ -273,7 +267,7 @@ function newSuaveWallet<TTransport extends Transport>(params: {
       // signTransaction also invokes prepareTxRequest, but only for CCRs. this is still needed for standard txs.
       const payload = await this.prepareTxRequest(txRequest)
       const signedTx = await this.signTransaction(payload)
-      return this.customWallet.request({
+      return this.customProvider.request({
         method: 'eth_sendRawTransaction',
         params: [signedTx as Hex],
       })
