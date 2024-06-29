@@ -234,6 +234,9 @@ function newSuaveWallet<TTransport extends Transport>(params: {
     async signEIP712ConfidentialRequest(
       request: PreparedConfidentialRecord,
     ): Promise<ReturnType<typeof formatSignature>> {
+      if (request.isEIP712 === false)
+        throw new Error('cannot sign an EIP712 CCR with isEIP712=false')
+
       const eip712Tx = {
         ...request,
         nonce: BigInt(request.nonce),
