@@ -192,20 +192,30 @@ function newSuaveWallet<TTransport extends Transport>(params: {
     /** If `customRpc` is provider, this is used instead of provided (custom) transport.
      *  Used for hitting the correct RPC when users switch RPCs in their wallets,
      *  when querying gasPrice, nonce, sending txs, etc. */
-    customWallet: params.customRpc ? createWalletClient({
-      account: client.account,
-      transport: http(params.customRpc),
-      chain: suaveRigil,
-    }) : client,
-    customProvider: getSuaveProvider(params.customRpc ? http(params.customRpc) : params.transport),
+    customWallet: params.customRpc
+      ? createWalletClient({
+          account: client.account,
+          transport: http(params.customRpc),
+          chain: suaveRigil,
+        })
+      : client,
+    customProvider: getSuaveProvider(
+      params.customRpc ? http(params.customRpc) : params.transport,
+    ),
 
     /** Prepare any omitted fields in request. */
     async prepareTxRequest(
       txRequest: TransactionRequestSuave,
     ): Promise<TransactionRequestSuave> {
+      const gas = txRequest.gas ?? (() => {
+        // TODO: replace this with a working call to eth_estimateGas
+        console.warn('no gas provided, using default 30000000')
+        return 30000000n
+      })()
       const preparedTx =
-        await this.customWallet.prepareTransactionRequest(txRequest)
-      const gasPrice = preparedTx.gasPrice ?? await this.customProvider.getGasPrice()
+        await this.customWallet.prepareTransactionRequest({...txRequest, gas})
+      const gasPrice =
+        preparedTx.gasPrice ?? (await this.customProvider.getGasPrice())
       return {
         ...txRequest,
         from: txRequest.from ?? preparedTx.from,
