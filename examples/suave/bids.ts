@@ -60,9 +60,7 @@ export class OFAOrder {
     return {
       to: this.OFAContract,
       data: this.newOrderCalldata(),
-      type: '0x43',
-      gas: 500000n,
-      gasPrice: 10000000000n,
+      gas: 100000n,
       isEIP712,
       kettleAddress: this.kettle,
       confidentialInputs: this.confidentialInputsBytes(),

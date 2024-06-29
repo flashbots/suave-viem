@@ -167,7 +167,7 @@ function newSuaveWallet<TTransport extends Transport>(params: {
   /** must set this for custom transports only. */
   jsonRpcAccount?: JsonRpcAccount
   /** should set this for custom transports. */
-  customRpc?: string,
+  customRpc?: string
   /** must set this for non-custom transports only. */
   privateKey?: Hex
 }): SuaveWallet<TTransport> {
@@ -189,24 +189,29 @@ function newSuaveWallet<TTransport extends Transport>(params: {
     transport: params.transport,
     chain: suaveRigil,
   }).extend((client) => ({
-    /** to be used when transport is custom; used for reliable RPC requests (wallet may switch RPC to L1, etc) */
-    customWallet: createWalletClient({
+    /** If `customRpc` is provider, this is used instead of provided (custom) transport.
+     *  Used for hitting the correct RPC when users switch RPCs in their wallets,
+     *  when querying gasPrice, nonce, sending txs, etc. */
+    customWallet: params.customRpc ? createWalletClient({
       account: client.account,
-      transport: http(params.customRpc || client.transport.url),
+      transport: http(params.customRpc),
       chain: suaveRigil,
-    }),
+    }) : client,
+    customProvider: getSuaveProvider(params.customRpc ? http(params.customRpc) : params.transport),
 
     /** Prepare any omitted fields in request. */
     async prepareTxRequest(
       txRequest: TransactionRequestSuave,
     ): Promise<TransactionRequestSuave> {
-      const preparedTx = await this.customWallet.prepareTransactionRequest(txRequest)
+      const preparedTx =
+        await this.customWallet.prepareTransactionRequest(txRequest)
+      const gasPrice = preparedTx.gasPrice ?? await this.customProvider.getGasPrice()
       return {
         ...txRequest,
         from: txRequest.from ?? preparedTx.from,
         nonce: txRequest.nonce ?? preparedTx.nonce,
         gas: txRequest.gas ?? preparedTx.gas,
-        gasPrice: txRequest.gasPrice ?? preparedTx.gasPrice,
+        gasPrice: txRequest.gasPrice ?? gasPrice,
         chainId: txRequest.chainId ?? suaveRigil.id,
       }
     },
@@ -215,7 +220,6 @@ function newSuaveWallet<TTransport extends Transport>(params: {
     async signEIP712ConfidentialRequest(
       request: PreparedConfidentialRecord,
     ): Promise<ReturnType<typeof formatSignature>> {
-
       const eip712Tx = {
         ...request,
         nonce: BigInt(request.nonce),
