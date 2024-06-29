@@ -207,13 +207,17 @@ function newSuaveWallet<TTransport extends Transport>(params: {
     async prepareTxRequest(
       txRequest: TransactionRequestSuave,
     ): Promise<TransactionRequestSuave> {
-      const gas = txRequest.gas ?? (() => {
-        // TODO: replace this with a working call to eth_estimateGas
-        console.warn('no gas provided, using default 30000000')
-        return 30000000n
-      })()
-      const preparedTx =
-        await this.customWallet.prepareTransactionRequest({...txRequest, gas})
+      const gas =
+        txRequest.gas ??
+        (() => {
+          // TODO: replace this with a working call to eth_estimateGas
+          console.warn('no gas provided, using default 30000000')
+          return 30000000n
+        })()
+      const preparedTx = await this.customWallet.prepareTransactionRequest({
+        ...txRequest,
+        gas,
+      })
       const gasPrice =
         preparedTx.gasPrice ?? (await this.customProvider.getGasPrice())
       return {
