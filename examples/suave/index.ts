@@ -3,10 +3,9 @@ import { http, Address, Hex, createPublicClient, formatEther, isHex } from 'viem
 import { goerli } from 'viem/chains'
 import { TransactionRequestSuave } from 'viem/chains/suave/types'
 import { OFAOrder } from './bids'
-import { SuaveProvider, SuaveWallet, getSuaveProvider, getSuaveWallet } from 'viem/chains/utils'
+import { SuaveProvider, SuaveWallet, getSuaveProvider, getSuaveWallet, parseTransactionSuave } from 'viem/chains/utils'
 import { HttpTransport } from 'viem'
 import BidContractDeployment from './deployedAddress.json'
-import { parseSignedComputeRequest } from 'viem/chains/suave/parsers'
 
 const failEnv = (name: string) => {
   throw new Error(`missing env var ${name}`)
@@ -126,12 +125,12 @@ async function testSuaveBids() {
     KETTLE_ADDRESS,
     BID_CONTRACT_ADDRESS,
   )
-  const ccr = bid.toConfidentialRequest()
+  const ccr = bid.toConfidentialRequest() // signs w/ EIP712 by default; pass `false` to use legacy CCR
   console.log('ccr', ccr)
 
   const signedCcr = await wallet.signTransaction(ccr)
-  const deserCcr = await parseSignedComputeRequest(signedCcr)
   console.log("signedCcr", signedCcr)
+  const deserCcr = await parseTransactionSuave(signedCcr)
   console.log("deserialized signed ccr", deserCcr)
 
   // deserCcr should be the same as ccr, but with any missing fields filled in, such as gasPrice & nonce

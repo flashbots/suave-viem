@@ -38,6 +38,7 @@ export type SuaveTxRequestType =
 
 type ConfidentialOverrides = {
   kettleAddress?: Address
+  isEIP712?: boolean
 }
 
 type ConfidentialComputeRequestOverrides = ConfidentialOverrides & {
@@ -136,22 +137,8 @@ export type ConfidentialComputeRecord<
   TQuantity = bigint,
   TIndex = number,
 > = Omit<
-  Omit<
-    Omit<
-      Omit<
-        TransactionBase<
-          TQuantity,
-          TIndex,
-          SuaveTxTypes.ConfidentialRecord,
-          TPending
-        >,
-        'blockHash'
-      >,
-      'transactionIndex'
-    >,
-    'blockNumber'
-  >,
-  'from'
+  TransactionBase<TQuantity, TIndex, SuaveTxTypes.ConfidentialRecord, TPending>,
+  'blockHash' | 'transactionIndex' | 'blockNumber' | 'from'
 > &
   ConfidentialComputeRecordOverrides
 
@@ -166,6 +153,17 @@ export type TransactionRequestSuave<
   ConfidentialComputeRequestOverrides & {
     from?: Address
   }
+
+export type PreparedConfidentialRecord = Omit<
+  ConfidentialComputeRecord,
+  'input' | 'typeHex' | 'hash' | 'r' | 's' | 'v'
+> & {
+  data: Hex
+  to: Address
+  gasPrice: bigint
+  kettleAddress: Address
+  confidentialInputsHash: Hash
+}
 
 export type RpcTransactionRequestSuave<TType = SuaveTxType> =
   TransactionRequestSuave<Hex, Hex> & {
@@ -195,7 +193,6 @@ export type TransactionSerializableSuave<
 > = TransactionSerializableEIP2930<TQuantity, TIndex> &
   ConfidentialComputeRecordOverrides &
   ConfidentialComputeRequestOverrides & {
-    signedComputeRecord?: Hex
     type: TType
   }
 

@@ -6,7 +6,7 @@ import {
   http,
 } from 'viem'
 import { privateKeyToAccount } from 'viem/accounts'
-import { suaveRigil, goerli } from 'viem/chains'
+import { suaveRigil, holesky } from 'viem/chains'
 import { OFAOrder } from '../../suave/bids'
 import { getSuaveWallet } from 'viem/chains/utils'
 import BidContractDeployment from '../../suave/deployedAddress.json'
@@ -16,18 +16,18 @@ const KETTLE_ADDRESS: Address = '0xb5feafbdd752ad52afb7e1bd2e40432a485bbb7f'
 const ADMIN_KEY: Hex =
   '0x91ab9a7e53c220e6210460b65a7a3bb2ca181412a8a7b43ff336b3df1737ce12'
 // public goerli node, may need to change if it goes down:
-const GOERLI_RPC_URL_HTTP: string = 'https://goerli.rigil.suave.flashbots.net'
+const L1_RPC_URL_HTTP: string = 'https://holesky.rigil.suave.flashbots.net'
 
 const goerliWallet = createWalletClient({
   account: privateKeyToAccount(
     '0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80',
   ),
-  chain: goerli,
-  transport: http(GOERLI_RPC_URL_HTTP),
+  chain: holesky,
+  transport: http(L1_RPC_URL_HTTP),
 })
 const goerliProvider = createPublicClient({
-  transport: http(GOERLI_RPC_URL_HTTP),
-  chain: goerli,
+  transport: http(L1_RPC_URL_HTTP),
+  chain: holesky,
 })
 const suaveAdminWallet = getSuaveWallet({
   privateKey: ADMIN_KEY,
