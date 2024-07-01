@@ -2,10 +2,11 @@
 pragma solidity ^0.8.8;
 
 import "suave-std/suavelib/Suave.sol";
+import "suave-std/Suapp.sol";
 import {Bundle} from "suave-std/protocols/Bundle.sol";
 import "solady/src/utils/LibString.sol";
 
-contract OFAPrivate {
+contract OFAPrivate is Suapp {
     // Struct to hold hint-related information for an order.
     struct HintOrder {
         Suave.DataId id;
@@ -19,11 +20,11 @@ contract OFAPrivate {
     event Debug(string message, bytes data);
 
     // Internal function to save order details and generate a hint.
-    function saveOrder(uint64 decryptionCondition) internal view returns (HintOrder memory) {
+    function saveOrder(uint64 decryptionCondition) internal returns (HintOrder memory) {
         // Retrieve the bundle data from the confidential inputs
         bytes memory bundleData = Suave.confidentialInputs();
         Bundle.BundleObj memory bundle = abi.decode(bundleData, (Bundle.BundleObj));
-        bundleData = Bundle.encodeBundle(bundle).body;
+        bundleData = Bundle.encodeBundleParams(bundle);
 
         // Simulate the bundle and extract its score.
         uint64 egp = Suave.simulateBundle(bundleData);
@@ -109,7 +110,7 @@ contract OFAPrivate {
         return abi.encodeWithSelector(this.emitMatchDataRecordAndHintCallback.selector, response);
     }
 
-    function submitBundle(string memory builderUrl, bytes memory bundleData) internal view returns (bytes memory) {
+    function submitBundle(string memory builderUrl, bytes memory bundleData) internal returns (bytes memory) {
         // encode the jsonrpc request in JSON format.
         bytes memory body =
             abi.encodePacked('{"jsonrpc":"2.0","method":"mev_sendBundle","params":[', bundleData, '],"id":1}');

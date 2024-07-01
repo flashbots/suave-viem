@@ -40,9 +40,9 @@ export class OFAOrder {
     return encodeAbiParameters([
       {
         components: [
-          { type: 'uint', name: 'blockNumber' },
-          { type: 'uint', name: 'minTimestamp' },
-          { type: 'uint', name: 'maxTimestamp' },
+          { type: 'uint64', name: 'blockNumber' },
+          { type: 'uint64', name: 'minTimestamp' },
+          { type: 'uint64', name: 'maxTimestamp' },
           { type: 'bytes[]', name: 'txns' },
         ],
         name: 'BundleObj',

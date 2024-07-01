@@ -1,6 +1,6 @@
 import { sleep } from 'bun'
 import { http, Address, Hex, createPublicClient, formatEther, isHex } from 'viem'
-import { goerli } from 'viem/chains'
+import { holesky } from 'viem/chains'
 import { TransactionRequestSuave } from 'viem/chains/suave/types'
 import { OFAOrder } from './bids'
 import { SuaveProvider, SuaveWallet, getSuaveProvider, getSuaveWallet, parseTransactionSuave } from 'viem/chains/utils'
@@ -19,15 +19,15 @@ if (!process.env.KETTLE_ADDRESS) {
 if (!process.env.SUAVE_RPC_URL_HTTP) {
   console.warn('SUAVE_RPC_URL_HTTP not set. Defaulting to localhost:8545')
 }
-if (!process.env.GOERLI_RPC_URL_HTTP) {
-  console.warn('GOERLI_RPC_URL_HTTP not set. Defaulting to localhost:8545')
+if (!process.env.L1_RPC_URL_HTTP) {
+  console.warn('L1_RPC_URL_HTTP not set. Defaulting to localhost:8545')
 }
 const KETTLE_ADDRESS: Address = process.env.KETTLE_ADDRESS as Address
 const PRIVATE_KEY: Hex = process.env.PRIVATE_KEY as Hex
 const SUAVE_RPC_URL_HTTP: string =
   process.env.SUAVE_RPC_URL_HTTP || 'http://localhost:8545'
-const GOERLI_RPC_URL_HTTP: string =
-  process.env.GOERLI_RPC_URL_HTTP || 'http://localhost:8545'
+const L1_RPC_URL_HTTP: string =
+  process.env.L1_RPC_URL_HTTP || 'http://localhost:8555'
 
 if (!BidContractDeployment.address) {
   console.error(
@@ -42,9 +42,9 @@ if (!isHex(BidContractDeployment.address)) {
 const BID_CONTRACT_ADDRESS = BidContractDeployment.address as Hex
 
 const suaveProvider: SuaveProvider<HttpTransport> = getSuaveProvider(http(SUAVE_RPC_URL_HTTP))
-const goerliProvider = createPublicClient({
-  chain: goerli,
-  transport: http(GOERLI_RPC_URL_HTTP),
+const l1Provider = createPublicClient({
+  chain: holesky,
+  transport: http(L1_RPC_URL_HTTP),
 })
 const adminWallet: SuaveWallet<HttpTransport> = getSuaveWallet({
   transport: http(SUAVE_RPC_URL_HTTP),
@@ -52,7 +52,7 @@ const adminWallet: SuaveWallet<HttpTransport> = getSuaveWallet({
 })
 const wallet = getSuaveWallet({
   transport: http(SUAVE_RPC_URL_HTTP),
-  privateKey: '0x01000070530220062104600650003002001814120800043ff33603df10300012',
+  privateKey: "0x6c45335a22461ccdb978b78ab61b238bad2fae4544fb55c14eb096c875ccfc52",
 })
 console.log('admin', adminWallet.account.address)
 console.log('wallet', wallet.account.address)
@@ -90,8 +90,17 @@ const fundAccount = async (wallet: Address, amount: bigint) => {
     }
     return await adminWallet.sendTransaction(tx)
   } else {
-    console.log(`wallet balance: ${formatEther(balance)} ETH`)
+    console.log(`SUAVE wallet balance: ${formatEther(balance)} ETH`)
   }
+}
+
+async function checkL1Balance(minBalance?: bigint) {
+  const balance = await l1Provider.getBalance({ address: wallet.account.address })
+  const absoluteMin = minBalance || 1n
+  if (balance < absoluteMin) {
+    throw new Error(`L1 balance too low: ${formatEther(balance)} ETH (needed ${formatEther(absoluteMin)}).\nPlease fund this account: ${wallet.account.address}`)
+  }
+  console.log(`L1 balance: ${formatEther(balance)} ETH`)
 }
 
 /** MEV-Share implementation on SUAVE.
@@ -107,18 +116,21 @@ async function testSuaveBids() {
   )
   fundRes && console.log('fundRes', fundRes)
 
-  // a tx that should be landed on goerli
+  // a tx that should be landed on L1
   const testTx = {
     to: '0x0000000000000000000000000000000000000000' as Address,
     data: '0x686f776479' as Hex,
     gas: 26000n,
     gasPrice: 10000000000n,
-    chainId: 5,
+    chainId: 17000,
   }
+  checkL1Balance(testTx.gas * testTx.gasPrice)
   const signedTx = await wallet.signTransaction(testTx)
 
+  console.log("signed tx", signedTx)
+
   // create bid & send ccr
-  const block = await goerliProvider.getBlockNumber()
+  const block = await l1Provider.getBlockNumber()
   const bid = new OFAOrder(
     block + 1n,
     signedTx,
