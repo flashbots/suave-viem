@@ -14,7 +14,7 @@ import {
   hexToSignature,
   keccak256,
 } from '../../index.js'
-import type { Hex } from '../../types/misc.js'
+import type { Hash, Hex } from '../../types/misc.js'
 import { suaveRigil } from '../index.js'
 import {
   serializeConfidentialComputeRecord,
@@ -115,6 +115,11 @@ function getSigningFunction<TTransport extends TransportConfig>(
 
 /** Get a SUAVE-enabled viem wallet.
  *
+ * @param params.transport - the transport to use for RPC requests. Defaults to public testnet.
+ * @param params.jsonRpcAccount - the address to use for EIP-1193 requests (browser wallets). Required for `custom` transports.
+ * @param params.privateKey - the private key to use for signing transactions. Required for *non*-`custom` transports.
+ * @param params.customRpc - the RPC URL to use for SUAVE calls (nonce, gas estimates, etc) when using a `custom` transport. Defaults to transport URL.
+ *
  * @example
  * import { http } from 'viem'
  * import { getSuaveWallet } from 'viem/chains/utils'
@@ -133,6 +138,8 @@ function getSigningFunction<TTransport extends TransportConfig>(
  *   const wallet = getSuaveWallet({
  *     transport: custom(window.ethereum),
  *     jsonRpcAccount: account,
+ *     // ensures reliable RPC requests (nonce, gas estimates, etc) as user switches RPCs in their wallet
+ *     customRpc: 'http://localhost:8545',
  *   })
  * }
  * main()
@@ -141,6 +148,7 @@ export function getSuaveWallet<TTransport extends Transport>(params: {
   transport?: TTransport
   jsonRpcAccount?: Hex
   privateKey?: Hex
+  customRpc?: string
 }): SuaveWallet<TTransport> {
   return newSuaveWallet({
     transport: params.transport ?? http(suaveRigil.rpcUrls.public.http[0]),
@@ -149,29 +157,18 @@ export function getSuaveWallet<TTransport extends Transport>(params: {
       address: params.jsonRpcAccount,
       type: 'json-rpc',
     },
+    customRpc: params.customRpc,
   })
-}
-
-async function prepareTx(
-  client: ReturnType<typeof newSuaveWallet>,
-  txRequest: TransactionRequestSuave,
-) {
-  const preparedTx = await client.prepareTransactionRequest(txRequest)
-  const payload: TransactionRequestSuave = {
-    ...txRequest,
-    from: txRequest.from ?? preparedTx.from,
-    nonce: txRequest.nonce ?? preparedTx.nonce,
-    gas: txRequest.gas ?? preparedTx.gas,
-    gasPrice: txRequest.gasPrice ?? preparedTx.gasPrice,
-    chainId: txRequest.chainId ?? suaveRigil.id,
-  }
-  return payload
 }
 
 /** Get a SUAVE-enabled viem wallet. */
 function newSuaveWallet<TTransport extends Transport>(params: {
   transport: TTransport
+  /** must set this for custom transports only. */
   jsonRpcAccount?: JsonRpcAccount
+  /** should set this for custom transports. */
+  customRpc?: string
+  /** must set this for non-custom transports only. */
   privateKey?: Hex
 }): SuaveWallet<TTransport> {
   if (!params.jsonRpcAccount && !params.privateKey) {
@@ -185,12 +182,48 @@ function newSuaveWallet<TTransport extends Transport>(params: {
   const privateKeyAccount = params.privateKey
     ? privateKeyToAccount(params.privateKey)
     : undefined
-  const account = params.jsonRpcAccount ?? privateKeyAccount
+  const account = params.jsonRpcAccount || privateKeyAccount
+
   return createWalletClient({
     account,
     transport: params.transport,
     chain: suaveRigil,
   }).extend((client) => ({
+    /** If `customRpc` is provided, this is used for some RPC requests instead of provided (custom) `transport`.
+     *  `transport` is still used for things that require the wallet's account (signing, etc).
+     */
+    customProvider: getSuaveProvider(
+      params.customRpc ? http(params.customRpc) : params.transport,
+    ),
+
+    /** Prepare any omitted fields in request. */
+    async prepareTxRequest(
+      txRequest: TransactionRequestSuave,
+    ): Promise<TransactionRequestSuave> {
+      const gas =
+        txRequest.gas ??
+        (() => {
+          // TODO: replace this with a working call to eth_estimateGas
+          console.warn('no gas provided, using default 30000000')
+          return 30000000n
+        })()
+      const preparedTx = await this.customProvider.prepareTransactionRequest({
+        account: client.account,
+        ...txRequest,
+        gas,
+      })
+      const gasPrice =
+        preparedTx.gasPrice ?? (await this.customProvider.getGasPrice())
+      return {
+        ...txRequest,
+        from: txRequest.from ?? preparedTx.from,
+        nonce: txRequest.nonce ?? preparedTx.nonce,
+        gas: txRequest.gas ?? preparedTx.gas,
+        gasPrice: txRequest.gasPrice ?? gasPrice,
+        chainId: txRequest.chainId ?? suaveRigil.id,
+      }
+    },
+
     /** Sign a prepared Confidential Compute Record; like a request, but with `confidentialInputsHash` and `type=0x42` */
     async signEIP712ConfidentialRequest(
       request: PreparedConfidentialRecord,
@@ -228,14 +261,19 @@ function newSuaveWallet<TTransport extends Transport>(params: {
       })
       return hexToSignature(rawSig)
     },
-    async sendTransaction(txRequest: TransactionRequestSuave) {
-      const payload = await prepareTx(client, txRequest)
+
+    /** Sign and Send an unsigned request. */
+    async sendTransaction(txRequest: TransactionRequestSuave): Promise<Hash> {
+      // signTransaction also invokes prepareTxRequest, but only for CCRs. this is still needed for standard txs.
+      const payload = await this.prepareTxRequest(txRequest)
       const signedTx = await this.signTransaction(payload)
-      return client.request({
+      return this.customProvider.request({
         method: 'eth_sendRawTransaction',
-        params: [signedTx],
+        params: [signedTx as Hex],
       })
     },
+
+    /** Sign a transaction request. */
     async signTransaction(
       txRequest: TransactionRequestSuave,
     ): Promise<`${SuaveTxType | TransactionType}${string}`> {
@@ -259,9 +297,9 @@ function newSuaveWallet<TTransport extends Transport>(params: {
         }
 
         const confidentialInputs = txRequest.confidentialInputs ?? '0x'
-        // get nonce, gas price, etc
-        const ctxParams = prepareTx(client, txRequest)
-        // dev note: calling (await ...) inline lets us skip the RPC request if teh data is not needed
+        // get nonce, gas price, etc.
+        const ctxParams = this.prepareTxRequest(txRequest)
+        // calling (await ...) inline lets us skip the RPC request if teh data is not needed
         const nonce = txRequest.nonce ?? (await ctxParams).nonce
         const value = txRequest.value ?? 0n
         const gas = txRequest.gas ?? (await ctxParams).gas
@@ -287,7 +325,7 @@ function newSuaveWallet<TTransport extends Transport>(params: {
         }
 
         const ccRecord: PreparedConfidentialRecord = {
-          // ...txRequest,
+          ...txRequest,
           nonce,
           type: SuaveTxTypes.ConfidentialRecord,
           chainId,

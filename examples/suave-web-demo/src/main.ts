@@ -2,7 +2,7 @@ import './style.css'
 import viteLogo from '/vite.svg'
 import typescriptLogo from './typescript.svg'
 import flashbotsLogo from './flashbots_icon.svg'
-import { setupConnectButton, setupDripFaucetButton, setupSendBidButton } from './suave'
+import { SUAVE_RPC_URL_HTTP, setupConnectButton, setupDripFaucetButton, setupSendBidButton } from './suave'
 import { Logo } from './components'
 import { custom, formatEther, http } from 'viem'
 import { getSuaveWallet, getSuaveProvider } from 'viem/chains/utils'
@@ -36,9 +36,13 @@ setupConnectButton(document.querySelector<HTMLButtonElement>('#connect')!,
     console.error(err)
     alert(err.message)
   }
-  const suaveWallet = getSuaveWallet({jsonRpcAccount: account, transport: custom(ethereum)})
+  const suaveWallet = getSuaveWallet({
+    jsonRpcAccount: account,
+    transport: custom(ethereum),
+    customRpc: SUAVE_RPC_URL_HTTP,
+  })
   console.log(suaveWallet)
-  const suaveProvider = getSuaveProvider(http("http://localhost:8545"))
+  const suaveProvider = getSuaveProvider(http(SUAVE_RPC_URL_HTTP))
   suaveProvider.getBalance({ address: account }).then((balance: any) => {
     suaveProvider.getChainId().then((chainId: any) => {
       if (chainId !== suaveRigil.id) {
@@ -58,7 +62,7 @@ setupConnectButton(document.querySelector<HTMLButtonElement>('#connect')!,
       alert(err)
       return
     }
-    const suaveProvider = getSuaveProvider(custom(ethereum))
+    const suaveProvider = getSuaveProvider(http(SUAVE_RPC_URL_HTTP))
     suaveProvider.getTransactionReceipt({hash: txHash}).then((receipt: any) => {
       console.log("receipt", receipt)
       document.querySelector<HTMLDivElement>('#status-content')!.innerHTML = `
