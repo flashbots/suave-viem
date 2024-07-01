@@ -56,13 +56,11 @@ export class OFAOrder {
   }
 
   /** Encodes this bid as a ConfidentialComputeRequest, which can be sent to SUAVE. */
-  toConfidentialRequest(): TransactionRequestSuave {
+  toConfidentialRequest(isEIP712?: boolean): TransactionRequestSuave {
     return {
       to: this.OFAContract,
       data: this.newOrderCalldata(),
-      type: '0x43',
-      gas: 500000n,
-      gasPrice: 1000000000n,
+      isEIP712,
       kettleAddress: this.kettle,
       confidentialInputs: this.confidentialInputsBytes(),
     }

@@ -15,8 +15,8 @@ import BidContractDeployment from '../../suave/deployedAddress.json'
 const KETTLE_ADDRESS: Address = '0xb5feafbdd752ad52afb7e1bd2e40432a485bbb7f'
 const ADMIN_KEY: Hex =
   '0x91ab9a7e53c220e6210460b65a7a3bb2ca181412a8a7b43ff336b3df1737ce12'
-// local L1 (suave-execution-geth or suavex-anvil)
-const L1_RPC_URL_HTTP: string = 'http://localhost:8555'
+export const L1_RPC_URL_HTTP: string = 'https://holesky.rigil.suave.flashbots.net'
+export const SUAVE_RPC_URL_HTTP: string = 'http://localhost:8545'
 
 const l1Wallet = createWalletClient({
   account: privateKeyToAccount(
@@ -26,12 +26,12 @@ const l1Wallet = createWalletClient({
   transport: http(L1_RPC_URL_HTTP),
 })
 const l1Provider = createPublicClient({
-  transport: http(L1_RPC_URL_HTTP),
   chain: holesky,
+  transport: http(L1_RPC_URL_HTTP),
 })
 const suaveAdminWallet = getSuaveWallet({
   privateKey: ADMIN_KEY,
-  transport: http('http://localhost:8545'),
+  transport: http(SUAVE_RPC_URL_HTTP),
 })
 
 /** Sets up "connect to wallet" button and holds wallet instance. */
@@ -93,7 +93,6 @@ export function setupSendBidButton(
       KETTLE_ADDRESS,
       BidContractDeployment.address as Address,
     )
-    console.log("bid", bid)
     const ccr = bid.toConfidentialRequest()
     console.log("ccr", ccr)
     let txHash: Hex

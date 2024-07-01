@@ -1,29 +1,32 @@
+import { sign } from '../../accounts/index.js'
 import { privateKeyToAccount } from '../../accounts/privateKeyToAccount.js'
-import { sign } from '../../accounts/utils/sign.js'
 import {
   http,
   type JsonRpcAccount,
   type PrivateKeyAccount,
   type PublicClient,
+  TransactionType,
   type Transport,
-  type TransportConfig,
+  TransportConfig,
   type WalletClient,
   createPublicClient,
   createWalletClient,
   hexToSignature,
   keccak256,
 } from '../../index.js'
-import type { Hex } from '../../types/misc.js'
+import type { Hash, Hex } from '../../types/misc.js'
 import { suaveRigil } from '../index.js'
 import {
   serializeConfidentialComputeRecord,
   serializeConfidentialComputeRequest,
 } from './serializers.js'
 import {
+  PreparedConfidentialRecord,
   SuaveTxRequestTypes,
+  SuaveTxType,
   SuaveTxTypes,
   type TransactionRequestSuave,
-  type TransactionSerializableSuave,
+  TransactionSerializableSuave,
 } from './types.js'
 
 /// client types
@@ -51,6 +54,7 @@ function formatSignature(signature: {
   }
 }
 
+/** Sign a CCR with a private key. */
 async function signConfidentialComputeRecord(
   transaction: TransactionSerializableSuave,
   privateKey: Hex,
@@ -68,21 +72,20 @@ async function signConfidentialComputeRecord(
   }
 }
 
-/**
- * Generates an anonymous function that signs a confidential compute request based on the signing method available to the given `transport` type.
- * @param transport The transport to use for signing.
- * @param privateKey The private key to use for signing. *Required for **non-custom** transports.*
- * @param address The address to use for signing. *Required for **custom** transports.*
- * @returns
+/** Returns the appropriate function for signing a CCR, as determined by the given transport.
+ *  If the transport is `custom`, `address` must be provided.
+ *  If the transport is not `custom`, `privateKey` must be provided instead.
  */
 function getSigningFunction<TTransport extends TransportConfig>(
   transport: TTransport,
   privateKey?: Hex,
   address?: Hex,
-) {
+): (
+  txRequest: TransactionSerializableSuave,
+) => Promise<ReturnType<typeof formatSignature>> {
   if (transport.type === 'custom') {
     if (!address) {
-      throw new Error("param 'address' is required for custom transports")
+      throw new Error("'address' is required for custom transports")
     }
     return async (txRequest: TransactionSerializableSuave) => {
       const rawSignature: Hex = await transport.request({
@@ -97,15 +100,25 @@ function getSigningFunction<TTransport extends TransportConfig>(
     }
   } else {
     if (!privateKey) {
-      throw new Error('privateKey is required for non-custom transports')
+      throw new Error("'privateKey' is required for non-custom transports")
     }
     return async (txRequest: TransactionSerializableSuave) => {
-      return await signConfidentialComputeRecord(txRequest, privateKey)
+      const { r, s, v } = await signConfidentialComputeRecord(
+        txRequest,
+        privateKey,
+      )
+      if (!r || !s || v === undefined) throw new Error('failed to sign')
+      return { r, s, v }
     }
   }
 }
 
 /** Get a SUAVE-enabled viem wallet.
+ *
+ * @param params.transport - the transport to use for RPC requests. Defaults to public testnet.
+ * @param params.jsonRpcAccount - the address to use for EIP-1193 requests (browser wallets). Required for `custom` transports.
+ * @param params.privateKey - the private key to use for signing transactions. Required for *non*-`custom` transports.
+ * @param params.customRpc - the RPC URL to use for SUAVE calls (nonce, gas estimates, etc) when using a `custom` transport. Defaults to transport URL.
  *
  * @example
  * import { http } from 'viem'
@@ -125,6 +138,8 @@ function getSigningFunction<TTransport extends TransportConfig>(
  *   const wallet = getSuaveWallet({
  *     transport: custom(window.ethereum),
  *     jsonRpcAccount: account,
+ *     // ensures reliable RPC requests (nonce, gas estimates, etc) as user switches RPCs in their wallet
+ *     customRpc: 'http://localhost:8545',
  *   })
  * }
  * main()
@@ -133,6 +148,7 @@ export function getSuaveWallet<TTransport extends Transport>(params: {
   transport?: TTransport
   jsonRpcAccount?: Hex
   privateKey?: Hex
+  customRpc?: string
 }): SuaveWallet<TTransport> {
   return newSuaveWallet({
     transport: params.transport ?? http(suaveRigil.rpcUrls.public.http[0]),
@@ -141,26 +157,18 @@ export function getSuaveWallet<TTransport extends Transport>(params: {
       address: params.jsonRpcAccount,
       type: 'json-rpc',
     },
+    customRpc: params.customRpc,
   })
-}
-
-async function prepareTx(client: any, txRequest: TransactionRequestSuave) {
-  const preparedTx = await client.prepareTransactionRequest(txRequest)
-  const payload: TransactionRequestSuave = {
-    ...txRequest,
-    from: txRequest.from ?? preparedTx.from,
-    nonce: txRequest.nonce ?? preparedTx.nonce,
-    gas: txRequest.gas ?? preparedTx.gas,
-    gasPrice: txRequest.gasPrice ?? preparedTx.gasPrice,
-    chainId: txRequest.chainId ?? suaveRigil.id,
-  }
-  return payload
 }
 
 /** Get a SUAVE-enabled viem wallet. */
 function newSuaveWallet<TTransport extends Transport>(params: {
   transport: TTransport
+  /** must set this for custom transports only. */
   jsonRpcAccount?: JsonRpcAccount
+  /** should set this for custom transports. */
+  customRpc?: string
+  /** must set this for non-custom transports only. */
   privateKey?: Hex
 }): SuaveWallet<TTransport> {
   if (!params.jsonRpcAccount && !params.privateKey) {
@@ -169,25 +177,106 @@ function newSuaveWallet<TTransport extends Transport>(params: {
   if (params.jsonRpcAccount && params.privateKey) {
     throw new Error("Cannot provide both 'jsonRpcAccount' and 'privateKey'")
   }
+
   // Overrides viem wallet methods with SUAVE equivalents.
   const privateKeyAccount = params.privateKey
     ? privateKeyToAccount(params.privateKey)
     : undefined
-  const account = params.jsonRpcAccount ?? privateKeyAccount
+  const account = params.jsonRpcAccount || privateKeyAccount
+
   return createWalletClient({
     account,
     transport: params.transport,
     chain: suaveRigil,
   }).extend((client) => ({
-    async sendTransaction(txRequest: TransactionRequestSuave) {
-      const payload = await prepareTx(client, txRequest)
+    /** If `customRpc` is provided, this is used for some RPC requests instead of provided (custom) `transport`.
+     *  `transport` is still used for things that require the wallet's account (signing, etc).
+     */
+    customProvider: getSuaveProvider(
+      params.customRpc ? http(params.customRpc) : params.transport,
+    ),
+
+    /** Prepare any omitted fields in request. */
+    async prepareTxRequest(
+      txRequest: TransactionRequestSuave,
+    ): Promise<TransactionRequestSuave> {
+      const gas =
+        txRequest.gas ??
+        (() => {
+          // TODO: replace this with a working call to eth_estimateGas
+          console.warn('no gas provided, using default 30000000')
+          return 30000000n
+        })()
+      const preparedTx = await this.customProvider.prepareTransactionRequest({
+        account: client.account,
+        ...txRequest,
+        gas,
+      })
+      const gasPrice =
+        preparedTx.gasPrice ?? (await this.customProvider.getGasPrice())
+      return {
+        ...txRequest,
+        from: txRequest.from ?? preparedTx.from,
+        nonce: txRequest.nonce ?? preparedTx.nonce,
+        gas: txRequest.gas ?? preparedTx.gas,
+        gasPrice: txRequest.gasPrice ?? gasPrice,
+        chainId: txRequest.chainId ?? suaveRigil.id,
+      }
+    },
+
+    /** Sign a prepared Confidential Compute Record; like a request, but with `confidentialInputsHash` and `type=0x42` */
+    async signEIP712ConfidentialRequest(
+      request: PreparedConfidentialRecord,
+    ): Promise<ReturnType<typeof formatSignature>> {
+      if (request.isEIP712 === false)
+        throw new Error('cannot sign an EIP712 CCR with isEIP712=false')
+
+      const eip712Tx = {
+        ...request,
+        nonce: BigInt(request.nonce),
+      }
+      const rawSig = await client.signTypedData({
+        primaryType: 'ConfidentialRecord',
+        message: eip712Tx,
+        types: {
+          Eip712Domain: [
+            { name: 'name', type: 'string' },
+            { name: 'verifyingContract', type: 'address' },
+          ],
+          ConfidentialRecord: [
+            { name: 'nonce', type: 'uint64' },
+            { name: 'gasPrice', type: 'uint256' },
+            { name: 'gas', type: 'uint64' },
+            { name: 'to', type: 'address' },
+            { name: 'value', type: 'uint256' },
+            { name: 'data', type: 'bytes' },
+            { name: 'kettleAddress', type: 'address' },
+            { name: 'confidentialInputsHash', type: 'bytes32' },
+          ],
+        },
+        domain: {
+          name: 'ConfidentialRecord',
+          verifyingContract: eip712Tx.kettleAddress,
+        },
+      })
+      return hexToSignature(rawSig)
+    },
+
+    /** Sign and Send an unsigned request. */
+    async sendTransaction(txRequest: TransactionRequestSuave): Promise<Hash> {
+      // signTransaction also invokes prepareTxRequest, but only for CCRs. this is still needed for standard txs.
+      const payload = await this.prepareTxRequest(txRequest)
       const signedTx = await this.signTransaction(payload)
-      return client.request({
+      return this.customProvider.request({
         method: 'eth_sendRawTransaction',
-        params: [signedTx],
+        params: [signedTx as Hex],
       })
     },
-    async signTransaction(txRequest: TransactionRequestSuave) {
+
+    /** Sign a transaction request. */
+    async signTransaction(
+      txRequest: TransactionRequestSuave,
+    ): Promise<`${SuaveTxType | TransactionType}${string}`> {
       if (
         txRequest.type === SuaveTxRequestTypes.ConfidentialRequest ||
         txRequest.kettleAddress ||
@@ -201,28 +290,69 @@ function newSuaveWallet<TTransport extends Transport>(params: {
         if (!txRequest.kettleAddress) {
           throw new Error('kettleAddress is required for confidential requests')
         }
+        if (txRequest.maxFeePerGas || txRequest.maxPriorityFeePerGas) {
+          throw new Error(
+            'maxFeePerGas and maxPriorityFeePerGas are not supported for confidential requests',
+          )
+        }
 
         const confidentialInputs = txRequest.confidentialInputs ?? '0x'
-        // determine signing method based on transport type
-        const signCcr = getSigningFunction(
-          client.transport,
-          params.privateKey,
-          client.account.address,
-        )
-        // get nonce, gas price, etc
-        const ctxParams = prepareTx(client, txRequest)
+        // get nonce, gas price, etc.
+        const ctxParams = this.prepareTxRequest(txRequest)
+        // calling (await ...) inline lets us skip the RPC request if teh data is not needed
+        const nonce = txRequest.nonce ?? (await ctxParams).nonce
+        const value = txRequest.value ?? 0n
+        const gas = txRequest.gas ?? (await ctxParams).gas
+        const gasPrice = txRequest.gasPrice ?? (await ctxParams).gasPrice
+        const chainId = txRequest.chainId ?? suaveRigil.id
+        const isEIP712 = txRequest.isEIP712 ?? true
+
         // prepare and sign confidential compute request
-        const presignTx = {
-          ...txRequest,
-          nonce: txRequest.nonce ?? (await ctxParams).nonce,
-          type: SuaveTxTypes.ConfidentialRecord,
-          confidentialInputsHash: keccak256(confidentialInputs),
-          chainId: txRequest.chainId ?? suaveRigil.id,
+        if (!txRequest.to) {
+          throw new Error('missing `to`')
         }
-        const sig = await signCcr(presignTx)
-        const { r, s, v } = sig
+        if (nonce === undefined) {
+          throw new Error('missing `nonce`')
+        }
+        if (gas === undefined) {
+          throw new Error('missing `gas`')
+        }
+        if (gasPrice === undefined) {
+          throw new Error('missing `gasPrice`')
+        }
+        if (!txRequest.kettleAddress) {
+          throw new Error('missing `kettleAddress`')
+        }
+
+        const ccRecord: PreparedConfidentialRecord = {
+          ...txRequest,
+          nonce,
+          type: SuaveTxTypes.ConfidentialRecord,
+          chainId,
+          to: txRequest.to,
+          value,
+          gas,
+          gasPrice,
+          data: txRequest.data ?? '0x',
+          kettleAddress: txRequest.kettleAddress,
+          confidentialInputsHash: keccak256(confidentialInputs),
+          isEIP712,
+        }
+
+        const sig = isEIP712
+          ? await this.signEIP712ConfidentialRequest(ccRecord)
+          : await (async () => {
+              const signCcr = getSigningFunction(
+                client.transport,
+                params.privateKey,
+                params.jsonRpcAccount?.address,
+              )
+              return await signCcr(ccRecord)
+            })()
+
+        const { r, s, v } = formatSignature(sig)
         return serializeConfidentialComputeRequest({
-          ...presignTx,
+          ...ccRecord,
           confidentialInputs,
           type: SuaveTxRequestTypes.ConfidentialRequest,
           r,

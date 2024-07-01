@@ -1,7 +1,7 @@
 import { InvalidSerializedTransactionTypeError } from '../../index.js'
 import type { Hex } from '../../types/misc.js'
 import { concatHex } from '../../utils/data/concat.js'
-import { numberToHex, toHex } from '../../utils/encoding/toHex.js'
+import { boolToHex, numberToHex, toHex } from '../../utils/encoding/toHex.js'
 import { toRlp } from '../../utils/encoding/toRlp.js'
 import {
   InvalidConfidentialRecordError,
@@ -165,6 +165,9 @@ export const serializeConfidentialComputeRequest = (
 
       transaction.kettleAddress,
       transaction.confidentialInputsHash,
+
+      // envelope
+      boolToHex(transaction.isEIP712 ?? true),
 
       numberToHex(transaction.chainId),
       toHex(transaction.v),
