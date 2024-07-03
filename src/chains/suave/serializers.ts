@@ -14,8 +14,10 @@ import {
   type TransactionSerializedSuave,
 } from './types.js'
 
-const safeHex = (hex: Hex): Hex => {
-  if (hex === '0x0' || hex === '0x00') {
+const safeHex = (hex_: Hex): Hex => {
+  // trim leading 00s
+  const hex = hex_.replace(/^0x(00)+/, '0x') as Hex
+  if (hex === '0x0') {
     return '0x'
   } else if (hex.length % 2 !== 0) {
     return `0x0${hex.slice(2)}`
