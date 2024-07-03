@@ -341,14 +341,11 @@ function newSuaveWallet<TTransport extends Transport>(params: {
 
         const sig = isEIP712
           ? await this.signEIP712ConfidentialRequest(ccRecord)
-          : await (async () => {
-              const signCcr = getSigningFunction(
-                client.transport,
-                params.privateKey,
-                params.jsonRpcAccount?.address,
-              )
-              return await signCcr(ccRecord)
-            })()
+          : await getSigningFunction(
+              client.transport,
+              params.privateKey,
+              params.jsonRpcAccount?.address,
+            )(ccRecord)
 
         const { r, s, v } = formatSignature(sig)
         return serializeConfidentialComputeRequest({
