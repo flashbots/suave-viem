@@ -15,7 +15,6 @@ import {
 } from './types.js'
 
 const safeHex = (hex: Hex): Hex => {
-  // const hex = hex_.replace(/^0x(00)+/, '0x') as Hex
   if (hex === '0x0' || hex === '0x00') {
     return '0x'
   } else if (hex.length % 2 !== 0) {
