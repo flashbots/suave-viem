@@ -14,10 +14,8 @@ import {
   type TransactionSerializedSuave,
 } from './types.js'
 
-const safeHex = (hex_: Hex): Hex => {
-  // trim leading 00s
-  const hex = hex_.replace(/^0x(00)+/, '0x') as Hex
-  if (hex === '0x0') {
+const safeHex = (hex: Hex): Hex => {
+  if (hex === '0x0' || hex === '0x00') {
     return '0x'
   } else if (hex.length % 2 !== 0) {
     return `0x0${hex.slice(2)}`
@@ -155,6 +153,16 @@ export const serializeConfidentialComputeRequest = (
     })
   }
 
+  /** Strips leading zero bytes ('00') from a hex string.
+   * @param hex - The hex string to strip.
+   * @returns The hex string with leading zero bytes removed.
+   * @example
+   * stripLeadingZeroBytes('0x0000ff') // '0xff'
+   */
+  const stripLeadingZeroBytes = (hex: Hex): Hex => {
+    return hex.replace(/^0x(00)+/, '0x') as Hex
+  }
+
   /* This is the final serialization step; what's sent to the JSON-RPC node.  */
   const preSerializedTransaction: (Hex | Hex[])[] = [
     [
@@ -173,8 +181,8 @@ export const serializeConfidentialComputeRequest = (
 
       numberToHex(transaction.chainId),
       toHex(transaction.v),
-      transaction.r,
-      transaction.s,
+      stripLeadingZeroBytes(transaction.r), // strip leading 0 bytes to prevent "non-canonical integer (leading zero bytes)" error
+      stripLeadingZeroBytes(transaction.s),
     ].map(safeHex),
     safeHex(transaction.confidentialInputs),
   ]
