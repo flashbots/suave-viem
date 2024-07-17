@@ -213,11 +213,17 @@ function newSuaveWallet<TTransport extends Transport>(params: {
       return {
         ...txRequest,
         from,
-        nonce: txRequest.nonce ?? (await this.customProvider.getTransactionCount({address: from})),
+        nonce:
+          txRequest.nonce ??
+          (await this.customProvider.getTransactionCount({ address: from })),
         gas,
-        gasPrice: txRequest.gasPrice ?? (await this.customProvider.getGasPrice()),
+        gasPrice:
+          txRequest.gasPrice ?? (await this.customProvider.getGasPrice()),
         chainId: txRequest.chainId ?? suaveRigil.id,
-        type: txRequest.type ?? txRequest.kettleAddress ? SuaveTxRequestTypes.ConfidentialRequest : '0x0',
+        type:
+          txRequest.type ?? txRequest.kettleAddress
+            ? SuaveTxRequestTypes.ConfidentialRequest
+            : '0x0',
       }
     },
 
