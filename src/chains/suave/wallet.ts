@@ -266,11 +266,15 @@ function newSuaveWallet<TTransport extends Transport>(params: {
     async sendTransaction(txRequest: TransactionRequestSuave): Promise<Hash> {
       // signTransaction also invokes prepareTxRequest, but only for CCRs. this is still needed for standard txs.
       const payload = await this.prepareTxRequest(txRequest)
-      const signedTx = await this.signTransaction(payload)
-      return this.customProvider.request({
-        method: 'eth_sendRawTransaction',
-        params: [signedTx as Hex],
-      })
+      if (txRequest.type === SuaveTxRequestTypes.ConfidentialRequest) {
+        const signedTx = await this.signTransaction(payload)
+        return this.customProvider.request({
+          method: 'eth_sendRawTransaction',
+          params: [signedTx as Hex],
+        })
+      } else {
+        return client.sendTransaction(payload)
+      }
     },
 
     /** Sign a transaction request. */
@@ -357,10 +361,14 @@ function newSuaveWallet<TTransport extends Transport>(params: {
           v,
         })
       } else {
-        return await client.account.signTransaction({
-          ...txRequest,
-          type: txRequest.type ?? txRequest.maxFeePerGas ? '0x2' : '0x0',
-        })
+        if (client.account.type === 'local') {
+          return await client.account.signTransaction({
+            ...txRequest,
+            type: txRequest.maxPriorityFeePerGas ? 'eip1559' : '0x0',
+          })
+        } else {
+          throw new Error('Unsupported transport for manual signTransaction')
+        }
       }
     },
   }))
