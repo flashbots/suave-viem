@@ -207,20 +207,17 @@ function newSuaveWallet<TTransport extends Transport>(params: {
           console.warn('no gas provided, using default 30000000')
           return 30000000n
         })()
-      const preparedTx = await this.customProvider.prepareTransactionRequest({
-        account: client.account,
-        ...txRequest,
-        gas,
-      })
-      const gasPrice =
-        preparedTx.gasPrice ?? (await this.customProvider.getGasPrice())
+
+      const from = txRequest.from ?? client.account.address
+
       return {
         ...txRequest,
-        from: txRequest.from ?? preparedTx.from,
-        nonce: txRequest.nonce ?? preparedTx.nonce,
-        gas: txRequest.gas ?? preparedTx.gas,
-        gasPrice: txRequest.gasPrice ?? gasPrice,
+        from,
+        nonce: txRequest.nonce ?? (await this.customProvider.getTransactionCount({address: from})),
+        gas,
+        gasPrice: txRequest.gasPrice ?? (await this.customProvider.getGasPrice()),
         chainId: txRequest.chainId ?? suaveRigil.id,
+        type: txRequest.type ?? txRequest.kettleAddress ? SuaveTxRequestTypes.ConfidentialRequest : '0x0',
       }
     },
 
