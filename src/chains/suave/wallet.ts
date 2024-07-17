@@ -361,8 +361,11 @@ function newSuaveWallet<TTransport extends Transport>(params: {
           v,
         })
       } else {
-        if (client.account.type === "local") {
-          return await client.account.signTransaction({...txRequest, type: txRequest.maxPriorityFeePerGas ? 'eip1559' : '0x0'})
+        if (client.account.type === 'local') {
+          return await client.account.signTransaction({
+            ...txRequest,
+            type: txRequest.maxPriorityFeePerGas ? 'eip1559' : '0x0',
+          })
         } else {
           throw new Error('Unsupported transport for manual signTransaction')
         }
