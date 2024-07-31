@@ -15,7 +15,7 @@ import {
   keccak256,
 } from '../../index.js'
 import type { Hash, Hex } from '../../types/misc.js'
-import { suaveToliman, suaveRigil } from '../index.js'
+import { suaveRigil, suaveToliman } from '../index.js'
 import {
   serializeConfidentialComputeRecord,
   serializeConfidentialComputeRequest,
@@ -154,7 +154,9 @@ export function getSuaveWallet<TTransport extends Transport>(params: {
   chain?: SuaveChain
 }): SuaveWallet<TTransport> {
   return newSuaveWallet({
-    transport: params.transport ?? http((params.chain || suaveToliman).rpcUrls.public.http[0]),
+    transport:
+      params.transport ??
+      http((params.chain || suaveToliman).rpcUrls.public.http[0]),
     privateKey: params.privateKey,
     jsonRpcAccount: params.jsonRpcAccount && {
       address: params.jsonRpcAccount,
@@ -193,14 +195,14 @@ function newSuaveWallet<TTransport extends Transport>(params: {
   return createWalletClient({
     account,
     transport: params.transport,
-    chain: (params.chain || suaveToliman),
+    chain: params.chain || suaveToliman,
   }).extend((client) => ({
     /** If `customRpc` is provided, this is used for some RPC requests instead of provided (custom) `transport`.
      *  `transport` is still used for things that require the wallet's account (signing, etc).
      */
     customProvider: getSuaveProvider(
       params.customRpc ? http(params.customRpc) : params.transport,
-      params.chain
+      params.chain,
     ),
 
     /** Prepare any omitted fields in request. */
