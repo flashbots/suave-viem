@@ -309,7 +309,10 @@ function newSuaveWallet<TTransport extends Transport>(params: {
           params: [signedTx as Hex],
         })
       } else {
-        return client.sendTransaction({...payload, type: "legacy"} as TransactionRequest)
+        return client.sendTransaction({
+          ...payload,
+          type: 'legacy',
+        } as TransactionRequest)
       }
     },
 
