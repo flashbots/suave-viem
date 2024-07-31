@@ -192,7 +192,10 @@ function newSuaveWallet<TTransport extends Transport>(params: {
     : undefined
   const account = params.jsonRpcAccount || privateKeyAccount
 
-  const clientChain = params.chain || params.customRpc?.includes('localhost') ? suaveRigil : suaveToliman
+  const clientChain =
+    params.chain || params.customRpc?.includes('localhost')
+      ? suaveRigil
+      : suaveToliman
 
   return createWalletClient({
     account,
