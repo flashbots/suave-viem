@@ -2,9 +2,11 @@ import { sign } from '../../accounts/index.js'
 import { privateKeyToAccount } from '../../accounts/privateKeyToAccount.js'
 import {
   http,
+  Address,
   type JsonRpcAccount,
   type PrivateKeyAccount,
   type PublicClient,
+  TransactionRequest,
   TransactionType,
   type Transport,
   TransportConfig,
@@ -14,8 +16,6 @@ import {
   hexToSignature,
   keccak256,
   zeroAddress,
-  Address,
-  TransactionRequest,
 } from '../../index.js'
 import type { Hash, Hex } from '../../types/misc.js'
 import { suaveRigil, suaveToliman } from '../index.js'
@@ -214,9 +214,17 @@ function newSuaveWallet<TTransport extends Transport>(params: {
     ),
 
     /** Prepare any omitted fields in request. */
-    async prepareTxRequest(
-      txRequest: TransactionRequestSuave,
-    ): Promise<TransactionRequestSuave & Required<{chainId: number, gas: bigint, nonce: number, to: Address, value: bigint, gasPrice: bigint}>> {
+    async prepareTxRequest(txRequest: TransactionRequestSuave): Promise<
+      TransactionRequestSuave &
+        Required<{
+          chainId: number
+          gas: bigint
+          nonce: number
+          to: Address
+          value: bigint
+          gasPrice: bigint
+        }>
+    > {
       const gas =
         txRequest.gas ??
         (() => {
