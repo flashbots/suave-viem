@@ -223,6 +223,7 @@ function newSuaveWallet<TTransport extends Transport>(params: {
           to: Address
           value: bigint
           gasPrice: bigint
+          type: SuaveTxType
         }>
     > {
       const gas =
@@ -301,14 +302,14 @@ function newSuaveWallet<TTransport extends Transport>(params: {
     async sendTransaction(txRequest: TransactionRequestSuave): Promise<Hash> {
       // signTransaction also invokes prepareTxRequest, but only for CCRs. this is still needed for standard txs.
       const payload = await this.prepareTxRequest(txRequest)
-      if (txRequest.type === SuaveTxRequestTypes.ConfidentialRequest) {
+      if (payload.type === SuaveTxRequestTypes.ConfidentialRequest) {
         const signedTx = await this.signTransaction(payload)
         return this.customProvider.request({
           method: 'eth_sendRawTransaction',
           params: [signedTx as Hex],
         })
       } else {
-        return client.sendTransaction(payload as TransactionRequest)
+        return client.sendTransaction({...payload, type: "legacy"} as TransactionRequest)
       }
     },
 
