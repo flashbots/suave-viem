@@ -70,7 +70,7 @@ First, see these instructions for spinning up a local devnet. Then install **[@f
 
 ```ts
 import { http, type Hex } from '@flashbots/suave-viem';
-import { suaveRigil } from '@flashbots/suave-viem/chains';
+import { suaveToliman as suaveChain } from '@flashbots/suave-viem/chains';
 import {
   getSuaveProvider,
   getSuaveWallet,
@@ -115,7 +115,7 @@ const ccr: TransactionRequestSuave = {
   gasPrice: 10000000000n, // Gas price for the transaction
   gas: 420000n, // Gas limit for the transaction
   type: SuaveTxRequestTypes.ConfidentialRequest, // (0x43)
-  chainId: suaveRigil.id,
+  chainId: suaveChain.id,
   data: '0x236eb5a70000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000006000000000000000000000000000000000000000000000000000000000000000a000000000000000000000000000000000000000000000000000000000000000010000000000000000000000008f21fdd6b4f4cacd33151777a46c122797c8bf170000000000000000000000000000000000000000000000000000000000000000',
 };
 

@@ -40,15 +40,11 @@ setupConnectButton(document.querySelector<HTMLButtonElement>('#connect')!,
     jsonRpcAccount: account,
     transport: custom(ethereum),
     customRpc: SUAVE_RPC_URL_HTTP,
+    chain: suaveRigil,
   })
   console.log(suaveWallet)
   const suaveProvider = getSuaveProvider(http(SUAVE_RPC_URL_HTTP))
   suaveProvider.getBalance({ address: account }).then((balance: any) => {
-    suaveProvider.getChainId().then((chainId: any) => {
-      if (chainId !== suaveRigil.id) {
-        alert(`wrong chain id. expected ${suaveRigil.id}, got ${chainId}`)
-      }
-    })
     document.querySelector<HTMLDivElement>('#status-content')!.innerHTML = `
       <div>
         <p>SUAVE-ETH balance: ${formatEther(balance)}</p>

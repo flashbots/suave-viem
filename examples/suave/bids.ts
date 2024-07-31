@@ -3,8 +3,8 @@ import {
   Hex,
   encodeAbiParameters,
   encodeFunctionData,
-} from 'viem'
-import { TransactionRequestSuave } from 'viem/chains/suave/types'
+} from '@flashbots/suave-viem'
+import { TransactionRequestSuave } from '@flashbots/suave-viem/chains/utils'
 import OFAContract from './contracts/out/OFA.sol/OFAPrivate.json'
 
 /** Factory class to create MEV-Share bids on SUAVE. */
@@ -61,6 +61,7 @@ export class OFAOrder {
       to: this.OFAContract,
       data: this.newOrderCalldata(),
       isEIP712,
+      gas: 10000000n,
       kettleAddress: this.kettle,
       confidentialInputs: this.confidentialInputsBytes(),
     }

@@ -7,12 +7,12 @@ import {
   SuaveTxRequestTypes,
 } from './types.js'
 import { getSuaveWallet } from './wallet.js'
-import { suaveRigil } from '../index.js'
+import { suaveToliman as suaveChain } from '../index.js'
 
 const getWallet = () => {
   return getSuaveWallet(
     {
-      transport: http('https://rpc.rigil.suave.flashbots.net'),
+      transport: http(suaveChain.rpcUrls.public.http[0]),
       privateKey: accounts[0].privateKey,
     },
   )
@@ -38,7 +38,7 @@ describe('Suave Transaction Parsers', () => {
     const parsedTx = parseTransactionSuave(signedTransaction as SuaveTxType)
     expect(parsedTx).toMatchInlineSnapshot(`
     {
-      "chainId": ${suaveRigil.id},
+      "chainId": ${suaveChain.id},
       "confidentialInputs": "${ccRequest.confidentialInputs}",
       "data": "${ccRequest.data}",
       "gas": 100n,

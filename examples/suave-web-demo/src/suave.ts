@@ -6,7 +6,7 @@ import {
   http,
 } from 'viem'
 import { privateKeyToAccount } from 'viem/accounts'
-import { suaveRigil, holesky } from 'viem/chains'
+import { holesky as l1Chain, suaveRigil } from 'viem/chains'
 import { OFAOrder } from '../../suave/bids'
 import { getSuaveWallet } from 'viem/chains/utils'
 import BidContractDeployment from '../../suave/deployedAddress.json'
@@ -15,23 +15,24 @@ import BidContractDeployment from '../../suave/deployedAddress.json'
 const KETTLE_ADDRESS: Address = '0xb5feafbdd752ad52afb7e1bd2e40432a485bbb7f'
 const ADMIN_KEY: Hex =
   '0x91ab9a7e53c220e6210460b65a7a3bb2ca181412a8a7b43ff336b3df1737ce12'
-export const L1_RPC_URL_HTTP: string = 'https://holesky.rigil.suave.flashbots.net'
+export const L1_RPC_URL_HTTP: string = 'https://holesky.toliman.suave.flashbots.net'
 export const SUAVE_RPC_URL_HTTP: string = 'http://localhost:8545'
 
 const l1Wallet = createWalletClient({
   account: privateKeyToAccount(
     '0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80',
   ),
-  chain: holesky,
+  chain: l1Chain,
   transport: http(L1_RPC_URL_HTTP),
 })
 const l1Provider = createPublicClient({
-  chain: holesky,
+  chain: l1Chain,
   transport: http(L1_RPC_URL_HTTP),
 })
 const suaveAdminWallet = getSuaveWallet({
   privateKey: ADMIN_KEY,
   transport: http(SUAVE_RPC_URL_HTTP),
+  chain: suaveRigil,
 })
 
 /** Sets up "connect to wallet" button and holds wallet instance. */
@@ -43,7 +44,6 @@ export function setupConnectButton(
   let account = null
   element.innerHTML = 'connect to wallet'
 
-  console.log(suaveRigil.id)
   const setConnected = async (ethereum: any) => {
     if (connected) return
     element.innerHTML = `connecting to ${connected}`
@@ -85,7 +85,7 @@ export function setupSendBidButton(
     console.log('signed L1 tx', signedTx)
 
     // create bid & send ccr
-    const decryptionCondition = 1n + (await l1Provider.getBlockNumber())
+    const decryptionCondition = (await l1Provider.getBlockNumber())
     console.log("decryptionCondition", decryptionCondition)
     const bid = new OFAOrder(
       decryptionCondition,
