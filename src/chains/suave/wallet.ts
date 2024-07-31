@@ -192,17 +192,19 @@ function newSuaveWallet<TTransport extends Transport>(params: {
     : undefined
   const account = params.jsonRpcAccount || privateKeyAccount
 
+  const clientChain = params.chain || params.customRpc?.includes('localhost') ? suaveRigil : suaveToliman
+
   return createWalletClient({
     account,
     transport: params.transport,
-    chain: params.chain || suaveToliman,
+    chain: clientChain,
   }).extend((client) => ({
     /** If `customRpc` is provided, this is used for some RPC requests instead of provided (custom) `transport`.
      *  `transport` is still used for things that require the wallet's account (signing, etc).
      */
     customProvider: getSuaveProvider(
       params.customRpc ? http(params.customRpc) : params.transport,
-      params.chain,
+      clientChain,
     ),
 
     /** Prepare any omitted fields in request. */
