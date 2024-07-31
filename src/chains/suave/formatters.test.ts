@@ -456,6 +456,7 @@ describe('transactionRequest', () => {
       confidentialInputs: '0x13131313',
       nonce: 13,
       data: '0x0',
+      chainId: suaveChain.id,
     }
     const formattedRequest = transactionRequest.format(inputRequest)
     expect(formattedRequest).toMatchInlineSnapshot(`

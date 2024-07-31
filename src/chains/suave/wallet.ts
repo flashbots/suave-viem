@@ -13,6 +13,9 @@ import {
   createWalletClient,
   hexToSignature,
   keccak256,
+  zeroAddress,
+  Address,
+  TransactionRequest,
 } from '../../index.js'
 import type { Hash, Hex } from '../../types/misc.js'
 import { suaveRigil, suaveToliman } from '../index.js'
@@ -213,7 +216,7 @@ function newSuaveWallet<TTransport extends Transport>(params: {
     /** Prepare any omitted fields in request. */
     async prepareTxRequest(
       txRequest: TransactionRequestSuave,
-    ): Promise<TransactionRequestSuave> {
+    ): Promise<TransactionRequestSuave & Required<{chainId: number, gas: bigint, nonce: number, to: Address, value: bigint, gasPrice: bigint}>> {
       const gas =
         txRequest.gas ??
         (() => {
@@ -225,7 +228,14 @@ function newSuaveWallet<TTransport extends Transport>(params: {
       const from = txRequest.from ?? client.account.address
 
       return {
-        ...txRequest,
+        // ...txRequest,
+        confidentialInputs: txRequest.confidentialInputs,
+        kettleAddress: txRequest.kettleAddress,
+        isEIP712: txRequest.isEIP712,
+        accessList: txRequest.accessList,
+        to: txRequest.to ?? zeroAddress,
+        data: txRequest.data ?? '0x',
+        value: txRequest.value ?? 0n,
         from,
         nonce:
           txRequest.nonce ??
@@ -290,7 +300,7 @@ function newSuaveWallet<TTransport extends Transport>(params: {
           params: [signedTx as Hex],
         })
       } else {
-        return client.sendTransaction(payload)
+        return client.sendTransaction(payload as TransactionRequest)
       }
     },
 
