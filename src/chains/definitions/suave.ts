@@ -2,34 +2,42 @@ import type { Address } from 'abitype'
 import { defineChain } from '../../utils/chain.js'
 import { formattersSuave } from '../suave/formatters.js'
 
-const testnetUrlHttp = 'https://rpc.rigil.suave.flashbots.net'
-const testnetUrlWs = 'wss://rpc.rigil.suave.flashbots.net'
-const testnetExplorerUrl = 'https://rpc.rigil.suave.flashbots.net'
+const suaveChainConfig = ({
+  networkName,
+  chainId,
+  currencySymbol,
+}: { networkName: string; chainId: number; currencySymbol: string }) => {
+  const networkNamePascal = `${networkName[0].toUpperCase()}${networkName.substring(
+    1,
+  )}`
+  const networkRpc = `rpc.${networkName}.suave.flashbots.net`
+  const networkUrlHttp = `https://${networkRpc}`
+  const networkUrlWs = `wss://${networkRpc}`
+  const explorerUrl = `https://explorer.${networkName}.suave.flashbots.net/`
 
-export const suaveRigil = /*#__PURE__*/ defineChain(
-  {
-    id: 16813125,
-    name: 'Suave Rigil Testnet',
-    network: 'rigil-testnet',
+  return {
+    id: chainId,
+    name: `Suave ${networkNamePascal} Testnet`,
+    network: `${networkName}-testnet`,
     nativeCurrency: {
       decimals: 18,
-      name: 'Suave Goerli',
-      symbol: 'ETH',
+      name: `${networkNamePascal} ETH`,
+      symbol: currencySymbol,
     },
     rpcUrls: {
       default: {
-        http: [testnetUrlHttp],
-        webSocket: [testnetUrlWs],
+        http: [networkUrlHttp],
+        webSocket: [networkUrlWs],
       },
       public: {
-        http: [testnetUrlHttp],
-        webSocket: [testnetUrlWs],
+        http: [networkUrlHttp],
+        webSocket: [networkUrlWs],
       },
     },
     blockExplorers: {
       default: {
-        name: 'SUAVE Rigil Explorer',
-        url: testnetExplorerUrl,
+        name: `SUAVE ${networkNamePascal} Explorer`,
+        url: explorerUrl,
       },
     },
     contracts: {
@@ -80,7 +88,27 @@ export const suaveRigil = /*#__PURE__*/ defineChain(
       },
     },
     testnet: true,
+  }
+}
+
+export const suaveToliman = /*#__PURE__*/ defineChain(
+  suaveChainConfig({
+    networkName: 'toliman',
+    chainId: 33626250,
+    currencySymbol: 'TEETH',
+  }),
+  {
+    formatters: formattersSuave,
+    // serializers: serializersSuave,
   },
+)
+
+export const suaveRigil = /*#__PURE__*/ defineChain(
+  suaveChainConfig({
+    networkName: 'rigil',
+    chainId: 16813125,
+    currencySymbol: 'RETH',
+  }),
   {
     formatters: formattersSuave,
     // serializers: serializersSuave,

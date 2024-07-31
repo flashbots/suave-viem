@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest'
 import { type Hex, numberToHex, zeroAddress } from '~viem/index.js'
-import { suaveRigil } from '../index.js'
+import { suaveToliman as suaveChain } from '../index.js'
 import {
   type ConfidentialComputeRecordRpc,
   type RpcTransactionReceiptSuave,
@@ -11,7 +11,7 @@ import {
 } from './types.js'
 
 describe('block', () => {
-  const { block } = suaveRigil.formatters!
+  const { block } = suaveChain.formatters!
 
   test('formatter (tx hashes)', () => {
     const inputBlock: SuaveRpcBlock = {
@@ -115,11 +115,11 @@ describe('block', () => {
           value: '0x0',
           type: '0x50',
           typeHex: '0x50',
-          chainId: '0x1008c45',
+          chainId: '0x201188a',
           requestRecord: {
             type: '0x42' as any,
             typeHex: '0x42',
-            chainId: '0x1008c45',
+            chainId: '0x201188a',
             nonce: '0x3',
             to: '0x8f21fdd6b4f4cacd33151777a46c122797c8bf17',
             gas: '0xf4240',
@@ -166,7 +166,7 @@ describe('block', () => {
         {
           "blockHash": "0xbe3e3c4205915e175df10e39a69d8dcbd4ca5b3e7dff2549a71edbc891a39e63",
           "blockNumber": 4n,
-          "chainId": 16813125,
+          "chainId": 33626250,
           "confidentialComputeResult": "0xc0b9d28700000000000000000000000000000000000000000000000000000000000000201518a916067557098f425aad1b1614f10000000000000000000000000000000011176998e3484c2d95582c916403a54100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000c00000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000014000000000000000000000000000000000000000000000000000000000000000010000000000000000000000008f21fdd6b4f4cacd33151777a46c122797c8bf170000000000000000000000000000000000000000000000000000000000000001000000000000000000000000b5feafbdd752ad52afb7e1bd2e40432a485bbb7f00000000000000000000000000000000000000000000000000000000000000156d657673686172653a76303a6d61746368426964730000000000000000000000",
           "from": "0xbe69d72ca5f88acba033a063df5dbe43a4148de0",
           "gas": 1000000n,
@@ -176,7 +176,7 @@ describe('block', () => {
           "nonce": 3,
           "r": "0x38bda742051df0c9c3853f197533c3dbc7113c7ef1b91bcb7cc268228fad01c",
           "requestRecord": {
-            "chainId": "0x1008c45",
+            "chainId": "0x201188a",
             "confidentialInputsHash": "0xd890046400e66fc2ae1841fd630f4c2eab51d8f238bf20f9a6785a73ff113741",
             "gas": "0xf4240",
             "gasPrice": "0x3518320e",
@@ -208,7 +208,7 @@ describe('block', () => {
 })
 
 describe('transaction', () => {
-  const { transaction } = suaveRigil.formatters!
+  const { transaction } = suaveChain.formatters!
 
   test('formatter (RPC -> Transaction)', () => {
     const requestRecord = {
@@ -233,7 +233,7 @@ describe('transaction', () => {
     const inputTransactionRpc = {
       blockHash:
         '0x8756d7614991fafffd2c788d7213122a2145629860575fb52be80cbef128fbb6',
-      chainId: numberToHex(suaveRigil.id),
+      chainId: numberToHex(suaveChain.id),
       requestRecord,
       confidentialComputeResult: '0x0' as Hex,
       blockNumber: '0x10' as Hex,
@@ -259,7 +259,7 @@ describe('transaction', () => {
       "accessList": undefined,
       "blockHash": "0x8756d7614991fafffd2c788d7213122a2145629860575fb52be80cbef128fbb6",
       "blockNumber": 16n,
-      "chainId": 16813125,
+      "chainId": 33626250,
       "confidentialComputeResult": "0x0",
       "from": "0x0000000000000000000000000000000000000000",
       "gas": 19n,
@@ -305,7 +305,7 @@ describe('transaction', () => {
 
 describe('transactionReceipt', () => {
   test('formatter', () => {
-    const { transactionReceipt } = suaveRigil.formatters!
+    const { transactionReceipt } = suaveChain.formatters!
 
     const inputReceipt: RpcTransactionReceiptSuave = {
       blockHash:
@@ -409,7 +409,7 @@ describe('transactionReceipt', () => {
 })
 
 describe('transactionRequest', () => {
-  const { transactionRequest } = suaveRigil.formatters!
+  const { transactionRequest } = suaveChain.formatters!
 
   test('formatter (confidential)', () => {
     const inputRequest: TransactionRequestSuave = {
@@ -420,7 +420,7 @@ describe('transactionRequest', () => {
       value: 0n,
       kettleAddress: zeroAddress,
       confidentialInputs: '0x13131313',
-      chainId: suaveRigil.id,
+      chainId: suaveChain.id,
       nonce: 13,
       data: '0x0',
       type: '0x43',
@@ -428,7 +428,7 @@ describe('transactionRequest', () => {
     const formattedRequest = transactionRequest.format(inputRequest)
     expect(formattedRequest).toMatchInlineSnapshot(`
       {
-        "chainId": "0x1008c45",
+        "chainId": "0x201188a",
         "confidentialInputs": "0x13131313",
         "data": "0x0",
         "from": "0x0000000000000000000000000000000000000000",
@@ -456,11 +456,12 @@ describe('transactionRequest', () => {
       confidentialInputs: '0x13131313',
       nonce: 13,
       data: '0x0',
+      chainId: suaveChain.id,
     }
     const formattedRequest = transactionRequest.format(inputRequest)
     expect(formattedRequest).toMatchInlineSnapshot(`
       {
-        "chainId": "0x1008c45",
+        "chainId": "0x201188a",
         "confidentialInputs": "0x13131313",
         "data": "0x0",
         "from": "0x0000000000000000000000000000000000000000",
@@ -479,7 +480,7 @@ describe('transactionRequest', () => {
 
   test('formatter (standard)', () => {
     const inputRequest: TransactionRequestSuave = {
-      chainId: suaveRigil.id,
+      chainId: suaveChain.id,
       from: zeroAddress,
       to: zeroAddress,
       gas: 1n,
@@ -492,7 +493,7 @@ describe('transactionRequest', () => {
     const formattedRequest = transactionRequest.format(inputRequest)
     expect(formattedRequest).toMatchInlineSnapshot(`
       {
-        "chainId": 16813125,
+        "chainId": 33626250,
         "data": "0x0",
         "from": "0x0000000000000000000000000000000000000000",
         "gas": "0x1",

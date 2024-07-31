@@ -2,9 +2,11 @@ import { sign } from '../../accounts/index.js'
 import { privateKeyToAccount } from '../../accounts/privateKeyToAccount.js'
 import {
   http,
+  Address,
   type JsonRpcAccount,
   type PrivateKeyAccount,
   type PublicClient,
+  TransactionRequest,
   TransactionType,
   type Transport,
   TransportConfig,
@@ -13,9 +15,10 @@ import {
   createWalletClient,
   hexToSignature,
   keccak256,
+  zeroAddress,
 } from '../../index.js'
 import type { Hash, Hex } from '../../types/misc.js'
-import { suaveRigil } from '../index.js'
+import { suaveRigil, suaveToliman } from '../index.js'
 import {
   serializeConfidentialComputeRecord,
   serializeConfidentialComputeRequest,
@@ -29,16 +32,18 @@ import {
   TransactionSerializableSuave,
 } from './types.js'
 
+type SuaveChain = typeof suaveToliman | typeof suaveRigil
+
 /// client types
 export type SuaveWallet<TTransport extends Transport> = WalletClient<
   TTransport,
-  typeof suaveRigil,
+  SuaveChain,
   PrivateKeyAccount | JsonRpcAccount
 >
 
 export type SuaveProvider<TTransport extends Transport> = PublicClient<
   TTransport,
-  typeof suaveRigil
+  SuaveChain
 >
 
 /// helper functions
@@ -149,15 +154,19 @@ export function getSuaveWallet<TTransport extends Transport>(params: {
   jsonRpcAccount?: Hex
   privateKey?: Hex
   customRpc?: string
+  chain?: SuaveChain
 }): SuaveWallet<TTransport> {
   return newSuaveWallet({
-    transport: params.transport ?? http(suaveRigil.rpcUrls.public.http[0]),
+    transport:
+      params.transport ??
+      http((params.chain || suaveToliman).rpcUrls.public.http[0]),
     privateKey: params.privateKey,
     jsonRpcAccount: params.jsonRpcAccount && {
       address: params.jsonRpcAccount,
       type: 'json-rpc',
     },
     customRpc: params.customRpc,
+    chain: params.chain,
   })
 }
 
@@ -170,6 +179,8 @@ function newSuaveWallet<TTransport extends Transport>(params: {
   customRpc?: string
   /** must set this for non-custom transports only. */
   privateKey?: Hex
+  /** optional: set chain to suaveRigil for local devnet. */
+  chain?: SuaveChain
 }): SuaveWallet<TTransport> {
   if (!params.jsonRpcAccount && !params.privateKey) {
     throw new Error("Must provide either 'jsonRpcAccount' or 'privateKey'")
@@ -184,22 +195,37 @@ function newSuaveWallet<TTransport extends Transport>(params: {
     : undefined
   const account = params.jsonRpcAccount || privateKeyAccount
 
+  const clientChain =
+    params.chain || params.customRpc?.includes('localhost')
+      ? suaveRigil
+      : suaveToliman
+
   return createWalletClient({
     account,
     transport: params.transport,
-    chain: suaveRigil,
+    chain: clientChain,
   }).extend((client) => ({
     /** If `customRpc` is provided, this is used for some RPC requests instead of provided (custom) `transport`.
      *  `transport` is still used for things that require the wallet's account (signing, etc).
      */
     customProvider: getSuaveProvider(
       params.customRpc ? http(params.customRpc) : params.transport,
+      clientChain,
     ),
 
     /** Prepare any omitted fields in request. */
-    async prepareTxRequest(
-      txRequest: TransactionRequestSuave,
-    ): Promise<TransactionRequestSuave> {
+    async prepareTxRequest(txRequest: TransactionRequestSuave): Promise<
+      TransactionRequestSuave &
+        Required<{
+          chainId: number
+          gas: bigint
+          nonce: number
+          to: Address
+          value: bigint
+          gasPrice: bigint
+          type: SuaveTxType
+        }>
+    > {
       const gas =
         txRequest.gas ??
         (() => {
@@ -211,7 +237,14 @@ function newSuaveWallet<TTransport extends Transport>(params: {
       const from = txRequest.from ?? client.account.address
 
       return {
-        ...txRequest,
+        // ...txRequest,
+        confidentialInputs: txRequest.confidentialInputs,
+        kettleAddress: txRequest.kettleAddress,
+        isEIP712: txRequest.isEIP712,
+        accessList: txRequest.accessList,
+        to: txRequest.to ?? zeroAddress,
+        data: txRequest.data ?? '0x',
+        value: txRequest.value ?? 0n,
         from,
         nonce:
           txRequest.nonce ??
@@ -219,7 +252,7 @@ function newSuaveWallet<TTransport extends Transport>(params: {
         gas,
         gasPrice:
           txRequest.gasPrice ?? (await this.customProvider.getGasPrice()),
-        chainId: txRequest.chainId ?? suaveRigil.id,
+        chainId: txRequest.chainId ?? client.chain.id,
         type:
           txRequest.type ?? txRequest.kettleAddress
             ? SuaveTxRequestTypes.ConfidentialRequest
@@ -269,14 +302,17 @@ function newSuaveWallet<TTransport extends Transport>(params: {
     async sendTransaction(txRequest: TransactionRequestSuave): Promise<Hash> {
       // signTransaction also invokes prepareTxRequest, but only for CCRs. this is still needed for standard txs.
       const payload = await this.prepareTxRequest(txRequest)
-      if (txRequest.type === SuaveTxRequestTypes.ConfidentialRequest) {
+      if (payload.type === SuaveTxRequestTypes.ConfidentialRequest) {
         const signedTx = await this.signTransaction(payload)
         return this.customProvider.request({
           method: 'eth_sendRawTransaction',
           params: [signedTx as Hex],
         })
       } else {
-        return client.sendTransaction(payload)
+        return client.sendTransaction({
+          ...payload,
+          type: 'legacy',
+        } as TransactionRequest)
       }
     },
 
@@ -289,11 +325,6 @@ function newSuaveWallet<TTransport extends Transport>(params: {
         txRequest.kettleAddress ||
         txRequest.confidentialInputs
       ) {
-        if (!txRequest.confidentialInputs) {
-          throw new Error(
-            'confidentialInputs is required for confidential requests',
-          )
-        }
         if (!txRequest.kettleAddress) {
           throw new Error('kettleAddress is required for confidential requests')
         }
@@ -311,7 +342,7 @@ function newSuaveWallet<TTransport extends Transport>(params: {
         const value = txRequest.value ?? 0n
         const gas = txRequest.gas ?? (await ctxParams).gas
         const gasPrice = txRequest.gasPrice ?? (await ctxParams).gasPrice
-        const chainId = txRequest.chainId ?? suaveRigil.id
+        const chainId = txRequest.chainId ?? params.chain?.id ?? client.chain.id
         const isEIP712 = txRequest.isEIP712 ?? true
 
         // prepare and sign confidential compute request
@@ -390,9 +421,11 @@ function newSuaveWallet<TTransport extends Transport>(params: {
  */
 export function getSuaveProvider<TTransport extends Transport>(
   transport?: TTransport,
+  chain?: SuaveChain,
 ): SuaveProvider<TTransport> {
+  const theChain = chain || suaveToliman
   return createPublicClient({
-    transport: transport ?? http(suaveRigil.rpcUrls.public.http[0]),
-    chain: suaveRigil,
+    transport: transport ?? http(theChain.rpcUrls.public.http[0]),
+    chain: theChain,
   })
 }

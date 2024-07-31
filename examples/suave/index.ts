@@ -1,10 +1,10 @@
 import { sleep } from 'bun'
-import { http, Address, Hex, createPublicClient, formatEther, isHex } from 'viem'
-import { holesky } from 'viem/chains'
-import { TransactionRequestSuave } from 'viem/chains/suave/types'
+import { http, Address, Hex, createPublicClient, formatEther, isHex } from '@flashbots/suave-viem'
+import { holesky, suaveRigil } from '@flashbots/suave-viem/chains'
+import { TransactionRequestSuave } from '@flashbots/suave-viem/chains/utils'
 import { OFAOrder } from './bids'
-import { SuaveProvider, SuaveWallet, getSuaveProvider, getSuaveWallet, parseTransactionSuave } from 'viem/chains/utils'
-import { HttpTransport } from 'viem'
+import { SuaveProvider, SuaveWallet, getSuaveProvider, getSuaveWallet, parseTransactionSuave } from '@flashbots/suave-viem/chains/utils'
+import { HttpTransport } from '@flashbots/suave-viem'
 import BidContractDeployment from './deployedAddress.json'
 
 const failEnv = (name: string) => {
@@ -48,14 +48,17 @@ const l1Provider = createPublicClient({
 })
 const adminWallet: SuaveWallet<HttpTransport> = getSuaveWallet({
   transport: http(SUAVE_RPC_URL_HTTP),
-  privateKey: PRIVATE_KEY, 
+  privateKey: PRIVATE_KEY,
+  chain: suaveRigil,
 })
 const wallet = getSuaveWallet({
   transport: http(SUAVE_RPC_URL_HTTP),
-  privateKey: "0x6c45335a22461ccdb978b78ab61b238bad2fae4544fb55c14eb096c875ccfc52",
+  privateKey: PRIVATE_KEY,
+  chain: suaveRigil,
 })
 console.log('admin', adminWallet.account.address)
 console.log('wallet', wallet.account.address)
+console.log('wallet chain id', wallet.chain.id)
 
 const retryExceptionsWithTimeout = async (
   timeout_ms: number,
@@ -94,15 +97,6 @@ const fundAccount = async (wallet: Address, amount: bigint) => {
   }
 }
 
-async function checkL1Balance(minBalance?: bigint) {
-  const balance = await l1Provider.getBalance({ address: wallet.account.address })
-  const absoluteMin = minBalance || 1n
-  if (balance < absoluteMin) {
-    throw new Error(`L1 balance too low: ${formatEther(balance)} ETH (needed ${formatEther(absoluteMin)}).\nPlease fund this account: ${wallet.account.address}`)
-  }
-  console.log(`L1 balance: ${formatEther(balance)} ETH`)
-}
-
 /** MEV-Share implementation on SUAVE.
  *
  * To run this, you'll need to deploy the contract first.
@@ -122,9 +116,8 @@ async function testSuaveBids() {
     data: '0x686f776479' as Hex,
     gas: 26000n,
     gasPrice: 10000000000n,
-    chainId: 17000,
+    type: '0x0' as const,
   }
-  checkL1Balance(testTx.gas * testTx.gasPrice)
   const signedTx = await wallet.signTransaction(testTx)
 
   console.log("signed tx", signedTx)
