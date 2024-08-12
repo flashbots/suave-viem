@@ -1,5 +1,14 @@
 # viem
 
+## 1.15.0
+
+### Minor Changes
+
+- [#60](https://github.com/flashbots/suave-viem/pull/60) [`1e6e2d7`](https://github.com/flashbots/suave-viem/commit/1e6e2d7efb8fca03ce5cc978a70dc6e7a28b07ba) Thanks [@zeroXbrock](https://github.com/zeroXbrock)! - _toliman release_
+
+  - add EIP-712 signature scheme
+  - add Toliman chain details
+
 ## 1.14.4
 
 ### Patch Changes
