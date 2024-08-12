@@ -1,4 +1,4 @@
-> :warning: **ALPHA SOFTWARE**: This code relies on the SUAVE protocol, and both are subject to change. Please use it with caution. The [SUAVE spec](https://github.com/flashbots/suave-specs/tree/main) has not yet stabilized, so we are refraining from merging this work upstream. We plan to do so when the time is right. Additionally, [Confidential Compute Requests](https://github.com/flashbots/suave-specs/blob/main/specs/rigil/kettle.md#confidentialcomputerequest) in their current form can only be signed with local accounts (using privateKey directly), or with [EIP-1193](https://eips.ethereum.org/EIPS/eip-1193) wallets using `eth_sign`.
+> :warning: **ALPHA SOFTWARE**: This code relies on the SUAVE protocol, and both are subject to change. Please use it with caution. The [SUAVE spec](https://github.com/flashbots/suave-specs/tree/main) has not yet stabilized, so we are currently refraining from merging this work upstream. [Confidential Compute Requests](https://github.com/flashbots/suave-specs/blob/main/specs/rigil/kettle.md#confidentialcomputerequest) rely on a custom signature scheme, with the option to use EIP-712 to sign the payload. [EIP-1193](https://eips.ethereum.org/EIPS/eip-1193) wallets use either `eth_signTypedData_v4` (EIP-712) or `eth_sign` (generally regarded as unsafe) to sign confidential requests. We recommend always using EIP-712, which is the default. This default can be overridden by setting `isEIP712` in the request being signed.
 
 <br/>
 
@@ -115,7 +115,6 @@ const ccr: TransactionRequestSuave = {
   gasPrice: 10000000000n, // Gas price for the transaction
   gas: 420000n, // Gas limit for the transaction
   type: SuaveTxRequestTypes.ConfidentialRequest, // (0x43)
-  chainId: suaveChain.id,
   data: '0x236eb5a70000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000006000000000000000000000000000000000000000000000000000000000000000a000000000000000000000000000000000000000000000000000000000000000010000000000000000000000008f21fdd6b4f4cacd33151777a46c122797c8bf170000000000000000000000000000000000000000000000000000000000000000',
 };
 
@@ -123,7 +122,7 @@ const res = await wallet.sendTransaction(ccr);
 console.log(`sent ccr! tx hash: ${res}`);
 ```
 
-See [the docs](https://suave-alpha.flashbots.net/tools/typescript-sdk) for more detailed examples.
+See [the docs](https://suave-alpha.flashbots.net/tools/typescript-sdk) and [examples](./examples/) in this repo ([suave](./examples/suave), [suave-web-demo](./examples/suave-web-demo)) for more detailed examples.
 
 ## Community
 
