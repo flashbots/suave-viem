@@ -7,22 +7,30 @@ import { SuaveProvider, SuaveWallet, getSuaveProvider, getSuaveWallet, parseTran
 import { HttpTransport } from '@flashbots/suave-viem'
 import BidContractDeployment from './deployedAddress.json'
 
+const DEFAULT_KETTLE_ADDRESS = '0xb5feafbdd752ad52afb7e1bd2e40432a485bbb7f' as Address
+const DEFAULT_SUAVE_RPC_URL_HTTP = 'http://localhost:8545'
+const DEFAULT_L1_RPC_URL_HTTP = 'http://localhost:8555'
+
 const failEnv = (name: string) => {
   throw new Error(`missing env var ${name}`)
 }
+
 if (!process.env.PRIVATE_KEY) {
   failEnv('PRIVATE_KEY')
 }
+
 if (!process.env.KETTLE_ADDRESS) {
-  failEnv('KETTLE_ADDRESS')
+  console.warn(`KETTLE_ADDRESS not set. Defaulting to ${DEFAULT_KETTLE_ADDRESS}`)
 }
+
 if (!process.env.SUAVE_RPC_URL_HTTP) {
-  console.warn('SUAVE_RPC_URL_HTTP not set. Defaulting to localhost:8545')
+  console.warn(`SUAVE_RPC_URL_HTTP not set. Defaulting to ${DEFAULT_SUAVE_RPC_URL_HTTP}`)
 }
+
 if (!process.env.L1_RPC_URL_HTTP) {
-  console.warn('L1_RPC_URL_HTTP not set. Defaulting to localhost:8545')
+  console.warn(`L1_RPC_URL_HTTP not set. Defaulting to ${DEFAULT_L1_RPC_URL_HTTP}`)
 }
-const KETTLE_ADDRESS: Address = process.env.KETTLE_ADDRESS as Address
+const KETTLE_ADDRESS: Address = process.env.KETTLE_ADDRESS as Address || DEFAULT_KETTLE_ADDRESS
 const PRIVATE_KEY: Hex = process.env.PRIVATE_KEY as Hex
 const SUAVE_RPC_URL_HTTP: string =
   process.env.SUAVE_RPC_URL_HTTP || 'http://localhost:8545'
@@ -90,6 +98,7 @@ const fundAccount = async (wallet: Address, amount: bigint) => {
       gasPrice: 10000000000n,
       gas: 21000n,
       to: wallet,
+      kettleAddress: KETTLE_ADDRESS,
     }
     return await adminWallet.sendTransaction(tx)
   } else {

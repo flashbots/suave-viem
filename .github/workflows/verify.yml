@@ -124,3 +124,40 @@ jobs:
       - name: Run test vectors
         shell: bash
         run: bun run vectors
+
+  suave-examples:
+    name: Suave Examples
+    runs-on: ubuntu-latest
+    steps:
+      - name: Clone repository
+        uses: actions/checkout@v3
+
+      - name: Install JS dependencies
+        uses: ./.github/actions/install-dependencies
+
+      - name: Build suave-viem
+        run: bun run build
+
+      - name: Install suave-geth
+        shell: bash
+        run: curl -L https://suaveup.flashbots.net | bash
+
+      - name: Install suave contract dependencies
+        shell: bash
+        working-directory: examples/suave/contracts
+        run: forge install
+
+      - name: Install suave example dependencies
+        working-directory: examples/suave
+        run: bun install
+
+      - name: Run example
+        working-directory: examples/suave
+        shell: bash
+        run: |
+          /root/.suave/bin/suave-geth --suave.dev --http.port 8545 &
+          anvil -p 8555 &
+          sleep 3
+          ./deployContracts.sh
+          export PRIVATE_KEY=0x91ab9a7e53c220e6210460b65a7a3bb2ca181412a8a7b43ff336b3df1737ce12
+          bun run index.ts
