@@ -131,6 +131,17 @@ jobs:
     steps:
       - name: Clone repository
         uses: actions/checkout@v3
+      
+      - name: Check out suave-geth
+        uses: actions/checkout@v3
+        with:
+          repository: flashbots/suave-geth
+          path: suave-geth-clone
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Run dev env
+        working-directory: suave-geth-clone
+        run: docker compose -f ./suave/e2e/docker-compose.yml up -d --build
 
       - name: Install JS dependencies
         uses: ./.github/actions/install-dependencies
@@ -155,9 +166,8 @@ jobs:
         working-directory: examples/suave
         shell: bash
         run: |
-          /root/.suave/bin/suave-geth --suave.dev --http.port 8545 &
-          anvil -p 8555 &
-          sleep 3
           ./deployContracts.sh
           export PRIVATE_KEY=0x91ab9a7e53c220e6210460b65a7a3bb2ca181412a8a7b43ff336b3df1737ce12
+          export SUAVE_RPC_URL_HTTP=http://0.0.0.0:8545
+          export L1_RPC_URL_HTTP=http://0.0.0.0:8555
           bun run index.ts
