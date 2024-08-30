@@ -1,33 +1,45 @@
 import { sleep } from 'bun'
-import { http, Address, Hex, createPublicClient, formatEther, isHex } from '@flashbots/suave-viem'
-import { holesky, suaveRigil } from '@flashbots/suave-viem/chains'
+import { http, Address, Hex, createPublicClient, createWalletClient, Chain, formatEther, isHex } from '@flashbots/suave-viem'
+import { privateKeyToAccount } from '@flashbots/suave-viem/accounts'
+import { suaveRigil } from '@flashbots/suave-viem/chains'
 import { TransactionRequestSuave } from '@flashbots/suave-viem/chains/utils'
 import { OFAOrder } from './bids'
 import { SuaveProvider, SuaveWallet, getSuaveProvider, getSuaveWallet, parseTransactionSuave } from '@flashbots/suave-viem/chains/utils'
 import { HttpTransport } from '@flashbots/suave-viem'
 import BidContractDeployment from './deployedAddress.json'
 
+const DEFAULT_KETTLE_ADDRESS = '0xb5feafbdd752ad52afb7e1bd2e40432a485bbb7f' as Address
+const DEFAULT_SUAVE_RPC_URL_HTTP = 'http://localhost:8545'
+const DEFAULT_L1_RPC_URL_HTTP = 'http://localhost:8555'
+const DEFAULT_L1_CHAIN_ID = 17000
+
 const failEnv = (name: string) => {
   throw new Error(`missing env var ${name}`)
 }
+
 if (!process.env.PRIVATE_KEY) {
   failEnv('PRIVATE_KEY')
 }
+
 if (!process.env.KETTLE_ADDRESS) {
-  failEnv('KETTLE_ADDRESS')
+  console.warn(`KETTLE_ADDRESS not set. Defaulting to ${DEFAULT_KETTLE_ADDRESS}`)
 }
+
 if (!process.env.SUAVE_RPC_URL_HTTP) {
-  console.warn('SUAVE_RPC_URL_HTTP not set. Defaulting to localhost:8545')
+  console.warn(`SUAVE_RPC_URL_HTTP not set. Defaulting to ${DEFAULT_SUAVE_RPC_URL_HTTP}`)
 }
+
 if (!process.env.L1_RPC_URL_HTTP) {
-  console.warn('L1_RPC_URL_HTTP not set. Defaulting to localhost:8545')
+  console.warn(`L1_RPC_URL_HTTP not set. Defaulting to ${DEFAULT_L1_RPC_URL_HTTP}`)
 }
-const KETTLE_ADDRESS: Address = process.env.KETTLE_ADDRESS as Address
+const KETTLE_ADDRESS: Address = process.env.KETTLE_ADDRESS as Address || DEFAULT_KETTLE_ADDRESS
 const PRIVATE_KEY: Hex = process.env.PRIVATE_KEY as Hex
 const SUAVE_RPC_URL_HTTP: string =
   process.env.SUAVE_RPC_URL_HTTP || 'http://localhost:8545'
 const L1_RPC_URL_HTTP: string =
   process.env.L1_RPC_URL_HTTP || 'http://localhost:8555'
+const L1_PRIVATE_KEY: Hex = '0x6c45335a22461ccdb978b78ab61b238bad2fae4544fb55c14eb096c875ccfc52'
+const L1_CHAIN_ID: number = process.env.L1_CHAIN_ID ? parseInt(process.env.L1_CHAIN_ID) : DEFAULT_L1_CHAIN_ID
 
 if (!BidContractDeployment.address) {
   console.error(
@@ -41,9 +53,14 @@ if (!isHex(BidContractDeployment.address)) {
 }
 const BID_CONTRACT_ADDRESS = BidContractDeployment.address as Hex
 
+const localhostChain = {
+  name: 'localhost',
+  id: L1_CHAIN_ID, // chainId suave expects (note this is not necessarily the actual chainId of the L1 chain; results may vary by testing environment)
+} as Chain
+
 const suaveProvider: SuaveProvider<HttpTransport> = getSuaveProvider(http(SUAVE_RPC_URL_HTTP))
 const l1Provider = createPublicClient({
-  chain: holesky,
+  chain: localhostChain,
   transport: http(L1_RPC_URL_HTTP),
 })
 const adminWallet: SuaveWallet<HttpTransport> = getSuaveWallet({
@@ -55,6 +72,11 @@ const wallet = getSuaveWallet({
   transport: http(SUAVE_RPC_URL_HTTP),
   privateKey: PRIVATE_KEY,
   chain: suaveRigil,
+})
+const l1Wallet = createWalletClient({
+  account: privateKeyToAccount(L1_PRIVATE_KEY),
+  transport: http(L1_RPC_URL_HTTP),
+  chain: localhostChain,
 })
 console.log('admin', adminWallet.account.address)
 console.log('wallet', wallet.account.address)
@@ -90,6 +112,7 @@ const fundAccount = async (wallet: Address, amount: bigint) => {
       gasPrice: 10000000000n,
       gas: 21000n,
       to: wallet,
+      kettleAddress: KETTLE_ADDRESS,
     }
     return await adminWallet.sendTransaction(tx)
   } else {
@@ -116,9 +139,8 @@ async function testSuaveBids() {
     data: '0x686f776479' as Hex,
     gas: 26000n,
     gasPrice: 10000000000n,
-    type: '0x0' as const,
   }
-  const signedTx = await wallet.signTransaction(testTx)
+  const signedTx = await l1Wallet.signTransaction(testTx)
 
   console.log("signed tx", signedTx)
 
