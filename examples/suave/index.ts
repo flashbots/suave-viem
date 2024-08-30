@@ -137,7 +137,7 @@ async function testSuaveBids() {
     data: '0x686f776479' as Hex,
     gas: 26000n,
     gasPrice: 10000000000n,
-    chainId: 1337, // chainId of localhost
+    chainId: 17000,
   }
   const signedTx = await l1Wallet.signTransaction(testTx)
 
