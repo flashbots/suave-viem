@@ -8,14 +8,10 @@ import { SuaveProvider, SuaveWallet, getSuaveProvider, getSuaveWallet, parseTran
 import { HttpTransport } from '@flashbots/suave-viem'
 import BidContractDeployment from './deployedAddress.json'
 
-const localhostChain = {
-  name: 'localhost',
-  id: 17000, // chainId suave expects (note this is not necessarily the actual chainId of the L1 chain; results may vary by testing environment)
-} as Chain
-
 const DEFAULT_KETTLE_ADDRESS = '0xb5feafbdd752ad52afb7e1bd2e40432a485bbb7f' as Address
 const DEFAULT_SUAVE_RPC_URL_HTTP = 'http://localhost:8545'
 const DEFAULT_L1_RPC_URL_HTTP = 'http://localhost:8555'
+const DEFAULT_L1_CHAIN_ID = 17000
 
 const failEnv = (name: string) => {
   throw new Error(`missing env var ${name}`)
@@ -43,6 +39,7 @@ const SUAVE_RPC_URL_HTTP: string =
 const L1_RPC_URL_HTTP: string =
   process.env.L1_RPC_URL_HTTP || 'http://localhost:8555'
 const L1_PRIVATE_KEY: Hex = '0x6c45335a22461ccdb978b78ab61b238bad2fae4544fb55c14eb096c875ccfc52'
+const L1_CHAIN_ID: number = process.env.L1_CHAIN_ID ? parseInt(process.env.L1_CHAIN_ID) : DEFAULT_L1_CHAIN_ID
 
 if (!BidContractDeployment.address) {
   console.error(
@@ -55,6 +52,11 @@ if (!isHex(BidContractDeployment.address)) {
   failEnv('BID_CONTRACT_ADDRESS')
 }
 const BID_CONTRACT_ADDRESS = BidContractDeployment.address as Hex
+
+const localhostChain = {
+  name: 'localhost',
+  id: L1_CHAIN_ID, // chainId suave expects (note this is not necessarily the actual chainId of the L1 chain; results may vary by testing environment)
+} as Chain
 
 const suaveProvider: SuaveProvider<HttpTransport> = getSuaveProvider(http(SUAVE_RPC_URL_HTTP))
 const l1Provider = createPublicClient({

@@ -166,4 +166,5 @@ jobs:
           export PRIVATE_KEY=0x91ab9a7e53c220e6210460b65a7a3bb2ca181412a8a7b43ff336b3df1737ce12
           export SUAVE_RPC_URL_HTTP=http://0.0.0.0:8545
           export L1_RPC_URL_HTTP=http://0.0.0.0:8555
+          export L1_CHAIN_ID=1337
           bun run index.ts
