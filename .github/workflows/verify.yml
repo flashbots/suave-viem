@@ -149,10 +149,6 @@ jobs:
       - name: Build suave-viem
         run: bun run build
 
-      - name: Install suave-geth
-        shell: bash
-        run: curl -L https://suaveup.flashbots.net | bash
-
       - name: Install suave contract dependencies
         shell: bash
         working-directory: examples/suave/contracts
