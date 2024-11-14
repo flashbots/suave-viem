@@ -253,9 +253,10 @@ function newSuaveWallet<TTransport extends Transport>(params: {
           txRequest.gasPrice ?? (await this.customProvider.getGasPrice()),
         chainId: txRequest.chainId ?? client.chain.id,
         type:
-          txRequest.type ?? txRequest.kettleAddress
+          txRequest.type ??
+          (txRequest.kettleAddress
             ? SuaveTxRequestTypes.ConfidentialRequest
-            : '0x0',
+            : '0x0'),
       }
     },
 
