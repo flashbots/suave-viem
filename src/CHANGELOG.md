@@ -1,5 +1,13 @@
 # viem
 
+## 1.15.1
+
+### Patch Changes
+
+- [#66](https://github.com/flashbots/suave-viem/pull/66) [`6ef0747`](https://github.com/flashbots/suave-viem/commit/6ef07479226e528d33658c4aa0f012d40e77a8bc) Thanks [@michcio1234](https://github.com/michcio1234)! - Fix sending Legacy transactions
+
+- [#64](https://github.com/flashbots/suave-viem/pull/64) [`43e44c4`](https://github.com/flashbots/suave-viem/commit/43e44c4dab206f158f483704b11e45fe288bdeb4) Thanks [@michcio1234](https://github.com/michcio1234)! - Fix chain in suave wallet
+
 ## 1.15.0
 
 ### Minor Changes
